@@ -3,190 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProVA Dashboard & Tasker</title>
+    <title>ProVA Premium Dashboard</title>
     <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; --dark: #1e293b; --accent: #10b981; --danger: #ef4444; }
+        :root { --primary: #2563eb; --bg: #f8fafc; --dark: #1e293b; --accent: #10b981; --danger: #ef4444; --white: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: flex; color: var(--dark); min-height: 100vh; }
         
         /* Sidebar */
-        .sidebar { width: 280px; background: var(--dark); color: white; padding: 30px 20px; position: fixed; height: 100vh; box-sizing: border-box; }
+        .sidebar { width: 280px; background: var(--dark); color: white; padding: 30px 20px; position: fixed; height: 100vh; box-sizing: border-box; z-index: 10; }
         .sidebar h2 { font-size: 1.1rem; margin-bottom: 5px; color: var(--primary); letter-spacing: 1px; }
         .va-role-tag { font-size: 0.85rem; color: #94a3b8; margin-bottom: 30px; display: block; font-style: italic; }
-        .nav-item { padding: 12px 0; border-bottom: 1px solid #334155; cursor: pointer; font-size: 0.9rem; transition: 0.3s; }
-        .nav-item:hover { color: var(--primary); }
+        .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; margin-bottom: 5px; }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--primary); }
+        .nav-active { background: var(--primary); color: white ! dominance; }
 
         /* Main UI */
         .main-content { margin-left: 280px; padding: 40px; width: 100%; max-width: 1000px; }
         .card { background: white; padding: 25px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; position: relative; }
         
-        /* Profile Styling */
-        .profile-header { display: flex; align-items: center; gap: 25px; margin-bottom: 20px; }
-        #profile-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); }
-        .edit-btn { position: absolute; top: 20px; right: 20px; background: #f1f5f9; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        /* Profile & Leave Header */
+        .profile-grid { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+        .profile-header { display: flex; align-items: center; gap: 20px; }
+        #profile-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); }
+        
+        /* Leave Credits Styling */
+        .leave-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .leave-stat { background: #f1f5f9; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0; }
+        .leave-stat label { font-size: 0.7rem; font-weight: 800; color: #64748b; display: block; margin-bottom: 5px; }
+        .leave-stat span { font-size: 1.4rem; font-weight: 800; color: var(--dark); }
+        .leave-btns { margin-top: 8px; display: flex; justify-content: center; gap: 5px; }
+        .leave-btns button { padding: 2px 8px; font-size: 0.7rem; cursor: pointer; border-radius: 4px; border: 1px solid #cbd5e1; }
+
+        /* Custom Modal (SOP Vault) */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(4px); }
+        .modal-bubble { background: white; padding: 30px; border-radius: 20px; width: 350px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .modal-bubble h3 { margin-top: 0; }
+        .modal-bubble input { width: 100%; padding: 12px; margin: 15px 0; border: 2px solid #e2e8f0; border-radius: 10px; box-sizing: border-box; outline: none; }
+        .modal-bubble input:focus { border-color: var(--primary); }
+        .btn-prime { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; }
+
+        /* Edit Mode Styles */
         .editable-input { display: none; width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #cbd5e1; border-radius: 6px; }
         .editing .editable-input { display: block; }
         .editing .static-text { display: none; }
+        .edit-btn { position: absolute; top: 20px; right: 20px; background: #f1f5f9; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; }
 
-        /* Task Box Styling */
-        .task-container { margin-top: 20px; }
-        .task-input-group { display: flex; gap: 10px; margin-bottom: 15px; }
-        #task-input { flex-grow: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
-        .task-list { list-style: none; padding: 0; }
-        .task-item { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f8fafc; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid var(--primary); }
-        .task-item.completed { opacity: 0.6; text-decoration: line-through; border-left-color: #cbd5e1; }
-        .delete-task { color: var(--danger); cursor: pointer; font-weight: bold; font-size: 1.2rem; }
-
-        .tenure-badge { background: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: bold; }
+        /* Task List */
+        .task-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; border-left: 4px solid var(--primary); }
+        .task-item.completed { opacity: 0.5; text-decoration: line-through; }
     </style>
 </head>
 <body>
+
+<!-- Custom Password Modal -->
+<div class="modal-overlay" id="vault-modal">
+    <div class="modal-bubble">
+        <div style="font-size: 3rem; margin-bottom: 10px;">🔐</div>
+        <h3>Enter Vault Password</h3>
+        <p style="color: #64748b; font-size: 0.9rem;">Access restricted to authorized VAs only.</p>
+        <input type="password" id="vault-pass-input" placeholder="Password">
+        <button class="btn-prime" onclick="checkVaultPassword()">Unlock Folder</button>
+        <button style="background: none; border: none; color: #94a3b8; margin-top: 10px; cursor: pointer;" onclick="closeVault()">Cancel</button>
+    </div>
+</div>
 
 <div class="sidebar">
     <h2>PROVA PORTAL</h2>
     <div id="side-name" style="font-weight: bold; margin-top: 20px;">Alex Rivera</div>
     <div id="side-role" class="va-role-tag">General Virtual Assistant</div>
     
-    <div class="nav-item">🏠 Dashboard Overview</div>
-    <div class="nav-item">🔒 SOP Vault (Locked)</div>
-    <div class="nav-item">📊 Monthly Reports</div>
+    <div class="nav-item">🏠 Dashboard</div>
+    <div class="nav-item" onclick="openVault()">📂 SOP Vault</div>
+    <div class="nav-item">📊 Reports</div>
 </div>
 
 <div class="main-content">
     
-    <div class="card" id="profile-card">
-        <button class="edit-btn" onclick="toggleEdit()">Edit Profile</button>
-        <div class="profile-header">
-            <img id="profile-img" src="https://via.placeholder.com/100" alt="Profile">
-            <div>
-                <h1 class="static-text" id="display-name">Alex Rivera</h1>
-                <input type="text" class="editable-input" id="edit-name">
-                
-                <div class="static-text" style="color: #64748b;" id="display-role">General Virtual Assistant</div>
-                <input type="text" class="editable-input" id="edit-role" placeholder="e.g. Social Media Manager">
-                
-                <span class="tenure-badge" id="tenure-text">0 Months Tenure</span>
+    <div class="profile-grid">
+        <!-- Profile Section -->
+        <div class="card" id="profile-card">
+            <button class="edit-btn" onclick="toggleEdit()">Edit Profile</button>
+            <div class="profile-header">
+                <img id="profile-img" src="https://via.placeholder.com/100" alt="Profile">
+                <div>
+                    <h1 class="static-text" id="display-name" style="margin:0">Alex Rivera</h1>
+                    <input type="text" class="editable-input" id="edit-name">
+                    
+                    <div class="static-text" style="color: #64748b;" id="display-role">General Virtual Assistant</div>
+                    <input type="text" class="editable-input" id="edit-role">
+                    
+                    <div class="static-text" style="font-size: 0.9rem; margin-top: 5px;">Agency: <b id="display-agency">Blue Horizon</b></div>
+                    <input type="text" class="editable-input" id="edit-agency">
+                </div>
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; border-top: 1px solid #eee; pt: 20px; padding-top: 15px;">
-            <div>
-                <label style="font-size: 0.7rem; font-weight: 800; color: #94a3b8;">AGENCY / CLIENT</label>
-                <div class="static-text" id="display-agency">Blue Horizon Media</div>
-                <input type="text" class="editable-input" id="edit-agency">
-            </div>
-            <div>
-                <label style="font-size: 0.7rem; font-weight: 800; color: #94a3b8;">START DATE</label>
-                <div class="static-text" id="display-start">2023-01-15</div>
-                <input type="date" class="editable-input" id="edit-start">
+        <!-- Leave Credits Section -->
+        <div class="card">
+            <h3 style="margin-top:0; font-size: 1rem;">Leave Credits</h3>
+            <div class="leave-container">
+                <div class="leave-stat">
+                    <label>PTO</label>
+                    <span id="pto-val">0</span>
+                    <div class="leave-btns">
+                        <button onclick="updateLeave('pto', 1)">+</button>
+                        <button onclick="updateLeave('pto', -1)">-</button>
+                    </div>
+                </div>
+                <div class="leave-stat">
+                    <label>SICK</label>
+                    <span id="sick-val">0</span>
+                    <div class="leave-btns">
+                        <button onclick="updateLeave('sick', 1)">+</button>
+                        <button onclick="updateLeave('sick', -1)">-</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Task List -->
     <div class="card">
-        <h3>📋 Daily Task List</h3>
-        <div class="task-input-group">
-            <input type="text" id="task-input" placeholder="Enter a new task...">
-            <button onclick="addTask()" style="background: var(--primary); color: white; border: none; border-radius: 8px; padding: 0 15px; cursor: pointer;">+ Add</button>
+        <h3>📋 Task List</h3>
+        <div style="display:flex; gap: 10px; margin-bottom: 20px;">
+            <input type="text" id="task-input" placeholder="What's the goal for today?" style="flex:1; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
+            <button onclick="addTask()" class="btn-prime" style="width: auto;">Add Task</button>
         </div>
-        <ul id="task-list" class="task-list">
-            </ul>
+        <div id="task-list"></div>
     </div>
 
 </div>
 
 <script>
-    // Initial Data Structure
-    let data = JSON.parse(localStorage.getItem('vaMasterData')) || {
-        profile: {
-            name: "Alex Rivera",
-            role: "General Virtual Assistant",
-            agency: "Blue Horizon Media",
-            start: "2024-01-01"
-        },
+    // Centralized Data Store
+    let data = JSON.parse(localStorage.getItem('vaMasterData_v3')) || {
+        profile: { name: "Alex Rivera", role: "General VA", agency: "Agency Name", pto: 10, sick: 5 },
         tasks: []
     };
 
+    const VAULT_PASSWORD = "admin"; // Change this to your preferred password
+
     function init() {
-        // Update Profile
         document.getElementById('display-name').innerText = data.profile.name;
         document.getElementById('side-name').innerText = data.profile.name;
         document.getElementById('display-role').innerText = data.profile.role;
         document.getElementById('side-role').innerText = data.profile.role;
         document.getElementById('display-agency').innerText = data.profile.agency;
-        document.getElementById('display-start').innerText = data.profile.start;
-        
-        calculateTenure();
+        document.getElementById('pto-val').innerText = data.profile.pto;
+        document.getElementById('sick-val').innerText = data.profile.sick;
         renderTasks();
     }
 
+    // Modal Logic
+    function openVault() { document.getElementById('vault-modal').style.display = 'flex'; }
+    function closeVault() { document.getElementById('vault-modal').style.display = 'none'; }
+    
+    function checkVaultPassword() {
+        const pass = document.getElementById('vault-pass-input').value;
+        if (pass === VAULT_PASSWORD) {
+            alert("SOP Vault Unlocked! (Redirecting to folder...)");
+            // Here you could show a hidden div or redirect to a link
+            closeVault();
+        } else {
+            alert("Wrong password. Try again.");
+        }
+    }
+
+    // Leave Logic
+    function updateLeave(type, amt) {
+        data.profile[type] += amt;
+        saveData();
+    }
+
+    // Profile Logic
     function toggleEdit() {
         const card = document.getElementById('profile-card');
         const isEditing = card.classList.toggle('editing');
-        const btn = document.querySelector('.edit-btn');
-        
         if (!isEditing) {
             data.profile.name = document.getElementById('edit-name').value;
             data.profile.role = document.getElementById('edit-role').value;
             data.profile.agency = document.getElementById('edit-agency').value;
-            data.profile.start = document.getElementById('edit-start').value;
             saveData();
-            btn.innerText = "Edit Profile";
         } else {
             document.getElementById('edit-name').value = data.profile.name;
             document.getElementById('edit-role').value = data.profile.role;
             document.getElementById('edit-agency').value = data.profile.agency;
-            document.getElementById('edit-start').value = data.profile.start;
-            btn.innerText = "Save Changes";
         }
     }
 
     // Task Logic
     function addTask() {
         const input = document.getElementById('task-input');
-        if (input.value.trim() === "") return;
-        
-        data.tasks.push({ text: input.value, completed: false });
+        if (!input.value) return;
+        data.tasks.push({ text: input.value, done: false });
         input.value = "";
         saveData();
     }
 
-    function toggleTask(index) {
-        data.tasks[index].completed = !data.tasks[index].completed;
-        saveData();
-    }
-
-    function deleteTask(index) {
-        data.tasks.splice(index, 1);
-        saveData();
-    }
-
     function renderTasks() {
-        const list = document.getElementById('task-list');
-        list.innerHTML = "";
-        data.tasks.forEach((task, index) => {
-            const li = document.createElement('li');
-            li.className = `task-item ${task.completed ? 'completed' : ''}`;
-            li.innerHTML = `
-                <div onclick="toggleTask(${index})" style="cursor:pointer; flex-grow:1;">
-                    ${task.text}
-                </div>
-                <span class="delete-task" onclick="deleteTask(${index})">&times;</span>
-            `;
-            list.appendChild(li);
-        });
+        const container = document.getElementById('task-list');
+        container.innerHTML = data.tasks.map((t, i) => `
+            <div class="task-item ${t.done ? 'completed' : ''}">
+                <span onclick="toggleTask(${i})" style="cursor:pointer; flex:1">${t.text}</span>
+                <span onclick="deleteTask(${i})" style="color:var(--danger); cursor:pointer; margin-left:15px">✕</span>
+            </div>
+        `).join('');
     }
 
-    function calculateTenure() {
-        const start = new Date(data.profile.start);
-        const now = new Date();
-        const diffMonths = Math.floor(Math.abs(now - start) / (1000 * 60 * 60 * 24 * 30.44));
-        document.getElementById('tenure-text').innerText = diffMonths + " Months Tenure";
-    }
-
-    function saveData() {
-        localStorage.setItem('vaMasterData', JSON.stringify(data));
-        init();
-    }
+    function toggleTask(i) { data.tasks[i].done = !data.tasks[i].done; saveData(); }
+    function deleteTask(i) { data.tasks.splice(i, 1); saveData(); }
+    function saveData() { localStorage.setItem('vaMasterData_v3', JSON.stringify(data)); init(); }
 
     init();
 </script>
