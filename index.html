@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Tracker</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; padding: 20px; background-color: #f4f7f6; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 350px; }
+        h2 { text-align: center; color: #333; }
+        .leave-group { margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 1rem; }
+        .label { font-weight: bold; display: block; margin-bottom: 0.5rem; }
+        .balance { font-size: 1.5rem; color: #2c3e50; margin-bottom: 10px; }
+        input { width: 60px; padding: 5px; margin-right: 10px; }
+        button { cursor: pointer; padding: 6px 12px; border: none; border-radius: 4px; background: #3498db; color: white; transition: 0.2s; }
+        button:hover { background: #2980b9; }
+        .reset-btn { background: #e74c3c; margin-top: 10px; width: 100%; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Leave Balance</h2>
+
+    <div class="leave-group">
+        <span class="label">🌴 Paid Time Off (Days)</span>
+        <div class="balance" id="pto-display">0</div>
+        <input type="number" id="pto-input" placeholder="Days">
+        <button onclick="updateLeave('pto', -1)">Use</button>
+        <button onclick="updateLeave('pto', 1)">Add</button>
+    </div>
+
+    <div class="leave-group">
+        <span class="label">🤒 Sick Leave (Days)</span>
+        <div class="balance" id="sick-display">0</div>
+        <input type="number" id="sick-input" placeholder="Days">
+        <button onclick="updateLeave('sick', -1)">Use</button>
+        <button onclick="updateLeave('sick', 1)">Add</button>
+    </div>
+
+    <button class="reset-btn" onclick="resetBalances()">Reset All Data</button>
+</div>
+
+<script>
+    // Load data from LocalStorage on startup
+    const balances = JSON.parse(localStorage.getItem('leaveData')) || { pto: 0, sick: 0 };
+
+    function updateDisplay() {
+        document.getElementById('pto-display').innerText = balances.pto;
+        document.getElementById('sick-display').innerText = balances.sick;
+        localStorage.setItem('leaveData', JSON.stringify(balances));
+    }
+
+    function updateLeave(type, multiplier) {
+        const input = document.getElementById(type + '-input');
+        const value = parseFloat(input.value);
+        
+        if (!isNaN(value)) {
+            balances[type] += (value * multiplier);
+            updateDisplay();
+            input.value = ''; // Clear input
+        } else {
+            alert("Please enter a valid number");
+        }
+    }
+
+    function resetBalances() {
+        if(confirm("Are you sure you want to clear all balances?")) {
+            balances.pto = 0;
+            balances.sick = 0;
+            updateDisplay();
+        }
+    }
+
+    // Initialize
+    updateDisplay();
+</script>
+
+</body>
+</html>
