@@ -3,117 +3,207 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VA Portal - Employee Profile</title>
+    <title>ProVA Dashboard</title>
     <style>
-        :root { --primary: #4a90e2; --bg: #f0f2f5; --text: #333; --vault: #f39c12; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; display: flex; }
+        :root { --primary: #2563eb; --bg: #f8fafc; --dark: #1e293b; --accent: #10b981; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: flex; color: var(--dark); }
         
-        /* Layout */
-        .sidebar { width: 250px; background: #2c3e50; color: white; height: 100vh; padding: 20px; position: fixed; }
-        .main-content { margin-left: 290px; padding: 40px; width: 100%; max-width: 900px; }
-        
-        /* Cards */
-        .card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-        h2 { margin-top: 0; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        /* Sidebar */
+        .sidebar { width: 260px; background: var(--dark); color: white; height: 100vh; padding: 30px 20px; position: fixed; }
+        .sidebar h2 { font-size: 1.2rem; margin-bottom: 30px; letter-spacing: 1px; }
 
-        /* Profile Info */
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .info-item label { font-weight: bold; font-size: 0.8rem; color: #888; display: block; }
+        /* Main UI */
+        .main-content { margin-left: 300px; padding: 40px; width: calc(100% - 340px); }
+        .card { background: white; padding: 25px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; position: relative; }
         
-        /* Leave Section */
-        .stats { display: flex; gap: 20px; }
-        .stat-box { flex: 1; padding: 15px; border-radius: 8px; background: #f8f9fa; text-align: center; }
-        .stat-box span { font-size: 2rem; font-weight: bold; display: block; }
+        /* Profile Header */
+        .profile-header { display: flex; align-items: center; gap: 25px; }
+        .photo-container { position: relative; width: 120px; height: 120px; }
+        #profile-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); }
+        .photo-controls { margin-top: 10px; display: flex; gap: 5px; }
+        
+        /* Edit Logic */
+        .edit-btn { position: absolute; top: 20px; right: 20px; background: #f1f5f9; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+        .editable-input { display: none; width: 100%; padding: 5px; margin: 5px 0; border: 1px solid #cbd5e1; border-radius: 4px; }
+        .editing .editable-input { display: block; }
+        .editing .static-text { display: none; }
 
-        /* SOP Vault */
-        #sop-content { display: none; margin-top: 20px; padding: 15px; background: #fffde7; border-left: 5px solid var(--vault); }
-        .lock-btn { background: var(--vault); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+        /* Grid Layout */
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 20px; }
+        .label { font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        
+        /* Leave Tracker */
+        .leave-row { display: flex; gap: 15px; margin-top: 15px; }
+        .leave-card { background: #f1f5f9; padding: 15px; border-radius: 12px; flex: 1; text-align: center; }
+        .leave-card span { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+
+        /* Tenure Badge */
+        .tenure-badge { background: #dcfce7; color: #166534; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="sidebar">
-    <h3>VA Portal</h3>
-    <p>Welcome back, Alex!</p>
-    <hr>
-    <p>Dashboard</p>
-    <p>Leave Requests</p>
-    <p>Standard Ops (SOPs)</p>
+    <h2>PROVA PORTAL</h2>
+    <p style="opacity: 0.7;">VA Dashboard v2.0</p>
+    <nav style="margin-top: 50px; line-height: 2.5;">
+        <div>🏠 Overview</div>
+        <div>📂 My SOP Vault</div>
+        <div>📈 Performance</div>
+    </nav>
 </div>
 
 <div class="main-content">
-    <div class="card">
-        <h2>Personal Information</h2>
+    
+    <div class="card" id="profile-card">
+        <button class="edit-btn" onclick="toggleEdit()">Edit Profile</button>
+        <div class="profile-header">
+            <div>
+                <img id="profile-img" src="https://via.placeholder.com/120" alt="Profile">
+                <div class="photo-controls">
+                    <input type="file" id="file-input" style="display:none" onchange="loadPhoto(event)">
+                    <button onclick="document.getElementById('file-input').click()" style="font-size: 10px;">Upload</button>
+                    <button onclick="deletePhoto()" style="font-size: 10px; color: red;">Delete</button>
+                </div>
+            </div>
+            <div>
+                <h1 class="static-text" id="display-name">Alex Rivera</h1>
+                <input type="text" class="editable-input" id="edit-name" value="Alex Rivera">
+                <span class="tenure-badge" id="tenure-text">0 Months Tenure</span>
+            </div>
+        </div>
+
         <div class="info-grid">
-            <div class="info-item"><label>Full Name</label> <span>Alex Rivera</span></div>
-            <div class="info-item"><label>Position</label> <span>Technical Virtual Assistant</span></div>
-            <div class="info-item"><label>Email</label> <span>alex@company.com</span></div>
-            <div class="info-item"><label>Start Date</label> <span>Jan 15, 2024</span></div>
+            <div>
+                <label>Agency / Client</label>
+                <div class="static-text" id="display-agency">Blue Horizon Media</div>
+                <input type="text" class="editable-input" id="edit-agency" value="Blue Horizon Media">
+            </div>
+            <div>
+                <label>Start Date</label>
+                <div class="static-text" id="display-start">2023-01-15</div>
+                <input type="date" class="editable-input" id="edit-start" onchange="calculateTenure()">
+            </div>
+            <div>
+                <label>Work Email</label>
+                <div class="static-text" id="display-work-email">alex.work@agency.com</div>
+                <input type="email" class="editable-input" id="edit-work-email">
+            </div>
+            <div>
+                <label>Personal Email</label>
+                <div class="static-text" id="display-pers-email">alex.private@gmail.com</div>
+                <input type="email" class="editable-input" id="edit-pers-email">
+            </div>
         </div>
     </div>
 
     <div class="card">
-        <h2>Leave Credits</h2>
-        <div class="stats">
-            <div class="stat-box">
-                <label>PTO Remaining</label>
-                <span id="pto-val">12</span>
-                <button onclick="changeLeave('pto', -1)">Use 1 Day</button>
+        <h3>Time Off Credits</h3>
+        <div class="leave-row">
+            <div class="leave-card">
+                <label>Vacation (PTO)</label><br>
+                <span id="pto-val">10</span> Days
+                <br><button onclick="updateLeave('pto', -1)">Use</button>
             </div>
-            <div class="stat-box">
-                <label>Sick Leave</label>
-                <span id="sick-val">5</span>
-                <button onclick="changeLeave('sick', -1)">Use 1 Day</button>
+            <div class="leave-card">
+                <label>Sick Leave</label><br>
+                <span id="sick-val">5</span> Days
+                <br><button onclick="updateLeave('sick', -1)">Use</button>
             </div>
         </div>
     </div>
 
-    <div class="card">
-        <h2>Secure SOP Folder</h2>
-        <p>Contains sensitive login procedures and client workflows.</p>
-        <button class="lock-btn" id="vault-btn" onclick="unlockSOPs()">🔓 Unlock SOP Folder</button>
-        
-        <div id="sop-content">
-            <h4>📁 Confidential Documents</h4>
-            <ul>
-                <li><a href="#">Client Password Management SOP</a></li>
-                <li><a href="#">Financial Reporting Workflow</a></li>
-                <li><a href="#">Emergency Contact List</a></li>
-            </ul>
-        </div>
-    </div>
 </div>
 
 <script>
-    // Leave Logic
-    let data = JSON.parse(localStorage.getItem('vaData')) || { pto: 12, sick: 5 };
+    let profileData = JSON.parse(localStorage.getItem('vaProfile')) || {
+        name: "Alex Rivera",
+        agency: "Blue Horizon Media",
+        start: "2023-01-15",
+        workEmail: "alex.work@agency.com",
+        persEmail: "alex.private@gmail.com",
+        pto: 10,
+        sick: 5,
+        photo: ""
+    };
 
-    function updateUI() {
-        document.getElementById('pto-val').innerText = data.pto;
-        document.getElementById('sick-val').innerText = data.sick;
-        localStorage.setItem('vaData', JSON.stringify(data));
+    function init() {
+        document.getElementById('display-name').innerText = profileData.name;
+        document.getElementById('display-agency').innerText = profileData.agency;
+        document.getElementById('display-start').innerText = profileData.start;
+        document.getElementById('display-work-email').innerText = profileData.workEmail;
+        document.getElementById('display-pers-email').innerText = profileData.persEmail;
+        document.getElementById('pto-val').innerText = profileData.pto;
+        document.getElementById('sick-val').innerText = profileData.sick;
+        if(profileData.photo) document.getElementById('profile-img').src = profileData.photo;
+        calculateTenure();
     }
 
-    function changeLeave(type, amount) {
-        data[type] += amount;
-        updateUI();
-    }
-
-    // SOP Password Logic
-    function unlockSOPs() {
-        const password = prompt("Enter Vault Password:");
-        const correctPassword = "admin123"; // You can change this!
-
-        if (password === correctPassword) {
-            document.getElementById('sop-content').style.display = "block";
-            document.getElementById('vault-btn').innerText = "🔒 Vault Unlocked";
-            document.getElementById('vault-btn').disabled = true;
+    function toggleEdit() {
+        const card = document.getElementById('profile-card');
+        const isEditing = card.classList.toggle('editing');
+        const btn = document.querySelector('.edit-btn');
+        
+        if (!isEditing) {
+            // Save data
+            profileData.name = document.getElementById('edit-name').value;
+            profileData.agency = document.getElementById('edit-agency').value;
+            profileData.start = document.getElementById('edit-start').value;
+            profileData.workEmail = document.getElementById('edit-work-email').value;
+            profileData.persEmail = document.getElementById('edit-pers-email').value;
+            
+            saveAndRefresh();
+            btn.innerText = "Edit Profile";
         } else {
-            alert("Incorrect Password. Access Denied.");
+            // Populate inputs with current data
+            document.getElementById('edit-name').value = profileData.name;
+            document.getElementById('edit-agency').value = profileData.agency;
+            document.getElementById('edit-start').value = profileData.start;
+            document.getElementById('edit-work-email').value = profileData.workEmail;
+            document.getElementById('edit-pers-email').value = profileData.persEmail;
+            btn.innerText = "Save Changes";
         }
     }
 
-    updateUI();
+    function loadPhoto(event) {
+        const reader = new FileReader();
+        reader.onload = function() {
+            document.getElementById('profile-img').src = reader.result;
+            profileData.photo = reader.result;
+            saveAndRefresh();
+        }
+        reader.readAsDataURL(event.target.files[0]);
+    }
+
+    function deletePhoto() {
+        profileData.photo = "";
+        document.getElementById('profile-img').src = "https://via.placeholder.com/120";
+        saveAndRefresh();
+    }
+
+    function calculateTenure() {
+        const start = new Date(profileData.start);
+        const now = new Date();
+        const diffTime = Math.abs(now - start);
+        const diffMonths = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 30.44));
+        
+        let tenureText = diffMonths >= 12 
+            ? Math.floor(diffMonths/12) + " Years " + (diffMonths%12) + " Months" 
+            : diffMonths + " Months";
+        document.getElementById('tenure-text').innerText = tenureText + " Tenure";
+    }
+
+    function updateLeave(type, val) {
+        profileData[type] += val;
+        saveAndRefresh();
+    }
+
+    function saveAndRefresh() {
+        localStorage.setItem('vaProfile', JSON.stringify(profileData));
+        init();
+    }
+
+    init();
 </script>
 
 </body>
