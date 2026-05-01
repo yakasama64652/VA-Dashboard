@@ -3,77 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leave Tracker</title>
+    <title>VA Portal - Employee Profile</title>
     <style>
-        body { font-family: sans-serif; display: flex; justify-content: center; padding: 20px; background-color: #f4f7f6; }
-        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 350px; }
-        h2 { text-align: center; color: #333; }
-        .leave-group { margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 1rem; }
-        .label { font-weight: bold; display: block; margin-bottom: 0.5rem; }
-        .balance { font-size: 1.5rem; color: #2c3e50; margin-bottom: 10px; }
-        input { width: 60px; padding: 5px; margin-right: 10px; }
-        button { cursor: pointer; padding: 6px 12px; border: none; border-radius: 4px; background: #3498db; color: white; transition: 0.2s; }
-        button:hover { background: #2980b9; }
-        .reset-btn { background: #e74c3c; margin-top: 10px; width: 100%; }
+        :root { --primary: #4a90e2; --bg: #f0f2f5; --text: #333; --vault: #f39c12; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); margin: 0; display: flex; }
+        
+        /* Layout */
+        .sidebar { width: 250px; background: #2c3e50; color: white; height: 100vh; padding: 20px; position: fixed; }
+        .main-content { margin-left: 290px; padding: 40px; width: 100%; max-width: 900px; }
+        
+        /* Cards */
+        .card { background: white; padding: 25px; border-radius: 12px; margin-bottom: 25px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        h2 { margin-top: 0; color: var(--primary); border-bottom: 2px solid #eee; padding-bottom: 10px; }
+
+        /* Profile Info */
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .info-item label { font-weight: bold; font-size: 0.8rem; color: #888; display: block; }
+        
+        /* Leave Section */
+        .stats { display: flex; gap: 20px; }
+        .stat-box { flex: 1; padding: 15px; border-radius: 8px; background: #f8f9fa; text-align: center; }
+        .stat-box span { font-size: 2rem; font-weight: bold; display: block; }
+
+        /* SOP Vault */
+        #sop-content { display: none; margin-top: 20px; padding: 15px; background: #fffde7; border-left: 5px solid var(--vault); }
+        .lock-btn { background: var(--vault); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>Leave Balance</h2>
+<div class="sidebar">
+    <h3>VA Portal</h3>
+    <p>Welcome back, Alex!</p>
+    <hr>
+    <p>Dashboard</p>
+    <p>Leave Requests</p>
+    <p>Standard Ops (SOPs)</p>
+</div>
 
-    <div class="leave-group">
-        <span class="label">🌴 Paid Time Off (Days)</span>
-        <div class="balance" id="pto-display">0</div>
-        <input type="number" id="pto-input" placeholder="Days">
-        <button onclick="updateLeave('pto', -1)">Use</button>
-        <button onclick="updateLeave('pto', 1)">Add</button>
+<div class="main-content">
+    <div class="card">
+        <h2>Personal Information</h2>
+        <div class="info-grid">
+            <div class="info-item"><label>Full Name</label> <span>Alex Rivera</span></div>
+            <div class="info-item"><label>Position</label> <span>Technical Virtual Assistant</span></div>
+            <div class="info-item"><label>Email</label> <span>alex@company.com</span></div>
+            <div class="info-item"><label>Start Date</label> <span>Jan 15, 2024</span></div>
+        </div>
     </div>
 
-    <div class="leave-group">
-        <span class="label">🤒 Sick Leave (Days)</span>
-        <div class="balance" id="sick-display">0</div>
-        <input type="number" id="sick-input" placeholder="Days">
-        <button onclick="updateLeave('sick', -1)">Use</button>
-        <button onclick="updateLeave('sick', 1)">Add</button>
+    <div class="card">
+        <h2>Leave Credits</h2>
+        <div class="stats">
+            <div class="stat-box">
+                <label>PTO Remaining</label>
+                <span id="pto-val">12</span>
+                <button onclick="changeLeave('pto', -1)">Use 1 Day</button>
+            </div>
+            <div class="stat-box">
+                <label>Sick Leave</label>
+                <span id="sick-val">5</span>
+                <button onclick="changeLeave('sick', -1)">Use 1 Day</button>
+            </div>
+        </div>
     </div>
 
-    <button class="reset-btn" onclick="resetBalances()">Reset All Data</button>
+    <div class="card">
+        <h2>Secure SOP Folder</h2>
+        <p>Contains sensitive login procedures and client workflows.</p>
+        <button class="lock-btn" id="vault-btn" onclick="unlockSOPs()">🔓 Unlock SOP Folder</button>
+        
+        <div id="sop-content">
+            <h4>📁 Confidential Documents</h4>
+            <ul>
+                <li><a href="#">Client Password Management SOP</a></li>
+                <li><a href="#">Financial Reporting Workflow</a></li>
+                <li><a href="#">Emergency Contact List</a></li>
+            </ul>
+        </div>
+    </div>
 </div>
 
 <script>
-    // Load data from LocalStorage on startup
-    const balances = JSON.parse(localStorage.getItem('leaveData')) || { pto: 0, sick: 0 };
+    // Leave Logic
+    let data = JSON.parse(localStorage.getItem('vaData')) || { pto: 12, sick: 5 };
 
-    function updateDisplay() {
-        document.getElementById('pto-display').innerText = balances.pto;
-        document.getElementById('sick-display').innerText = balances.sick;
-        localStorage.setItem('leaveData', JSON.stringify(balances));
+    function updateUI() {
+        document.getElementById('pto-val').innerText = data.pto;
+        document.getElementById('sick-val').innerText = data.sick;
+        localStorage.setItem('vaData', JSON.stringify(data));
     }
 
-    function updateLeave(type, multiplier) {
-        const input = document.getElementById(type + '-input');
-        const value = parseFloat(input.value);
-        
-        if (!isNaN(value)) {
-            balances[type] += (value * multiplier);
-            updateDisplay();
-            input.value = ''; // Clear input
+    function changeLeave(type, amount) {
+        data[type] += amount;
+        updateUI();
+    }
+
+    // SOP Password Logic
+    function unlockSOPs() {
+        const password = prompt("Enter Vault Password:");
+        const correctPassword = "admin123"; // You can change this!
+
+        if (password === correctPassword) {
+            document.getElementById('sop-content').style.display = "block";
+            document.getElementById('vault-btn').innerText = "🔒 Vault Unlocked";
+            document.getElementById('vault-btn').disabled = true;
         } else {
-            alert("Please enter a valid number");
+            alert("Incorrect Password. Access Denied.");
         }
     }
 
-    function resetBalances() {
-        if(confirm("Are you sure you want to clear all balances?")) {
-            balances.pto = 0;
-            balances.sick = 0;
-            updateDisplay();
-        }
-    }
-
-    // Initialize
-    updateDisplay();
+    updateUI();
 </script>
 
 </body>
