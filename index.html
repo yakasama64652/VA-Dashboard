@@ -14,7 +14,6 @@
         .va-role-tag { font-size: 0.85rem; color: #94a3b8; margin-bottom: 30px; display: block; font-style: italic; }
         .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; margin-bottom: 5px; }
         .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--primary); }
-        .nav-active { background: var(--primary); color: white ! dominance; }
 
         /* Main UI */
         .main-content { margin-left: 280px; padding: 40px; width: 100%; max-width: 1000px; }
@@ -22,9 +21,21 @@
         
         /* Profile & Leave Header */
         .profile-grid { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
-        .profile-header { display: flex; align-items: center; gap: 20px; }
-        #profile-img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); }
         
+        /* Photo Management */
+        .profile-header { display: flex; align-items: center; gap: 20px; }
+        .photo-area { text-align: center; position: relative; width: 100px; }
+        #profile-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); background: #eee;}
+        .photo-controls { display: none; margin-top: 5px; gap: 3px; justify-content: center;}
+        .photo-btn { font-size: 10px; padding: 2px 6px; cursor: pointer; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px;}
+        
+        /* Editing States */
+        .editing .photo-controls { display: flex; }
+        .editable-input { display: none; width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;}
+        .editing .editable-input { display: block; }
+        .editing .static-text { display: none; }
+        .edit-btn { position: absolute; top: 20px; right: 20px; background: #f1f5f9; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; z-index: 5;}
+
         /* Leave Credits Styling */
         .leave-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         .leave-stat { background: #f1f5f9; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0; }
@@ -42,12 +53,6 @@
         .modal-bubble input:focus { border-color: var(--primary); }
         .btn-prime { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; }
 
-        /* Edit Mode Styles */
-        .editable-input { display: none; width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #cbd5e1; border-radius: 6px; }
-        .editing .editable-input { display: block; }
-        .editing .static-text { display: none; }
-        .edit-btn { position: absolute; top: 20px; right: 20px; background: #f1f5f9; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-
         /* Task List */
         .task-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; border-left: 4px solid var(--primary); }
         .task-item.completed { opacity: 0.5; text-decoration: line-through; }
@@ -55,12 +60,11 @@
 </head>
 <body>
 
-<!-- Custom Password Modal -->
 <div class="modal-overlay" id="vault-modal">
     <div class="modal-bubble">
         <div style="font-size: 3rem; margin-bottom: 10px;">🔐</div>
         <h3>Enter Vault Password</h3>
-        <p style="color: #64748b; font-size: 0.9rem;">Access restricted to authorized VAs only.</p>
+        <p style="color: #64748b; font-size: 0.9rem;">Access restricted (Default: admin)</p>
         <input type="password" id="vault-pass-input" placeholder="Password">
         <button class="btn-prime" onclick="checkVaultPassword()">Unlock Folder</button>
         <button style="background: none; border: none; color: #94a3b8; margin-top: 10px; cursor: pointer;" onclick="closeVault()">Cancel</button>
@@ -80,13 +84,19 @@
 <div class="main-content">
     
     <div class="profile-grid">
-        <!-- Profile Section -->
         <div class="card" id="profile-card">
             <button class="edit-btn" onclick="toggleEdit()">Edit Profile</button>
             <div class="profile-header">
-                <img id="profile-img" src="https://via.placeholder.com/100" alt="Profile">
-                <div>
-                    <h1 class="static-text" id="display-name" style="margin:0">Alex Rivera</h1>
+                <div class="photo-area">
+                    <img id="profile-img" src="https://via.placeholder.com/100?text=VA" alt="Profile">
+                    <div class="photo-controls">
+                        <input type="file" id="file-input" style="display:none" onchange="handlePhotoUpload(event)" accept="image/*">
+                        <button class="photo-btn" onclick="document.getElementById('file-input').click()">Up</button>
+                        <button class="photo-btn" onclick="deletePhoto()" style="color:var(--danger)">Del</button>
+                    </div>
+                </div>
+                <div style="flex:1;">
+                    <h1 class="static-text" id="display-name" style="margin:0; font-size: 1.5rem;">Alex Rivera</h1>
                     <input type="text" class="editable-input" id="edit-name">
                     
                     <div class="static-text" style="color: #64748b;" id="display-role">General Virtual Assistant</div>
@@ -98,7 +108,6 @@
             </div>
         </div>
 
-        <!-- Leave Credits Section -->
         <div class="card">
             <h3 style="margin-top:0; font-size: 1rem;">Leave Credits</h3>
             <div class="leave-container">
@@ -122,7 +131,6 @@
         </div>
     </div>
 
-    <!-- Task List -->
     <div class="card">
         <h3>📋 Task List</h3>
         <div style="display:flex; gap: 10px; margin-bottom: 20px;">
@@ -135,63 +143,111 @@
 </div>
 
 <script>
-    // Centralized Data Store
-    let data = JSON.parse(localStorage.getItem('vaMasterData_v3')) || {
-        profile: { name: "Alex Rivera", role: "General VA", agency: "Agency Name", pto: 10, sick: 5 },
+    // Centralized Data Store (v4 includes photo string)
+    let data = JSON.parse(localStorage.getItem('vaMasterData_v4')) || {
+        profile: { 
+            name: "Alex Rivera", 
+            role: "General VA", 
+            agency: "Agency Name", 
+            pto: 10, 
+            sick: 5,
+            photo: "" // Stores base64 image string
+        },
         tasks: []
     };
 
-    const VAULT_PASSWORD = "admin"; // Change this to your preferred password
+    const VAULT_PASSWORD = "admin";
+    const placeholderPhoto = "https://via.placeholder.com/100?text=VA";
 
     function init() {
+        // Profile text
         document.getElementById('display-name').innerText = data.profile.name;
         document.getElementById('side-name').innerText = data.profile.name;
         document.getElementById('display-role').innerText = data.profile.role;
         document.getElementById('side-role').innerText = data.profile.role;
         document.getElementById('display-agency').innerText = data.profile.agency;
+        
+        // Photo handling
+        const imgEl = document.getElementById('profile-img');
+        if (data.profile.photo) {
+            imgEl.src = data.profile.photo;
+        } else {
+            imgEl.src = placeholderPhoto;
+        }
+
+        // Leave & Tasks
         document.getElementById('pto-val').innerText = data.profile.pto;
         document.getElementById('sick-val').innerText = data.profile.sick;
         renderTasks();
     }
 
-    // Modal Logic
+    // Photo Management Logic
+    function handlePhotoUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        // Ensure it's an image
+        if (!file.type.startsWith('image/')) { alert('Please upload an image file.'); return; }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            // Update the temporary view immediately
+            document.getElementById('profile-img').src = e.target.result;
+            // The actual data is saved when they click "Save Changes" in toggleEdit
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function deletePhoto() {
+        // Update temporary view
+        document.getElementById('profile-img').src = placeholderPhoto;
+        document.getElementById('file-input').value = ""; // Clear file input
+        // Saved when toggleEdit completes
+    }
+
+    // Edit Profile Logic
+    function toggleEdit() {
+        const card = document.getElementById('profile-card');
+        const isEditing = card.classList.toggle('editing');
+        const btn = document.querySelector('.edit-btn');
+
+        if (!isEditing) {
+            // SAVE STATE
+            data.profile.name = document.getElementById('edit-name').value;
+            data.profile.role = document.getElementById('edit-role').value;
+            data.profile.agency = document.getElementById('edit-agency').value;
+            
+            // Save the photo state (capture whatever is currently on the img tag)
+            const currentImgSrc = document.getElementById('profile-img').src;
+            data.profile.photo = currentImgSrc.startsWith('data:') ? currentImgSrc : "";
+
+            saveData();
+            btn.innerText = "Edit Profile";
+        } else {
+            // ENTER EDIT MODE
+            document.getElementById('edit-name').value = data.profile.name;
+            document.getElementById('edit-role').value = data.profile.role;
+            document.getElementById('edit-agency').value = data.profile.agency;
+            btn.innerText = "Save Changes";
+        }
+    }
+
+    // Core Logic (Kept as is)
     function openVault() { document.getElementById('vault-modal').style.display = 'flex'; }
-    function closeVault() { document.getElementById('vault-modal').style.display = 'none'; }
+    function closeVault() { document.getElementById('vault-modal').style.display = 'none'; document.getElementById('vault-pass-input').value = ""; }
     
     function checkVaultPassword() {
         const pass = document.getElementById('vault-pass-input').value;
         if (pass === VAULT_PASSWORD) {
-            alert("SOP Vault Unlocked! (Redirecting to folder...)");
-            // Here you could show a hidden div or redirect to a link
+            alert("SOP Vault Unlocked! (Simulating redirect...)");
             closeVault();
         } else {
-            alert("Wrong password. Try again.");
+            alert("Wrong password.");
         }
     }
 
-    // Leave Logic
-    function updateLeave(type, amt) {
-        data.profile[type] += amt;
-        saveData();
-    }
+    function updateLeave(type, amt) { data.profile[type] += amt; saveData(); }
 
-    // Profile Logic
-    function toggleEdit() {
-        const card = document.getElementById('profile-card');
-        const isEditing = card.classList.toggle('editing');
-        if (!isEditing) {
-            data.profile.name = document.getElementById('edit-name').value;
-            data.profile.role = document.getElementById('edit-role').value;
-            data.profile.agency = document.getElementById('edit-agency').value;
-            saveData();
-        } else {
-            document.getElementById('edit-name').value = data.profile.name;
-            document.getElementById('edit-role').value = data.profile.role;
-            document.getElementById('edit-agency').value = data.profile.agency;
-        }
-    }
-
-    // Task Logic
     function addTask() {
         const input = document.getElementById('task-input');
         if (!input.value) return;
@@ -212,7 +268,7 @@
 
     function toggleTask(i) { data.tasks[i].done = !data.tasks[i].done; saveData(); }
     function deleteTask(i) { data.tasks.splice(i, 1); saveData(); }
-    function saveData() { localStorage.setItem('vaMasterData_v3', JSON.stringify(data)); init(); }
+    function saveData() { localStorage.setItem('vaMasterData_v4', JSON.stringify(data)); init(); }
 
     init();
 </script>
