@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LAVA Automation | Supabase Synced</title>
+    <title>LAVA Automation | Cloud Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --primary: #2563eb; --bg: #f8fafc; --dark: #1e293b; --accent: #10b981; --danger: #ef4444; --white: #ffffff; }
@@ -17,15 +17,30 @@
         .auth-card h2 { margin-bottom: 20px; color: var(--dark); font-size: 1.2rem; }
         .toggle-link { color: var(--primary); cursor: pointer; font-size: 0.85rem; margin-top: 15px; display: block; }
 
-        /* Dashboard Wrapper */
+        /* Dashboard Layout */
         #dashboard-wrapper { display: none; }
         .main-layout { display: flex; }
 
-        /* Sidebar */
-        .sidebar { width: 280px; background: var(--dark); color: white; padding: 30px 20px; position: fixed; height: 100vh; box-sizing: border-box; z-index: 10; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        /* Sidebar - Centered Branding */
+        .sidebar { 
+            width: 280px; 
+            background: var(--dark); 
+            color: white; 
+            padding: 30px 20px; 
+            position: fixed; 
+            height: 100vh; 
+            box-sizing: border-box; 
+            z-index: 10; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            text-align: center; 
+        }
         .brand-logo { width: auto; max-width: 80%; max-height: 80px; margin-bottom: 15px; object-fit: contain; }
         .sidebar h2 { font-size: 1.1rem; margin: 0 0 5px 0; color: var(--primary); letter-spacing: 1px; text-transform: uppercase; }
         .va-role-tag { font-size: 0.85rem; color: #94a3b8; margin-bottom: 30px; display: block; font-style: italic; }
+        
+        /* Navigation (No Icons) */
         .nav-container { width: 100%; text-align: left; flex-grow: 1; }
         .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; margin-bottom: 5px; width: 100%; box-sizing: border-box; }
         .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--primary); }
@@ -35,10 +50,12 @@
         .main-content { margin-left: 280px; padding: 40px; width: 100%; max-width: 1000px; }
         .card { background: white; padding: 25px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; position: relative; }
         .profile-grid { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+        
         .profile-header { display: flex; align-items: center; gap: 20px; text-align: left; }
         #profile-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); background: #eee;}
         .photo-controls { display: none; margin-top: 5px; gap: 3px; justify-content: center;}
         .photo-btn { font-size: 10px; padding: 2px 6px; cursor: pointer; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px;}
+        
         .editing .photo-controls { display: flex; }
         .editable-input { display: none; width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;}
         .editing .editable-input { display: block; }
@@ -54,8 +71,9 @@
         .leave-btns button { padding: 2px 8px; font-size: 0.7rem; cursor: pointer; border-radius: 4px; border: 1px solid #cbd5e1; }
 
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(4px); }
-        .modal-bubble { background: white; padding: 30px; border-radius: 20px; width: 350px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .modal-bubble { background: white; padding: 30px; border-radius: 20px; width: 350px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
         .btn-prime { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; }
+        
         .task-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; border-left: 4px solid var(--primary); text-align: left; }
         .task-item.completed { opacity: 0.5; text-decoration: line-through; }
     </style>
@@ -69,7 +87,7 @@
         <input type="email" id="login-email" placeholder="Email">
         <input type="password" id="login-pass" placeholder="Password">
         <button class="btn-prime" onclick="handleLogin()">Login</button>
-        <span class="toggle-link" onclick="toggleAuth(false)">New account</span>
+        <span class="toggle-link" onclick="toggleAuth(false)">Need an account? Signup</span>
     </div>
 
     <div class="auth-card" id="signup-card" style="display:none;">
@@ -87,8 +105,8 @@
         <div class="sidebar">
             <img src="https://raw.githubusercontent.com/yakasama64652/PTO/main/kling_20260422_VIDEO__1217_0.png" alt="LAVA Logo" class="brand-logo">
             <h2>LAVA Automation</h2>
-            <div id="side-name" style="font-weight: bold; margin-top: 10px;">User Name</div>
-            <div id="side-role" class="va-role-tag">Loading...</div>
+            <div id="side-name" style="font-weight: bold; margin-top: 10px;">User</div>
+            <div id="side-role" class="va-role-tag">Role</div>
             <div class="nav-container">
                 <div class="nav-item">Dashboard</div>
                 <div class="nav-item">SOP Vault</div>
@@ -111,11 +129,11 @@
                             </div>
                         </div>
                         <div style="flex:1;">
-                            <h1 class="static-text" id="display-name" style="margin:0; font-size: 1.5rem;">Alex Rivera</h1>
+                            <h1 class="static-text" id="display-name" style="margin:0; font-size: 1.5rem;">User Name</h1>
                             <input type="text" class="editable-input" id="edit-name">
-                            <div class="static-text" style="color: #64748b;" id="display-role">General Virtual Assistant</div>
+                            <div class="static-text" style="color: #64748b;" id="display-role">Position Title</div>
                             <input type="text" class="editable-input" id="edit-role">
-                            <div class="static-text" style="font-size: 0.9rem; margin-top: 5px;">Agency: <b id="display-agency">Blue Horizon</b></div>
+                            <div class="static-text" style="font-size: 0.9rem; margin-top: 5px;">Agency: <b id="display-agency">Agency Name</b></div>
                             <input type="text" class="editable-input" id="edit-agency">
                         </div>
                     </div>
@@ -147,24 +165,23 @@
 </div>
 
 <script>
-    // --- 1. CONFIG SUPABASE ---
+    // --- 1. CONFIG ---
     const _supabase = supabase.createClient('https://esjxzcmfxtestkettdyp.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzanh6Y21meHRlc3RrZXR0ZHlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTQ3MzksImV4cCI6MjA5MzczMDczOX0.G9i7nrGVzD8WrKFg7642HvRs9GeTPgkRMuFw8vQ-6C0');
-
     let currentUser = null;
-    let data = { profile: { name: "", role: "", agency: "", pto: 0, sick: 0, photo: "" }, tasks: [] };
+    let data = { profile: { name: "", role: "", agency: "", pto: 10, sick: 5, photo: "" }, tasks: [] };
 
-    // --- 2. AUTH LOGIC ---
+    // --- 2. AUTH ---
     async function handleSignup() {
         const email = document.getElementById('reg-email').value;
         const password = document.getElementById('reg-pass').value;
         const { error } = await _supabase.auth.signUp({ email, password });
-        if (error) alert(error.message); else alert("Check email for verification!");
+        if (error) alert(error.message); else alert("Signup successful! Check email for verification.");
     }
 
     async function handleLogin() {
         const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-pass').value;
-        const { data: authData, error } = await _supabase.auth.signInWithPassword({ email, password });
+        const { error } = await _supabase.auth.signInWithPassword({ email, password });
         if (error) alert(error.message); else checkSession();
     }
 
@@ -178,7 +195,7 @@
         document.getElementById('signup-card').style.display = isLogin ? 'none' : 'block';
     }
 
-    // --- 3. SYNC LOGIC ---
+    // --- 3. DATA SYNC ---
     async function checkSession() {
         const { data: { session } } = await _supabase.auth.getSession();
         if (session) {
@@ -205,12 +222,12 @@
             data.tasks = dbData.tasks_data;
             renderAll();
         } else {
-            // New user, create empty row
             await saveToSupabase();
         }
     }
 
     async function saveToSupabase() {
+        if (!currentUser) return;
         const { error } = await _supabase
             .from('va_data')
             .upsert({ 
@@ -224,7 +241,7 @@
         renderAll();
     }
 
-    // --- 4. DASHBOARD ACTIONS (REPLACED saveData) ---
+    // --- 4. DASHBOARD LOGIC ---
     function renderAll() {
         document.getElementById('display-name').innerText = data.profile.name || "Set Name";
         document.getElementById('side-name').innerText = data.profile.name || "User";
@@ -246,8 +263,47 @@
         `).join('');
     }
 
-    // Wrap these existing functions to call saveToSupabase()
+    function toggleEdit() {
+        const card = document.getElementById('profile-card');
+        const isEditing = card.classList.toggle('editing');
+        const btn = document.querySelector('.edit-btn');
+
+        if (!isEditing) {
+            data.profile.name = document.getElementById('edit-name').value;
+            data.profile.role = document.getElementById('edit-role').value;
+            data.profile.agency = document.getElementById('edit-agency').value;
+            
+            const currentImgSrc = document.getElementById('profile-img').src;
+            data.profile.photo = currentImgSrc.startsWith('data:') ? currentImgSrc : data.profile.photo;
+
+            saveToSupabase(); 
+            btn.innerText = "Edit Profile";
+        } else {
+            document.getElementById('edit-name').value = data.profile.name || "";
+            document.getElementById('edit-role').value = data.profile.role || "";
+            document.getElementById('edit-agency').value = data.profile.agency || "";
+            btn.innerText = "Save Changes";
+        }
+    }
+
+    function handlePhotoUpload(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            data.profile.photo = e.target.result;
+            document.getElementById('profile-img').src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function deletePhoto() { 
+        data.profile.photo = ""; 
+        document.getElementById('profile-img').src = "https://via.placeholder.com/100?text=VA";
+    }
+
     function updateLeave(type, amt) { data.profile[type] += amt; saveToSupabase(); }
+    
     function addTask() {
         const val = document.getElementById('task-input').value;
         if (!val) return;
@@ -255,36 +311,10 @@
         document.getElementById('task-input').value = "";
         saveToSupabase();
     }
+
     function toggleTask(i) { data.tasks[i].done = !data.tasks[i].done; saveToSupabase(); }
     function deleteTask(i) { data.tasks.splice(i, 1); saveToSupabase(); }
-    
-    function toggleEdit() {
-        const card = document.getElementById('profile-card');
-        const isEditing = card.classList.toggle('editing');
-        if (!isEditing) {
-            data.profile.name = document.getElementById('edit-name').value;
-            data.profile.role = document.getElementById('edit-role').value;
-            data.profile.agency = document.getElementById('edit-agency').value;
-            saveToSupabase();
-        } else {
-            document.getElementById('edit-name').value = data.profile.name;
-            document.getElementById('edit-role').value = data.profile.role;
-            document.getElementById('edit-agency').value = data.profile.agency;
-        }
-    }
 
-    // Photo logic 
-    function handlePhotoUpload(event) {
-        const file = event.target.files[0];
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            data.profile.photo = e.target.result;
-            saveToSupabase();
-        };
-        reader.readAsDataURL(file);
-    }
-
-    // Initial Start
     checkSession();
 </script>
 
