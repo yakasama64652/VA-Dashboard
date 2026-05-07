@@ -21,11 +21,26 @@
         #dashboard-wrapper { display: none; }
         .main-layout { display: flex; }
 
-        /* Sidebar */
-        .sidebar { width: 280px; background: var(--dark); color: white; padding: 30px 20px; position: fixed; height: 100vh; box-sizing: border-box; z-index: 10; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        /* Sidebar - Centered Branding */
+        .sidebar { 
+            width: 280px; 
+            background: var(--dark); 
+            color: white; 
+            padding: 30px 20px; 
+            position: fixed; 
+            height: 100vh; 
+            box-sizing: border-box; 
+            z-index: 10; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            text-align: center; 
+        }
         .brand-logo { width: auto; max-width: 80%; max-height: 80px; margin-bottom: 15px; object-fit: contain; }
         .sidebar h2 { font-size: 1.1rem; margin: 0 0 5px 0; color: var(--primary); letter-spacing: 1px; text-transform: uppercase; }
         .va-role-tag { font-size: 0.85rem; color: #94a3b8; margin-bottom: 30px; display: block; font-style: italic; }
+        
+        /* Navigation (No Icons) */
         .nav-container { width: 100%; text-align: left; flex-grow: 1; }
         .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; margin-bottom: 5px; width: 100%; box-sizing: border-box; }
         .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--primary); }
@@ -35,18 +50,19 @@
         .main-content { margin-left: 280px; padding: 40px; width: 100%; max-width: 1000px; }
         .card { background: white; padding: 25px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; position: relative; }
         .profile-grid { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
+        
         .profile-header { display: flex; align-items: center; gap: 20px; text-align: left; }
         #profile-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); background: #eee;}
         .photo-controls { display: none; margin-top: 5px; gap: 3px; justify-content: center;}
         .photo-btn { font-size: 10px; padding: 2px 6px; cursor: pointer; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px;}
+        
         .editing .photo-controls { display: flex; }
         .editable-input { display: none; width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;}
         .editing .editable-input { display: block; }
         .editing .static-text { display: none; }
         .edit-btn { position: absolute; top: 20px; right: 20px; background: #f1f5f9; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; z-index: 5;}
 
-        /* Leave Credits */
-        .leave-container { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        /* Leave Credits Styling */
         .leave-stat { background: #f1f5f9; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0; }
         .leave-stat label { font-size: 0.7rem; font-weight: 800; color: #64748b; display: block; margin-bottom: 5px; }
         .leave-stat span { font-size: 1.4rem; font-weight: 800; color: var(--dark); }
@@ -139,7 +155,7 @@
 
                 <div class="card">
                     <h3 style="margin-top:0; font-size: 1rem;">Leave Credits</h3>
-                    <div class="leave-container">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                         <div class="leave-stat"><label>PTO</label><span id="pto-val">0</span>
                             <div class="leave-btns"><button onclick="updateLeave('pto', 1)">+</button><button onclick="updateLeave('pto', -1)">-</button></div>
                         </div>
@@ -193,16 +209,19 @@
     async function handlePasswordReset() {
         const email = document.getElementById('reset-email').value;
         const { error } = await _supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.href // Redirects back to this page
+            redirectTo: window.location.origin + window.location.pathname
         });
-        if (error) alert(error.message); else alert("Reset link sent to your email!");
+        if (error) alert(error.message); else alert("Reset link sent! Please check your email.");
     }
 
     async function handleUpdatePassword() {
         const newPassword = document.getElementById('new-pass').value;
         const { error } = await _supabase.auth.updateUser({ password: newPassword });
-        if (error) alert(error.message); else {
+        if (error) {
+            alert("Error: " + error.message);
+        } else {
             alert("Password updated successfully!");
+            window.location.hash = ""; // Clear hash
             checkSession();
         }
     }
@@ -212,11 +231,17 @@
         checkSession();
     }
 
-    // --- 3. DATA SYNC ---
+    // --- 3. SESSION & RECOVERY LISTENER ---
+    _supabase.auth.onAuthStateChange((event, session) => {
+        if (event === "PASSWORD_RECOVERY") {
+            toggleAuth('update');
+        }
+    });
+
     async function checkSession() {
         const { data: { session } } = await _supabase.auth.getSession();
         
-        // Detection for password reset flow
+        // Manual hash check as backup
         if (window.location.hash.includes("type=recovery")) {
             toggleAuth('update');
             return;
@@ -266,7 +291,7 @@
         renderAll();
     }
 
-    // --- 4. DASHBOARD LOGIC ---
+    // --- 4. DASHBOARD RENDER ---
     function renderAll() {
         document.getElementById('display-name').innerText = data.profile.name || "Set Name";
         document.getElementById('side-name').innerText = data.profile.name || "User";
@@ -297,10 +322,8 @@
             data.profile.name = document.getElementById('edit-name').value;
             data.profile.role = document.getElementById('edit-role').value;
             data.profile.agency = document.getElementById('edit-agency').value;
-            
             const currentImgSrc = document.getElementById('profile-img').src;
             data.profile.photo = currentImgSrc.startsWith('data:') ? currentImgSrc : data.profile.photo;
-
             saveToSupabase(); 
             btn.innerText = "Edit Profile";
         } else {
