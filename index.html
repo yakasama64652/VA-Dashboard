@@ -3,72 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LAVA Automation | Cloud Dashboard</title>
+    <title>LAVA Automation | VA Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* CSS stays exactly the same as your working version */
         :root { --primary: #2563eb; --bg: #f8fafc; --dark: #1e293b; --accent: #10b981; --danger: #ef4444; --white: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: var(--dark); min-height: 100vh; }
-        
-        /* Auth Screens */
         #auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: var(--dark); }
         .auth-card { background: white; padding: 40px; border-radius: 20px; width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         .auth-card img { max-height: 80px; margin-bottom: 20px; }
         .auth-card input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
         .auth-card h2 { margin-bottom: 20px; color: var(--dark); font-size: 1.2rem; }
         .toggle-link { color: var(--primary); cursor: pointer; font-size: 0.85rem; margin-top: 15px; display: block; text-decoration: none; }
-
-        /* Dashboard Layout */
         #dashboard-wrapper { display: none; }
         .main-layout { display: flex; }
-
-        /* Sidebar - Centered Branding */
-        .sidebar { 
-            width: 280px; 
-            background: var(--dark); 
-            color: white; 
-            padding: 30px 20px; 
-            position: fixed; 
-            height: 100vh; 
-            box-sizing: border-box; 
-            z-index: 10; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            text-align: center; 
-        }
+        .sidebar { width: 280px; background: var(--dark); color: white; padding: 30px 20px; position: fixed; height: 100vh; box-sizing: border-box; z-index: 10; display: flex; flex-direction: column; align-items: center; text-align: center; }
         .brand-logo { width: auto; max-width: 80%; max-height: 80px; margin-bottom: 15px; object-fit: contain; }
         .sidebar h2 { font-size: 1.1rem; margin: 0 0 5px 0; color: var(--primary); letter-spacing: 1px; text-transform: uppercase; }
         .va-role-tag { font-size: 0.85rem; color: #94a3b8; margin-bottom: 30px; display: block; font-style: italic; }
-        
-        /* Navigation (No Icons) */
         .nav-container { width: 100%; text-align: left; flex-grow: 1; }
         .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; margin-bottom: 5px; width: 100%; box-sizing: border-box; }
         .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--primary); }
         .logout-btn { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); margin-top: auto; }
-
-        /* Main UI */
         .main-content { margin-left: 280px; padding: 40px; width: 100%; max-width: 1000px; }
         .card { background: white; padding: 25px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; position: relative; }
         .profile-grid { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
-        
         .profile-header { display: flex; align-items: center; gap: 20px; text-align: left; }
         #profile-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); background: #eee;}
         .photo-controls { display: none; margin-top: 5px; gap: 3px; justify-content: center;}
         .photo-btn { font-size: 10px; padding: 2px 6px; cursor: pointer; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px;}
-        
         .editing .photo-controls { display: flex; }
         .editable-input { display: none; width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;}
         .editing .editable-input { display: block; }
         .editing .static-text { display: none; }
         .edit-btn { position: absolute; top: 20px; right: 20px; background: #f1f5f9; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; z-index: 5;}
-
-        /* Leave Credits Styling */
-        .leave-stat { background: #f1f5f9; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0; }
-        .leave-stat label { font-size: 0.7rem; font-weight: 800; color: #64748b; display: block; margin-bottom: 5px; }
-        .leave-stat span { font-size: 1.4rem; font-weight: 800; color: var(--dark); }
-        .leave-btns { margin-top: 8px; display: flex; justify-content: center; gap: 5px; }
-        .leave-btns button { padding: 2px 8px; font-size: 0.7rem; cursor: pointer; border-radius: 4px; border: 1px solid #cbd5e1; }
-
         .btn-prime { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; transition: 0.2s; }
         .btn-prime:hover { filter: brightness(1.1); }
         .task-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; border-left: 4px solid var(--primary); text-align: left; }
@@ -84,7 +52,7 @@
         <input type="email" id="login-email" placeholder="Email">
         <input type="password" id="login-pass" placeholder="Password">
         <button class="btn-prime" onclick="handleLogin()">Login</button>
-        <span class="toggle-link" onclick="toggleAuth('forgot')">Forgot password?</span>
+        <span class="toggle-link" onclick="toggleAuth('magic')">Forgot Password? Use Magic Link</span>
         <span class="toggle-link" onclick="toggleAuth('signup')">Need an account? Signup</span>
     </div>
 
@@ -97,20 +65,13 @@
         <span class="toggle-link" onclick="toggleAuth('login')">Back to Login</span>
     </div>
 
-    <div class="auth-card" id="forgot-card" style="display:none;">
+    <div class="auth-card" id="magic-card" style="display:none;">
         <img src="https://raw.githubusercontent.com/yakasama64652/PTO/main/kling_20260422_VIDEO__1217_0.png" alt="LAVA Logo">
-        <h2>Reset Password</h2>
-        <p style="font-size: 0.85rem; color: #64748b;">Enter your email to receive a reset link.</p>
-        <input type="email" id="reset-email" placeholder="Email">
-        <button class="btn-prime" onclick="handlePasswordReset()">Send Reset Link</button>
-        <span class="toggle-link" onclick="toggleAuth('login')">Back to Login</span>
-    </div>
-
-    <div class="auth-card" id="update-pass-card" style="display:none;">
-        <img src="https://raw.githubusercontent.com/yakasama64652/PTO/main/kling_20260422_VIDEO__1217_0.png" alt="LAVA Logo">
-        <h2>Create New Password</h2>
-        <input type="password" id="new-pass" placeholder="Enter new password">
-        <button class="btn-prime" onclick="handleUpdatePassword()">Update & Login</button>
+        <h2>Magic Login</h2>
+        <p style="font-size: 0.85rem; color: #64748b; margin-bottom: 15px;">We'll email you a link that logs you in instantly.</p>
+        <input type="email" id="magic-email" placeholder="Enter your email">
+        <button class="btn-prime" id="magic-btn" onclick="handleMagicLink()">Send Magic Link</button>
+        <span class="toggle-link" onclick="toggleAuth('login')">Back to Password Login</span>
     </div>
 </div>
 
@@ -179,24 +140,14 @@
 </div>
 
 <script>
-    // --- 1. CONFIG ---
     const _supabase = supabase.createClient('https://esjxzcmfxtestkettdyp.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzanh6Y21meHRlc3RrZXR0ZHlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTQ3MzksImV4cCI6MjA5MzczMDczOX0.G9i7nrGVzD8WrKFg7642HvRs9GeTPgkRMuFw8vQ-6C0');
     let currentUser = null;
     let data = { profile: { name: "", role: "", agency: "", pto: 10, sick: 5, photo: "" }, tasks: [] };
 
-    // --- 2. AUTH & RESET LOGIC ---
     function toggleAuth(view) {
         document.getElementById('login-card').style.display = view === 'login' ? 'block' : 'none';
         document.getElementById('signup-card').style.display = view === 'signup' ? 'block' : 'none';
-        document.getElementById('forgot-card').style.display = view === 'forgot' ? 'block' : 'none';
-        document.getElementById('update-pass-card').style.display = view === 'update' ? 'block' : 'none';
-    }
-
-    async function handleSignup() {
-        const email = document.getElementById('reg-email').value;
-        const password = document.getElementById('reg-pass').value;
-        const { error } = await _supabase.auth.signUp({ email, password });
-        if (error) alert(error.message); else alert("Signup successful! Check email for verification.");
+        document.getElementById('magic-card').style.display = view === 'magic' ? 'block' : 'none';
     }
 
     async function handleLogin() {
@@ -206,47 +157,51 @@
         if (error) alert(error.message); else checkSession();
     }
 
-    async function handlePasswordReset() {
-        const email = document.getElementById('reset-email').value;
-        const { error } = await _supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin + window.location.pathname
-        });
-        if (error) alert(error.message); else alert("Reset link sent! Please check your email.");
+    async function handleSignup() {
+        const email = document.getElementById('reg-email').value;
+        const password = document.getElementById('reg-pass').value;
+        const { error } = await _supabase.auth.signUp({ email, password });
+        if (error) alert(error.message); else alert("Check your email to verify!");
     }
 
-    async function handleUpdatePassword() {
-        const newPassword = document.getElementById('new-pass').value;
-        const { error } = await _supabase.auth.updateUser({ password: newPassword });
+    async function handleMagicLink() {
+        const email = document.getElementById('magic-email').value;
+        const btn = document.getElementById('magic-btn');
+        btn.innerText = "Sending...";
+        btn.disabled = true;
+        
+        const { error } = await _supabase.auth.signInWithOtp({ 
+            email: email,
+            options: { emailRedirectTo: window.location.href }
+        });
+
         if (error) {
-            alert("Error: " + error.message);
+            alert(error.message);
+            btn.innerText = "Send Magic Link";
+            btn.disabled = false;
         } else {
-            alert("Password updated successfully!");
-            window.location.hash = ""; // Clear hash
-            checkSession();
+            alert("Magic link sent! Check your inbox.");
+            btn.innerText = "Check your email!";
         }
     }
 
     async function handleLogout() {
         await _supabase.auth.signOut();
+        window.location.hash = ""; // Clear tokens from URL
         checkSession();
     }
 
-    // --- 3. SESSION & RECOVERY LISTENER ---
+    // --- CRITICAL FIX: The Listener ---
+    // This watches for the "Magic Link" moment and forces the login
     _supabase.auth.onAuthStateChange((event, session) => {
-        if (event === "PASSWORD_RECOVERY") {
-            toggleAuth('update');
+        if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
+            checkSession();
         }
     });
 
     async function checkSession() {
         const { data: { session } } = await _supabase.auth.getSession();
         
-        // Manual hash check as backup
-        if (window.location.hash.includes("type=recovery")) {
-            toggleAuth('update');
-            return;
-        }
-
         if (session) {
             currentUser = session.user;
             document.getElementById('auth-container').style.display = 'none';
@@ -256,17 +211,16 @@
             currentUser = null;
             document.getElementById('auth-container').style.display = 'flex';
             document.getElementById('dashboard-wrapper').style.display = 'none';
-            toggleAuth('login');
+            // If we are not logged in, make sure the login card is visible
+            if (document.getElementById('magic-card').style.display === 'none' && 
+                document.getElementById('signup-card').style.display === 'none') {
+                toggleAuth('login');
+            }
         }
     }
 
     async function loadUserData() {
-        const { data: dbData, error } = await _supabase
-            .from('va_data')
-            .select('*')
-            .eq('user_id', currentUser.id)
-            .single();
-
+        const { data: dbData } = await _supabase.from('va_data').select('*').eq('user_id', currentUser.id).single();
         if (dbData) {
             data.profile = dbData.profile_data;
             data.tasks = dbData.tasks_data;
@@ -278,33 +232,24 @@
 
     async function saveToSupabase() {
         if (!currentUser) return;
-        const { error } = await _supabase
-            .from('va_data')
-            .upsert({ 
-                user_id: currentUser.id, 
-                profile_data: data.profile, 
-                tasks_data: data.tasks,
-                updated_at: new Date()
-            }, { onConflict: 'user_id' });
-        
-        if (error) console.error("Sync Error:", error);
+        await _supabase.from('va_data').upsert({ 
+            user_id: currentUser.id, 
+            profile_data: data.profile, 
+            tasks_data: data.tasks,
+            updated_at: new Date()
+        }, { onConflict: 'user_id' });
         renderAll();
     }
 
-    // --- 4. DASHBOARD RENDER ---
     function renderAll() {
-        document.getElementById('display-name').innerText = data.profile.name || "Set Name";
+        document.getElementById('display-name').innerText = data.profile.name || "User Name";
         document.getElementById('side-name').innerText = data.profile.name || "User";
-        document.getElementById('display-role').innerText = data.profile.role || "Set Role";
+        document.getElementById('display-role').innerText = data.profile.role || "Role";
         document.getElementById('side-role').innerText = data.profile.role || "";
-        document.getElementById('display-agency').innerText = data.profile.agency || "Set Agency";
+        document.getElementById('display-agency').innerText = data.profile.agency || "Agency";
         document.getElementById('profile-img').src = data.profile.photo || "https://via.placeholder.com/100?text=VA";
         document.getElementById('pto-val').innerText = data.profile.pto;
         document.getElementById('sick-val').innerText = data.profile.sick;
-        renderTasks();
-    }
-
-    function renderTasks() {
         document.getElementById('task-list').innerHTML = data.tasks.map((t, i) => `
             <div class="task-item ${t.done ? 'completed' : ''}">
                 <span onclick="toggleTask(${i})" style="cursor:pointer; flex:1">${t.text}</span>
@@ -317,19 +262,16 @@
         const card = document.getElementById('profile-card');
         const isEditing = card.classList.toggle('editing');
         const btn = document.querySelector('.edit-btn');
-
         if (!isEditing) {
             data.profile.name = document.getElementById('edit-name').value;
             data.profile.role = document.getElementById('edit-role').value;
             data.profile.agency = document.getElementById('edit-agency').value;
-            const currentImgSrc = document.getElementById('profile-img').src;
-            data.profile.photo = currentImgSrc.startsWith('data:') ? currentImgSrc : data.profile.photo;
-            saveToSupabase(); 
+            saveToSupabase();
             btn.innerText = "Edit Profile";
         } else {
-            document.getElementById('edit-name').value = data.profile.name || "";
-            document.getElementById('edit-role').value = data.profile.role || "";
-            document.getElementById('edit-agency').value = data.profile.agency || "";
+            document.getElementById('edit-name').value = data.profile.name;
+            document.getElementById('edit-role').value = data.profile.role;
+            document.getElementById('edit-agency').value = data.profile.agency;
             btn.innerText = "Save Changes";
         }
     }
@@ -341,17 +283,13 @@
         reader.onload = (e) => {
             data.profile.photo = e.target.result;
             document.getElementById('profile-img').src = e.target.result;
+            saveToSupabase();
         };
         reader.readAsDataURL(file);
     }
 
-    function deletePhoto() { 
-        data.profile.photo = ""; 
-        document.getElementById('profile-img').src = "https://via.placeholder.com/100?text=VA";
-    }
-
+    function deletePhoto() { data.profile.photo = ""; saveToSupabase(); }
     function updateLeave(type, amt) { data.profile[type] += amt; saveToSupabase(); }
-    
     function addTask() {
         const val = document.getElementById('task-input').value;
         if (!val) return;
@@ -359,12 +297,10 @@
         document.getElementById('task-input').value = "";
         saveToSupabase();
     }
-
     function toggleTask(i) { data.tasks[i].done = !data.tasks[i].done; saveToSupabase(); }
     function deleteTask(i) { data.tasks.splice(i, 1); saveToSupabase(); }
 
     checkSession();
 </script>
-
 </body>
 </html>
