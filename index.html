@@ -3,14 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProVA Premium Dashboard</title>
+    <title>LAVA Automation Dashboard</title>
     <style>
         :root { --primary: #2563eb; --bg: #f8fafc; --dark: #1e293b; --accent: #10b981; --danger: #ef4444; --white: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; display: flex; color: var(--dark); min-height: 100vh; }
         
         /* Sidebar */
         .sidebar { width: 280px; background: var(--dark); color: white; padding: 30px 20px; position: fixed; height: 100vh; box-sizing: border-box; z-index: 10; }
-        .sidebar h2 { font-size: 1.1rem; margin-bottom: 5px; color: var(--primary); letter-spacing: 1px; }
+        
+        /* New Logo Styling */
+        .brand-logo { 
+            width: auto; 
+            max-width: 100%; 
+            max-height: 70px; 
+            margin-bottom: 15px; 
+            display: block;
+            object-fit: contain;
+        }
+
+        .sidebar h2 { font-size: 1.1rem; margin-top: 0; margin-bottom: 5px; color: var(--primary); letter-spacing: 1px; text-transform: uppercase; }
         .va-role-tag { font-size: 0.85rem; color: #94a3b8; margin-bottom: 30px; display: block; font-style: italic; }
         .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; margin-bottom: 5px; }
         .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--primary); }
@@ -72,7 +83,9 @@
 </div>
 
 <div class="sidebar">
-    <h2>PROVA PORTAL</h2>
+    <img src="https://raw.githubusercontent.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/main/kling_20260422_VIDEO__1217_0.png" alt="LAVA Logo" class="brand-logo">
+    
+    <h2>LAVA Automation</h2>
     <div id="side-name" style="font-weight: bold; margin-top: 20px;">Alex Rivera</div>
     <div id="side-role" class="va-role-tag">General Virtual Assistant</div>
     
@@ -143,7 +156,7 @@
 </div>
 
 <script>
-    // Centralized Data Store (v4 includes photo string)
+    // Centralized Data Store
     let data = JSON.parse(localStorage.getItem('vaMasterData_v4')) || {
         profile: { 
             name: "Alex Rivera", 
@@ -151,7 +164,7 @@
             agency: "Agency Name", 
             pto: 10, 
             sick: 5,
-            photo: "" // Stores base64 image string
+            photo: "" 
         },
         tasks: []
     };
@@ -160,14 +173,12 @@
     const placeholderPhoto = "https://via.placeholder.com/100?text=VA";
 
     function init() {
-        // Profile text
         document.getElementById('display-name').innerText = data.profile.name;
         document.getElementById('side-name').innerText = data.profile.name;
         document.getElementById('display-role').innerText = data.profile.role;
         document.getElementById('side-role').innerText = data.profile.role;
         document.getElementById('display-agency').innerText = data.profile.agency;
         
-        // Photo handling
         const imgEl = document.getElementById('profile-img');
         if (data.profile.photo) {
             imgEl.src = data.profile.photo;
@@ -175,56 +186,42 @@
             imgEl.src = placeholderPhoto;
         }
 
-        // Leave & Tasks
         document.getElementById('pto-val').innerText = data.profile.pto;
         document.getElementById('sick-val').innerText = data.profile.sick;
         renderTasks();
     }
 
-    // Photo Management Logic
     function handlePhotoUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
-
-        // Ensure it's an image
         if (!file.type.startsWith('image/')) { alert('Please upload an image file.'); return; }
 
         const reader = new FileReader();
         reader.onload = function(e) {
-            // Update the temporary view immediately
             document.getElementById('profile-img').src = e.target.result;
-            // The actual data is saved when they click "Save Changes" in toggleEdit
         };
         reader.readAsDataURL(file);
     }
 
     function deletePhoto() {
-        // Update temporary view
         document.getElementById('profile-img').src = placeholderPhoto;
-        document.getElementById('file-input').value = ""; // Clear file input
-        // Saved when toggleEdit completes
+        document.getElementById('file-input').value = ""; 
     }
 
-    // Edit Profile Logic
     function toggleEdit() {
         const card = document.getElementById('profile-card');
         const isEditing = card.classList.toggle('editing');
         const btn = document.querySelector('.edit-btn');
 
         if (!isEditing) {
-            // SAVE STATE
             data.profile.name = document.getElementById('edit-name').value;
             data.profile.role = document.getElementById('edit-role').value;
             data.profile.agency = document.getElementById('edit-agency').value;
-            
-            // Save the photo state (capture whatever is currently on the img tag)
             const currentImgSrc = document.getElementById('profile-img').src;
             data.profile.photo = currentImgSrc.startsWith('data:') ? currentImgSrc : "";
-
             saveData();
             btn.innerText = "Edit Profile";
         } else {
-            // ENTER EDIT MODE
             document.getElementById('edit-name').value = data.profile.name;
             document.getElementById('edit-role').value = data.profile.role;
             document.getElementById('edit-agency').value = data.profile.agency;
@@ -232,14 +229,13 @@
         }
     }
 
-    // Core Logic (Kept as is)
     function openVault() { document.getElementById('vault-modal').style.display = 'flex'; }
     function closeVault() { document.getElementById('vault-modal').style.display = 'none'; document.getElementById('vault-pass-input').value = ""; }
     
     function checkVaultPassword() {
         const pass = document.getElementById('vault-pass-input').value;
         if (pass === VAULT_PASSWORD) {
-            alert("SOP Vault Unlocked! (Simulating redirect...)");
+            alert("SOP Vault Unlocked!");
             closeVault();
         } else {
             alert("Wrong password.");
