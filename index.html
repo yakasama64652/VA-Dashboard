@@ -20,14 +20,14 @@
             z-index: 10;
             display: flex;
             flex-direction: column;
-            align-items: center; /* This centers the logo and title */
+            align-items: center; 
             text-align: center;
         }
 
         /* Logo Styling */
         .brand-logo {
             width: auto;
-            max-width: 80%; /* Slightly smaller for a cleaner look */
+            max-width: 80%;
             max-height: 80px;
             margin-bottom: 15px;
             object-fit: contain;
@@ -43,7 +43,7 @@
 
         .va-role-tag { font-size: 0.85rem; color: #94a3b8; margin-bottom: 30px; display: block; font-style: italic; }
         
-        /* Nav items should still align left for better readability */
+        /* Nav items alignment */
         .nav-container { width: 100%; text-align: left; }
         .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; margin-bottom: 5px; width: 100%; box-sizing: border-box; }
         .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--primary); }
@@ -112,9 +112,9 @@
     <div id="side-role" class="va-role-tag">General Virtual Assistant</div>
     
     <div class="nav-container">
-        <div class="nav-item">🏠 Dashboard</div>
-        <div class="nav-item" onclick="openVault()">📂 SOP Vault</div>
-        <div class="nav-item">📊 Reports</div>
+        <div class="nav-item">Dashboard</div>
+        <div class="nav-item" onclick="openVault()">SOP Vault</div>
+        <div class="nav-item">Reports</div>
     </div>
 </div>
 
@@ -168,7 +168,7 @@
     </div>
 
     <div class="card">
-        <h3>📋 Task List</h3>
+        <h3>Task List</h3>
         <div style="display:flex; gap: 10px; margin-bottom: 20px;">
             <input type="text" id="task-input" placeholder="What's the goal for today?" style="flex:1; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
             <button onclick="addTask()" class="btn-prime" style="width: auto;">Add Task</button>
