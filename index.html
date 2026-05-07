@@ -15,32 +15,17 @@
         .auth-card img { max-height: 80px; margin-bottom: 20px; }
         .auth-card input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
         .auth-card h2 { margin-bottom: 20px; color: var(--dark); font-size: 1.2rem; }
-        .toggle-link { color: var(--primary); cursor: pointer; font-size: 0.85rem; margin-top: 15px; display: block; }
+        .toggle-link { color: var(--primary); cursor: pointer; font-size: 0.85rem; margin-top: 15px; display: block; text-decoration: none; }
 
         /* Dashboard Layout */
         #dashboard-wrapper { display: none; }
         .main-layout { display: flex; }
 
-        /* Sidebar - Centered Branding */
-        .sidebar { 
-            width: 280px; 
-            background: var(--dark); 
-            color: white; 
-            padding: 30px 20px; 
-            position: fixed; 
-            height: 100vh; 
-            box-sizing: border-box; 
-            z-index: 10; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            text-align: center; 
-        }
+        /* Sidebar */
+        .sidebar { width: 280px; background: var(--dark); color: white; padding: 30px 20px; position: fixed; height: 100vh; box-sizing: border-box; z-index: 10; display: flex; flex-direction: column; align-items: center; text-align: center; }
         .brand-logo { width: auto; max-width: 80%; max-height: 80px; margin-bottom: 15px; object-fit: contain; }
         .sidebar h2 { font-size: 1.1rem; margin: 0 0 5px 0; color: var(--primary); letter-spacing: 1px; text-transform: uppercase; }
         .va-role-tag { font-size: 0.85rem; color: #94a3b8; margin-bottom: 30px; display: block; font-style: italic; }
-        
-        /* Navigation (No Icons) */
         .nav-container { width: 100%; text-align: left; flex-grow: 1; }
         .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; margin-bottom: 5px; width: 100%; box-sizing: border-box; }
         .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--primary); }
@@ -50,12 +35,10 @@
         .main-content { margin-left: 280px; padding: 40px; width: 100%; max-width: 1000px; }
         .card { background: white; padding: 25px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; position: relative; }
         .profile-grid { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
-        
         .profile-header { display: flex; align-items: center; gap: 20px; text-align: left; }
         #profile-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); background: #eee;}
         .photo-controls { display: none; margin-top: 5px; gap: 3px; justify-content: center;}
         .photo-btn { font-size: 10px; padding: 2px 6px; cursor: pointer; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px;}
-        
         .editing .photo-controls { display: flex; }
         .editable-input { display: none; width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;}
         .editing .editable-input { display: block; }
@@ -70,10 +53,8 @@
         .leave-btns { margin-top: 8px; display: flex; justify-content: center; gap: 5px; }
         .leave-btns button { padding: 2px 8px; font-size: 0.7rem; cursor: pointer; border-radius: 4px; border: 1px solid #cbd5e1; }
 
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: none; justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(4px); }
-        .modal-bubble { background: white; padding: 30px; border-radius: 20px; width: 350px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
-        .btn-prime { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; }
-        
+        .btn-prime { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; transition: 0.2s; }
+        .btn-prime:hover { filter: brightness(1.1); }
         .task-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; border-left: 4px solid var(--primary); text-align: left; }
         .task-item.completed { opacity: 0.5; text-decoration: line-through; }
     </style>
@@ -83,20 +64,37 @@
 <div id="auth-container">
     <div class="auth-card" id="login-card">
         <img src="https://raw.githubusercontent.com/yakasama64652/PTO/main/kling_20260422_VIDEO__1217_0.png" alt="LAVA Logo">
-        <h2>VA Pro Hub</h2>
+        <h2>VA Command Center</h2>
         <input type="email" id="login-email" placeholder="Email">
         <input type="password" id="login-pass" placeholder="Password">
         <button class="btn-prime" onclick="handleLogin()">Login</button>
-        <span class="toggle-link" onclick="toggleAuth(false)">Need an account? Signup</span>
+        <span class="toggle-link" onclick="toggleAuth('forgot')">Forgot password?</span>
+        <span class="toggle-link" onclick="toggleAuth('signup')">Need an account? Signup</span>
     </div>
 
     <div class="auth-card" id="signup-card" style="display:none;">
         <img src="https://raw.githubusercontent.com/yakasama64652/PTO/main/kling_20260422_VIDEO__1217_0.png" alt="LAVA Logo">
-        <h2>LAVA Signup</h2>
+        <h2>VA Signup</h2>
         <input type="email" id="reg-email" placeholder="Email">
         <input type="password" id="reg-pass" placeholder="Password">
         <button class="btn-prime" onclick="handleSignup()">Sign Up</button>
-        <span class="toggle-link" onclick="toggleAuth(true)">Back to Login</span>
+        <span class="toggle-link" onclick="toggleAuth('login')">Back to Login</span>
+    </div>
+
+    <div class="auth-card" id="forgot-card" style="display:none;">
+        <img src="https://raw.githubusercontent.com/yakasama64652/PTO/main/kling_20260422_VIDEO__1217_0.png" alt="LAVA Logo">
+        <h2>Reset Password</h2>
+        <p style="font-size: 0.85rem; color: #64748b;">Enter your email to receive a reset link.</p>
+        <input type="email" id="reset-email" placeholder="Email">
+        <button class="btn-prime" onclick="handlePasswordReset()">Send Reset Link</button>
+        <span class="toggle-link" onclick="toggleAuth('login')">Back to Login</span>
+    </div>
+
+    <div class="auth-card" id="update-pass-card" style="display:none;">
+        <img src="https://raw.githubusercontent.com/yakasama64652/PTO/main/kling_20260422_VIDEO__1217_0.png" alt="LAVA Logo">
+        <h2>Create New Password</h2>
+        <input type="password" id="new-pass" placeholder="Enter new password">
+        <button class="btn-prime" onclick="handleUpdatePassword()">Update & Login</button>
     </div>
 </div>
 
@@ -170,7 +168,14 @@
     let currentUser = null;
     let data = { profile: { name: "", role: "", agency: "", pto: 10, sick: 5, photo: "" }, tasks: [] };
 
-    // --- 2. AUTH ---
+    // --- 2. AUTH & RESET LOGIC ---
+    function toggleAuth(view) {
+        document.getElementById('login-card').style.display = view === 'login' ? 'block' : 'none';
+        document.getElementById('signup-card').style.display = view === 'signup' ? 'block' : 'none';
+        document.getElementById('forgot-card').style.display = view === 'forgot' ? 'block' : 'none';
+        document.getElementById('update-pass-card').style.display = view === 'update' ? 'block' : 'none';
+    }
+
     async function handleSignup() {
         const email = document.getElementById('reg-email').value;
         const password = document.getElementById('reg-pass').value;
@@ -185,19 +190,38 @@
         if (error) alert(error.message); else checkSession();
     }
 
+    async function handlePasswordReset() {
+        const email = document.getElementById('reset-email').value;
+        const { error } = await _supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.href // Redirects back to this page
+        });
+        if (error) alert(error.message); else alert("Reset link sent to your email!");
+    }
+
+    async function handleUpdatePassword() {
+        const newPassword = document.getElementById('new-pass').value;
+        const { error } = await _supabase.auth.updateUser({ password: newPassword });
+        if (error) alert(error.message); else {
+            alert("Password updated successfully!");
+            checkSession();
+        }
+    }
+
     async function handleLogout() {
         await _supabase.auth.signOut();
         checkSession();
     }
 
-    function toggleAuth(isLogin) {
-        document.getElementById('login-card').style.display = isLogin ? 'block' : 'none';
-        document.getElementById('signup-card').style.display = isLogin ? 'none' : 'block';
-    }
-
     // --- 3. DATA SYNC ---
     async function checkSession() {
         const { data: { session } } = await _supabase.auth.getSession();
+        
+        // Detection for password reset flow
+        if (window.location.hash.includes("type=recovery")) {
+            toggleAuth('update');
+            return;
+        }
+
         if (session) {
             currentUser = session.user;
             document.getElementById('auth-container').style.display = 'none';
@@ -207,6 +231,7 @@
             currentUser = null;
             document.getElementById('auth-container').style.display = 'flex';
             document.getElementById('dashboard-wrapper').style.display = 'none';
+            toggleAuth('login');
         }
     }
 
