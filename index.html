@@ -26,10 +26,20 @@
         .brand-logo { width: auto; max-width: 80%; max-height: 80px; margin-bottom: 15px; object-fit: contain; }
         .sidebar h2 { font-size: 1.1rem; margin: 0 0 5px 0; color: var(--primary); letter-spacing: 1px; text-transform: uppercase; }
         .va-role-tag { font-size: 0.85rem; color: #94a3b8; margin-bottom: 30px; display: block; font-style: italic; }
+        
+        /* Navigation & Dropdown */
         .nav-container { width: 100%; text-align: left; flex-grow: 1; }
-        .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; margin-bottom: 5px; width: 100%; box-sizing: border-box; }
+        .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; margin-bottom: 5px; width: 100%; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; }
         .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--primary); }
-        .logout-btn { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); margin-top: auto; }
+        
+        .dropdown-container { display: none; background: rgba(255,255,255,0.03); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
+        .dropdown-item { padding: 10px 30px; font-size: 0.85rem; color: #94a3b8; cursor: pointer; transition: 0.2s; }
+        .dropdown-item:hover { color: white; background: rgba(255,255,255,0.05); }
+        .dropdown-active { display: block; }
+        .arrow { font-size: 0.7rem; transition: 0.3s; }
+        .rotated { transform: rotate(180deg); }
+
+        .logout-btn { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); margin-top: auto; justify-content: center; }
 
         /* Main UI */
         .main-content { margin-left: 280px; padding: 40px; width: 100%; max-width: 1000px; }
@@ -38,7 +48,6 @@
         .profile-header { display: flex; align-items: center; gap: 20px; text-align: left; }
         #profile-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); background: #eee;}
         
-        /* Edit Profile Button Styled as Link */
         .edit-btn { position: absolute; top: 20px; right: 20px; background: #f1f5f9; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--dark); text-decoration: none; border: 1px solid #e2e8f0; transition: 0.2s; }
         .edit-btn:hover { background: #e2e8f0; }
 
@@ -97,7 +106,15 @@
             <div class="nav-container">
                 <div class="nav-item">Dashboard</div>
                 <div class="nav-item">SOP Vault</div>
-                <div class="nav-item">Reports</div>
+                
+                <div class="nav-item" onclick="toggleDropdown()">
+                    Reports <span class="arrow" id="report-arrow">▼</span>
+                </div>
+                <div class="dropdown-container" id="report-dropdown">
+                    <div class="dropdown-item">Attendance</div>
+                    <div class="dropdown-item">Payslips</div>
+                    <div class="dropdown-item">Time Off Records</div>
+                </div>
             </div>
             <div class="nav-item logout-btn" onclick="handleLogout()">Logout</div>
         </div>
@@ -155,6 +172,14 @@
     const _supabase = supabase.createClient('https://esjxzcmfxtestkettdyp.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzanh6Y21meHRlc3RrZXR0ZHlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTQ3MzksImV4cCI6MjA5MzczMDczOX0.G9i7nrGVzD8WrKFg7642HvRs9GeTPgkRMuFw8vQ-6C0');
     let currentUser = null;
     let data = { profile: { name: "", role: "", agency: "", pto: 10, sick: 5, photo: "", gender: "", birthday: "", joinDate: "" }, tasks: [] };
+
+    // Sidebar Dropdown Toggle
+    function toggleDropdown() {
+        const dropdown = document.getElementById('report-dropdown');
+        const arrow = document.getElementById('report-arrow');
+        dropdown.classList.toggle('dropdown-active');
+        arrow.classList.toggle('rotated');
+    }
 
     function toggleAuth(view) {
         document.getElementById('login-card').style.display = view === 'login' ? 'block' : 'none';
@@ -242,7 +267,6 @@
         document.getElementById('display-agency').innerText = p.agency || "Set Agency";
         document.getElementById('profile-img').src = p.photo || "https://via.placeholder.com/100?text=VA";
 
-        // Displaying New Fields
         document.getElementById('display-gender').innerText = p.gender || "Gender";
         document.getElementById('display-birthday').innerText = p.birthday || "Birthday";
         document.getElementById('display-join-date').innerText = p.joinDate || "Date";
