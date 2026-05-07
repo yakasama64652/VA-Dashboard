@@ -6,17 +6,22 @@
     <title>LAVA Automation | VA Dashboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* CSS stays exactly the same as your working version */
         :root { --primary: #2563eb; --bg: #f8fafc; --dark: #1e293b; --accent: #10b981; --danger: #ef4444; --white: #ffffff; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: var(--dark); min-height: 100vh; }
+        
+        /* Auth Screens */
         #auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: var(--dark); }
         .auth-card { background: white; padding: 40px; border-radius: 20px; width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
         .auth-card img { max-height: 80px; margin-bottom: 20px; }
         .auth-card input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
         .auth-card h2 { margin-bottom: 20px; color: var(--dark); font-size: 1.2rem; }
         .toggle-link { color: var(--primary); cursor: pointer; font-size: 0.85rem; margin-top: 15px; display: block; text-decoration: none; }
+
+        /* Dashboard Layout */
         #dashboard-wrapper { display: none; }
         .main-layout { display: flex; }
+
+        /* Sidebar */
         .sidebar { width: 280px; background: var(--dark); color: white; padding: 30px 20px; position: fixed; height: 100vh; box-sizing: border-box; z-index: 10; display: flex; flex-direction: column; align-items: center; text-align: center; }
         .brand-logo { width: auto; max-width: 80%; max-height: 80px; margin-bottom: 15px; object-fit: contain; }
         .sidebar h2 { font-size: 1.1rem; margin: 0 0 5px 0; color: var(--primary); letter-spacing: 1px; text-transform: uppercase; }
@@ -25,20 +30,27 @@
         .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; margin-bottom: 5px; width: 100%; box-sizing: border-box; }
         .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--primary); }
         .logout-btn { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); margin-top: auto; }
+
+        /* Main UI */
         .main-content { margin-left: 280px; padding: 40px; width: 100%; max-width: 1000px; }
         .card { background: white; padding: 25px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; position: relative; }
         .profile-grid { display: grid; grid-template-columns: 1fr 300px; gap: 20px; }
         .profile-header { display: flex; align-items: center; gap: 20px; text-align: left; }
         #profile-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); background: #eee;}
-        .photo-controls { display: none; margin-top: 5px; gap: 3px; justify-content: center;}
-        .photo-btn { font-size: 10px; padding: 2px 6px; cursor: pointer; background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px;}
-        .editing .photo-controls { display: flex; }
-        .editable-input { display: none; width: 100%; padding: 8px; margin: 5px 0; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box;}
-        .editing .editable-input { display: block; }
-        .editing .static-text { display: none; }
-        .edit-btn { position: absolute; top: 20px; right: 20px; background: #f1f5f9; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; z-index: 5;}
+        
+        /* Edit Profile Button Styled as Link */
+        .edit-btn { position: absolute; top: 20px; right: 20px; background: #f1f5f9; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--dark); text-decoration: none; border: 1px solid #e2e8f0; transition: 0.2s; }
+        .edit-btn:hover { background: #e2e8f0; }
+
         .btn-prime { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; transition: 0.2s; }
         .btn-prime:hover { filter: brightness(1.1); }
+        
+        .leave-stat { background: #f1f5f9; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0; }
+        .leave-stat label { font-size: 0.7rem; font-weight: 800; color: #64748b; display: block; margin-bottom: 5px; }
+        .leave-stat span { font-size: 1.4rem; font-weight: 800; color: var(--dark); }
+        .leave-btns { margin-top: 8px; display: flex; justify-content: center; gap: 5px; }
+        .leave-btns button { padding: 2px 8px; font-size: 0.7rem; cursor: pointer; border-radius: 4px; border: 1px solid #cbd5e1; }
+
         .task-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; border-left: 4px solid var(--primary); text-align: left; }
         .task-item.completed { opacity: 0.5; text-decoration: line-through; }
     </style>
@@ -93,23 +105,23 @@
         <div class="main-content">
             <div class="profile-grid">
                 <div class="card" id="profile-card">
-                    <a href="edit-profile.html" class="edit-btn" style="text-decoration:none; text-align:center;">Edit Profile</a>
+                    <a href="edit-profile.html" class="edit-btn">Edit Profile</a>
                     <div class="profile-header">
                         <div class="photo-area">
                             <img id="profile-img" src="https://via.placeholder.com/100?text=VA" alt="Profile">
-                            <div class="photo-controls">
-                                <input type="file" id="file-input" style="display:none" onchange="handlePhotoUpload(event)" accept="image/*">
-                                <button class="photo-btn" onclick="document.getElementById('file-input').click()">Up</button>
-                                <button class="photo-btn" onclick="deletePhoto()" style="color:var(--danger)">Del</button>
-                            </div>
                         </div>
                         <div style="flex:1;">
-                            <h1 class="static-text" id="display-name" style="margin:0; font-size: 1.5rem;">User Name</h1>
-                            <input type="text" class="editable-input" id="edit-name">
-                            <div class="static-text" style="color: #64748b;" id="display-role">Position Title</div>
-                            <input type="text" class="editable-input" id="edit-role">
-                            <div class="static-text" style="font-size: 0.9rem; margin-top: 5px;">Agency: <b id="display-agency">Agency Name</b></div>
-                            <input type="text" class="editable-input" id="edit-agency">
+                            <h1 id="display-name" style="margin:0; font-size: 1.5rem;">User Name</h1>
+                            <div id="display-role" style="color: #64748b; font-weight: 600;">Position Title</div>
+                            
+                            <div style="font-size: 0.85rem; margin-top: 5px; color: #475569;">
+                                <span id="display-gender">Gender</span> • <span id="display-birthday">Birthday</span>
+                            </div>
+                            
+                            <div style="font-size: 0.9rem; margin-top: 5px;">
+                                Agency: <b id="display-agency">Agency Name</b> 
+                                <span style="color: #64748b; font-size: 0.8rem; margin-left: 5px;">(Joined: <span id="display-join-date">Date</span>)</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -142,7 +154,7 @@
 <script>
     const _supabase = supabase.createClient('https://esjxzcmfxtestkettdyp.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzanh6Y21meHRlc3RrZXR0ZHlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTQ3MzksImV4cCI6MjA5MzczMDczOX0.G9i7nrGVzD8WrKFg7642HvRs9GeTPgkRMuFw8vQ-6C0');
     let currentUser = null;
-    let data = { profile: { name: "", role: "", agency: "", pto: 10, sick: 5, photo: "" }, tasks: [] };
+    let data = { profile: { name: "", role: "", agency: "", pto: 10, sick: 5, photo: "", gender: "", birthday: "", joinDate: "" }, tasks: [] };
 
     function toggleAuth(view) {
         document.getElementById('login-card').style.display = view === 'login' ? 'block' : 'none';
@@ -166,33 +178,18 @@
 
     async function handleMagicLink() {
         const email = document.getElementById('magic-email').value;
-        const btn = document.getElementById('magic-btn');
-        btn.innerText = "Sending...";
-        btn.disabled = true;
-        
         const { error } = await _supabase.auth.signInWithOtp({ 
             email: email,
             options: { emailRedirectTo: window.location.href }
         });
-
-        if (error) {
-            alert(error.message);
-            btn.innerText = "Send Magic Link";
-            btn.disabled = false;
-        } else {
-            alert("Magic link sent! Check your inbox.");
-            btn.innerText = "Check your email!";
-        }
+        if (error) alert(error.message); else alert("Magic link sent! Check your inbox.");
     }
 
     async function handleLogout() {
         await _supabase.auth.signOut();
-        window.location.hash = ""; // Clear tokens from URL
         checkSession();
     }
 
-    // --- CRITICAL FIX: The Listener ---
-    // This watches for the "Magic Link" moment and forces the login
     _supabase.auth.onAuthStateChange((event, session) => {
         if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
             checkSession();
@@ -201,7 +198,6 @@
 
     async function checkSession() {
         const { data: { session } } = await _supabase.auth.getSession();
-        
         if (session) {
             currentUser = session.user;
             document.getElementById('auth-container').style.display = 'none';
@@ -211,11 +207,7 @@
             currentUser = null;
             document.getElementById('auth-container').style.display = 'flex';
             document.getElementById('dashboard-wrapper').style.display = 'none';
-            // If we are not logged in, make sure the login card is visible
-            if (document.getElementById('magic-card').style.display === 'none' && 
-                document.getElementById('signup-card').style.display === 'none') {
-                toggleAuth('login');
-            }
+            toggleAuth('login');
         }
     }
 
@@ -223,7 +215,7 @@
         const { data: dbData } = await _supabase.from('va_data').select('*').eq('user_id', currentUser.id).single();
         if (dbData) {
             data.profile = dbData.profile_data;
-            data.tasks = dbData.tasks_data;
+            data.tasks = dbData.tasks_data || [];
             renderAll();
         } else {
             await saveToSupabase();
@@ -242,14 +234,22 @@
     }
 
     function renderAll() {
-        document.getElementById('display-name').innerText = data.profile.name || "User Name";
-        document.getElementById('side-name').innerText = data.profile.name || "User";
-        document.getElementById('display-role').innerText = data.profile.role || "Role";
-        document.getElementById('side-role').innerText = data.profile.role || "";
-        document.getElementById('display-agency').innerText = data.profile.agency || "Agency";
-        document.getElementById('profile-img').src = data.profile.photo || "https://via.placeholder.com/100?text=VA";
-        document.getElementById('pto-val').innerText = data.profile.pto;
-        document.getElementById('sick-val').innerText = data.profile.sick;
+        const p = data.profile;
+        document.getElementById('display-name').innerText = p.name || "Set Name";
+        document.getElementById('side-name').innerText = p.name || "User";
+        document.getElementById('display-role').innerText = p.role || "Set Role";
+        document.getElementById('side-role').innerText = p.role || "";
+        document.getElementById('display-agency').innerText = p.agency || "Set Agency";
+        document.getElementById('profile-img').src = p.photo || "https://via.placeholder.com/100?text=VA";
+
+        // Displaying New Fields
+        document.getElementById('display-gender').innerText = p.gender || "Gender";
+        document.getElementById('display-birthday').innerText = p.birthday || "Birthday";
+        document.getElementById('display-join-date').innerText = p.joinDate || "Date";
+
+        document.getElementById('pto-val').innerText = p.pto || 0;
+        document.getElementById('sick-val').innerText = p.sick || 0;
+        
         document.getElementById('task-list').innerHTML = data.tasks.map((t, i) => `
             <div class="task-item ${t.done ? 'completed' : ''}">
                 <span onclick="toggleTask(${i})" style="cursor:pointer; flex:1">${t.text}</span>
@@ -258,38 +258,7 @@
         `).join('');
     }
 
-    function toggleEdit() {
-        const card = document.getElementById('profile-card');
-        const isEditing = card.classList.toggle('editing');
-        const btn = document.querySelector('.edit-btn');
-        if (!isEditing) {
-            data.profile.name = document.getElementById('edit-name').value;
-            data.profile.role = document.getElementById('edit-role').value;
-            data.profile.agency = document.getElementById('edit-agency').value;
-            saveToSupabase();
-            btn.innerText = "Edit Profile";
-        } else {
-            document.getElementById('edit-name').value = data.profile.name;
-            document.getElementById('edit-role').value = data.profile.role;
-            document.getElementById('edit-agency').value = data.profile.agency;
-            btn.innerText = "Save Changes";
-        }
-    }
-
-    function handlePhotoUpload(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            data.profile.photo = e.target.result;
-            document.getElementById('profile-img').src = e.target.result;
-            saveToSupabase();
-        };
-        reader.readAsDataURL(file);
-    }
-
-    function deletePhoto() { data.profile.photo = ""; saveToSupabase(); }
-    function updateLeave(type, amt) { data.profile[type] += amt; saveToSupabase(); }
+    function updateLeave(type, amt) { data.profile[type] = (data.profile[type] || 0) + amt; saveToSupabase(); }
     function addTask() {
         const val = document.getElementById('task-input').value;
         if (!val) return;
