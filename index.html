@@ -107,7 +107,7 @@
                 <div class="nav-item">Dashboard</div>
                 <div class="nav-item">SOP Vault</div>
                 
-                <div class="nav-item" onclick="toggleDropdown()">
+                <div class="nav-item" onclick="toggleDropdown('report-dropdown', 'report-arrow')">
                     Reports <span class="arrow" id="report-arrow">▼</span>
                 </div>
                 <div class="dropdown-container" id="report-dropdown">
@@ -116,7 +116,12 @@
                     <div class="dropdown-item">Time Off Records</div>
                 </div>
                 
-                <div class="nav-item" onclick="window.open('brick breaker.html', '_blank')">LAVA Games</div>
+                <div class="nav-item" onclick="toggleDropdown('games-dropdown', 'games-arrow')">
+                    LAVA Games <span class="arrow" id="games-arrow">▼</span>
+                </div>
+                <div class="dropdown-container" id="games-dropdown">
+                    <div class="dropdown-item" onclick="window.open('brick breaker.html', '_blank')">Brick Breaker</div>
+                </div>
             </div>
             <div class="nav-item logout-btn" onclick="handleLogout()">Logout</div>
         </div>
@@ -175,9 +180,10 @@
     let currentUser = null;
     let data = { profile: { name: "", role: "", agency: "", pto: 10, sick: 5, photo: "", gender: "", birthday: "", joinDate: "" }, tasks: [] };
 
-    function toggleDropdown() {
-        const dropdown = document.getElementById('report-dropdown');
-        const arrow = document.getElementById('report-arrow');
+    // Updated toggle function to handle specific menus
+    function toggleDropdown(menuId, arrowId) {
+        const dropdown = document.getElementById(menuId);
+        const arrow = document.getElementById(arrowId);
         dropdown.classList.toggle('dropdown-active');
         arrow.classList.toggle('rotated');
     }
