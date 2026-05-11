@@ -116,7 +116,7 @@
                     <div class="dropdown-item">Time Off Records</div>
                 </div>
                 
-                <div class="nav-item">LAVA Games</div>
+                <div class="nav-item" onclick="window.open('games.html', '_blank')">LAVA Games</div>
             </div>
             <div class="nav-item logout-btn" onclick="handleLogout()">Logout</div>
         </div>
@@ -175,7 +175,6 @@
     let currentUser = null;
     let data = { profile: { name: "", role: "", agency: "", pto: 10, sick: 5, photo: "", gender: "", birthday: "", joinDate: "" }, tasks: [] };
 
-    // Sidebar Dropdown Toggle
     function toggleDropdown() {
         const dropdown = document.getElementById('report-dropdown');
         const arrow = document.getElementById('report-arrow');
