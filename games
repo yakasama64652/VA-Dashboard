@@ -116,7 +116,7 @@
                     <div class="dropdown-item">Time Off Records</div>
                 </div>
                 
-                <div class="nav-item" onclick="window.open('games.html', '_blank')">LAVA Games</div>
+                <div class="nav-item" onclick="window.open('brick breaker.html', '_blank')">LAVA Games</div>
             </div>
             <div class="nav-item logout-btn" onclick="handleLogout()">Logout</div>
         </div>
