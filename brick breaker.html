@@ -39,7 +39,7 @@
 <body>
 
 <div class="ui">
-    <p>Mouse/Arrow Keys Move | Esc to Pause</p>
+    <p>Use Arrow Keys to Move | Esc to Pause</p>
 </div>
 
 <div id="game-container">
@@ -171,9 +171,9 @@
         }
     }
 
+    // --- KEYBOARD CONTROLS ONLY ---
     document.addEventListener("keydown", keyDownHandler, false);
     document.addEventListener("keyup", keyUpHandler, false);
-    document.addEventListener("mousemove", mouseMoveHandler, false);
 
     function keyDownHandler(e) {
         if (e.key === "Right" || e.key === "ArrowRight") rightPressed = true;
@@ -184,14 +184,6 @@
     function keyUpHandler(e) {
         if (e.key === "Right" || e.key === "ArrowRight") rightPressed = false;
         else if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = false;
-    }
-
-    function mouseMoveHandler(e) {
-        if (!isGameRunning) return;
-        const relativeX = e.clientX - canvas.offsetLeft;
-        if (relativeX > 0 && relativeX < canvas.width) {
-            paddleX = relativeX - paddleWidth / 2;
-        }
     }
 
     function toggleMenu() {
@@ -344,6 +336,7 @@
             }
         }
 
+        // MOVEMENT LOGIC: Arrows only
         if (rightPressed && paddleX < canvas.width - paddleWidth) paddleX += 9;
         else if (leftPressed && paddleX > 0) paddleX -= 9;
 
