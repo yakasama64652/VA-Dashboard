@@ -41,34 +41,39 @@
 
         .logout-btn { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); margin-top: auto; justify-content: center; }
 
-        /* Main UI */
-        .main-content { margin-left: 280px; padding: 40px; width: 100%; max-width: 1100px; }
-        .card { background: white; padding: 25px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; position: relative; }
-        .profile-grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+        /* Main UI Layout */
+        .main-content { margin-left: 280px; padding: 40px; width: 100%; max-width: 1200px; }
+        .card { background: white; padding: 25px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; position: relative; height: 100%; box-sizing: border-box; }
+        
+        /* Top Row: Profile Only */
+        .profile-section { margin-bottom: 25px; }
         .profile-header { display: flex; align-items: center; gap: 20px; text-align: left; }
         #profile-img { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary); background: #eee;}
         
         .edit-btn { position: absolute; top: 20px; right: 20px; background: #f1f5f9; border: 1px solid #e2e8f0; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--dark); transition: 0.2s; z-index: 50; }
         .edit-btn:hover { background: #e2e8f0; }
 
+        /* Bottom Grid: Responsibilities, Leave, and Trivia */
+        .dashboard-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; align-items: stretch; }
+
         .btn-prime { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; transition: 0.2s; }
         .btn-prime:hover { filter: brightness(1.1); }
         
-        .leave-stat { background: #f1f5f9; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0; }
+        .leave-stat { background: #f1f5f9; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0; margin-bottom: 10px; }
         .leave-stat label { font-size: 0.7rem; font-weight: 800; color: #64748b; display: block; margin-bottom: 5px; }
         .leave-stat span { font-size: 1.4rem; font-weight: 800; color: var(--dark); }
         .leave-btns { margin-top: 8px; display: flex; justify-content: center; gap: 5px; }
         .leave-btns button { padding: 2px 8px; font-size: 0.7rem; cursor: pointer; border-radius: 4px; border: 1px solid #cbd5e1; }
 
         /* Insurance Trivia Card Styling */
-        .trivia-card { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; padding: 25px; border-radius: 16px; min-height: 200px; display: flex; flex-direction: column; justify-content: center; position: relative; overflow: hidden; box-shadow: 0 10px 15px rgba(0,0,0,0.1); border: 1px solid rgba(255,255,255,0.1); }
+        .trivia-card { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; border: none; }
         .trivia-card h4 { margin: 0 0 10px 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); }
-        .trivia-text { font-size: 0.95rem; line-height: 1.6; transition: opacity 0.5s ease-in-out; opacity: 1; min-height: 80px; }
+        .trivia-text { font-size: 0.9rem; line-height: 1.6; transition: opacity 0.5s ease-in-out; opacity: 1; }
         .trivia-text.fade { opacity: 0; }
-        .trivia-icon { position: absolute; bottom: -10px; right: -10px; font-size: 5rem; opacity: 0.05; transform: rotate(-15deg); pointer-events: none; }
+        .trivia-icon { position: absolute; bottom: -10px; right: -10px; font-size: 4rem; opacity: 0.1; transform: rotate(-15deg); pointer-events: none; }
 
-        .task-tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
-        .task-tag { background: #eff6ff; color: #2563eb; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; border: 1px solid #dbeafe; }
+        .task-tag-container { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+        .task-tag { background: #eff6ff; color: #2563eb; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; border: 1px solid #dbeafe; }
     </style>
 </head>
 <body>
@@ -125,50 +130,48 @@
         </div>
 
         <div class="main-content">
-            <div class="profile-grid">
-                <div>
-                    <div class="card" id="profile-card">
-                        <button type="button" onclick="window.open('edit-profile.html', '_blank')" class="edit-btn">Edit Profile</button>
-                        <div class="profile-header">
-                            <div class="photo-area"><img id="profile-img" src="https://via.placeholder.com/100?text=VA" alt="Profile"></div>
-                            <div style="flex:1;">
-                                <h1 id="display-name" style="margin:0; font-size: 1.5rem;">User Name</h1>
-                                <div id="display-role" style="color: #64748b; font-weight: 600;">Position Title</div>
-                                <div style="font-size: 0.85rem; margin-top: 5px; color: #475569;"><span id="display-gender">Gender</span> • <span id="display-birthday">Birthday</span></div>
-                                <div style="font-size: 0.9rem; margin-top: 8px;">Agency: <b id="display-agency">Agency Name</b> <span style="color: #64748b; font-size: 0.8rem; margin-left: 5px;">(Joined: <span id="display-join-date">Date</span>)</span></div>
-                                <div style="font-size: 0.85rem; margin-top: 10px; color: var(--danger); font-weight: 600;">Emergency Contact: <span id="display-emergency" style="color: var(--dark);">None</span></div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="card" id="task-card" style="display:none;">
-                        <h3 style="margin-top:0; font-size: 1rem;">Core Tasks & Responsibilities</h3>
-                        <div id="display-tasks" class="task-tag-container"></div>
-                    </div>
-                </div>
-
-                <div>
-                    <div class="trivia-card card">
-                        <h4>Did you know?</h4>
-                        <div id="trivia-display" class="trivia-text">Loading insurance facts...</div>
-                        <div class="trivia-icon">🛡️</div>
-                    </div>
-
-                    <div class="card">
-                        <h3 style="margin-top:0; font-size: 1rem;">Leave Credits</h3>
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                            <div class="leave-stat"><label>PTO</label><span id="pto-val">0</span>
-                                <div class="leave-btns"><button onclick="updateLeave('pto', 1)">+</button><button onclick="updateLeave('pto', -1)">-</button></div>
-                            </div>
-                            <div class="leave-stat"><label>SICK</label><span id="sick-val">0</span>
-                                <div class="leave-btns"><button onclick="updateLeave('sick', 1)">+</button><button onclick="updateLeave('sick', -1)">-</button></div>
-                            </div>
+            <div class="profile-section">
+                <div class="card" id="profile-card">
+                    <button type="button" onclick="window.open('edit-profile.html', '_blank')" class="edit-btn">Edit Profile</button>
+                    <div class="profile-header">
+                        <div class="photo-area"><img id="profile-img" src="https://via.placeholder.com/100?text=VA" alt="Profile"></div>
+                        <div style="flex:1;">
+                            <h1 id="display-name" style="margin:0; font-size: 1.5rem;">User Name</h1>
+                            <div id="display-role" style="color: #64748b; font-weight: 600;">Position Title</div>
+                            <div style="font-size: 0.85rem; margin-top: 5px; color: #475569;"><span id="display-gender">Gender</span> • <span id="display-birthday">Birthday</span></div>
+                            <div style="font-size: 0.9rem; margin-top: 8px;">Agency: <b id="display-agency">Agency Name</b> <span style="color: #64748b; font-size: 0.8rem; margin-left: 5px;">(Joined: <span id="display-join-date">Date</span>)</span></div>
+                            <div style="font-size: 0.85rem; margin-top: 10px; color: var(--danger); font-weight: 600;">Emergency Contact: <span id="display-emergency" style="color: var(--dark);">None</span></div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card" id="gaming-stats-card" style="display:none;">
+            <div class="dashboard-grid">
+                <div class="card" id="task-card" style="display:none;">
+                    <h3 style="margin-top:0; font-size: 1rem;">Core Responsibilities</h3>
+                    <div id="display-tasks" class="task-tag-container"></div>
+                </div>
+
+                <div class="card">
+                    <h3 style="margin-top:0; font-size: 1rem;">Leave Credits</h3>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div class="leave-stat"><label>PTO</label><span id="pto-val">0</span>
+                            <div class="leave-btns"><button onclick="updateLeave('pto', 1)">+</button><button onclick="updateLeave('pto', -1)">-</button></div>
+                        </div>
+                        <div class="leave-stat"><label>SICK</label><span id="sick-val">0</span>
+                            <div class="leave-btns"><button onclick="updateLeave('sick', 1)">+</button><button onclick="updateLeave('sick', -1)">-</button></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card trivia-card">
+                    <h4>Did you know?</h4>
+                    <div id="trivia-display" class="trivia-text">Loading insurance facts...</div>
+                    <div class="trivia-icon">🛡️</div>
+                </div>
+            </div>
+
+            <div class="card" id="gaming-stats-card" style="display:none; margin-top: 25px;">
                 <h3>Gaming High Scores</h3>
                 <div style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
                     <b style="color:var(--primary);">Brick Breaker Elite:</b>
@@ -184,7 +187,6 @@
     let currentUser = null;
     let data = { profile: { name: "", role: "", agency: "", pto: 10, sick: 5, photo: "", gender: "", birthday: "", joinDate: "", emergency: "", tasks: [] }, games: { brickBreaker: { highScore: 0 } } };
 
-    // Trivia List
     const insuranceTrivia = [
         "Benjamin Franklin founded the first successful U.S. property insurance company in 1752.",
         "The first auto insurance policy was issued in 1897, when there were fewer than 100 cars on the road.",
@@ -199,11 +201,10 @@
         "The first Social Security check was issued in 1940 to Ida May Fuller for the amount of $22.54.",
         "A 'Floater' policy is named because it covers property that 'floats' or moves (like jewelry).",
         "Pet Insurance was first sold in the U.S. in 1982—the first policyholder was the dog who played Lassie.",
-        "Standard homeowners' insurance almost never cover damage from floods without a special rider.",
+        "Standard homeowners' insurance policies almost never cover damage from floods without a special rider.",
         "Usage-Based Insurance (UBI) uses telematics to track braking and acceleration to determine rates."
     ];
 
-    // Trivia Rotation Logic
     let triviaIndex = 0;
     function rotateTrivia() {
         const display = document.getElementById('trivia-display');
