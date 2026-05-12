@@ -3,84 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LAVA Games | Brick Breaker</title>
+    <title>LAVA Games | Brick Breaker Enhanced</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            background-color: #1e293b;
-            margin: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            color: white;
-            font-family: 'Inter', sans-serif;
-            overflow: hidden;
-        }
-        canvas {
-            background: #0f172a;
-            display: block;
-            border-radius: 8px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            border: 2px solid #2563eb;
-        }
-        .ui {
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        h1 { margin: 0; color: #2563eb; }
-        p { color: #94a3b8; font-size: 0.9rem; }
+        body { background-color: #0f172a; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .ui { margin-bottom: 20px; text-align: center; }
+        h1 { margin: 0 0 10px 0; color: #3b82f6; text-transform: uppercase; letter-spacing: 2px; }
+        p { color: #94a3b8; font-size: 0.9rem; margin: 0; }
+        
+        #game-container { position: relative; width: 800px; height: 600px; }
+        canvas { background: #1e293b; display: block; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); border: 4px solid #3b82f6; width: 100%; height: 100%; }
+
+        /* Menu Overlay */
+        #menu-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+        .menu-title { font-size: 3rem; color: #60a5fa; margin-bottom: 30px; font-weight: 800; text-shadow: 0 0 15px rgba(96,165,250,0.5); }
+        .menu-btns { display: flex; flex-direction: column; gap: 15px; width: 300px; }
+        .btn-menu { background: #3b82f6; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; font-weight: 600; text-transform: uppercase; transition: 0.2s; }
+        .btn-menu:hover { background: #2563eb; transform: translateY(-2px); }
+        .high-score-tag { margin-top: 20px; color: #10b981; font-weight: bold; }
+
+        /* Leaderboard Modal */
+        #leaderboard-modal { display: none; position: absolute; top: 50px; left: 50%; transform: translateX(-50%); width: 600px; background: #1e293b; padding: 30px; border-radius: 16px; border: 2px solid #3b82f6; z-index: 20; box-shadow: 0 20px 40px rgba(0,0,0,0.8); }
+        #leaderboard-modal h2 { color: #10b981; text-align: center; margin-top: 0; }
+        .leaderboard-list { margin-top: 20px; }
+        .leaderboard-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #334155; }
+        .leaderboard-item:last-child { border-bottom: none; }
+        .leaderboard-name { color: white; font-weight: 600; }
+        .leaderboard-score { color: #60a5fa; }
+        .btn-close-modal { position: absolute; top: 15px; right: 15px; background: transparent; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer; }
     </style>
 </head>
 <body>
 
 <div class="ui">
-    <h1>LAVA BRICK BREAKER</h1>
-    <p>Use Mouse or Arrow Keys to Move</p>
+    <h1>LAVA BRICK BREAKER ELITE</h1>
+    <p>Mouse/Arrow Keys Move | Esc to Pause</p>
 </div>
 
-<canvas id="gameCanvas" width="480" height="320"></canvas>
+<div id="game-container">
+    <div id="menu-overlay">
+        <div class="menu-title">COMMANDER</div>
+        <div class="menu-btns">
+            <button class="btn-menu" onclick="startGame()">Start New Game</button>
+            <button class="btn-menu" style="background: #10b981;" onclick="showLeaderboard()">Leaderboard</button>
+        </div>
+        <div class="high-score-tag" id="main-high-score">Your High Score: Loading...</div>
+    </div>
+
+    <div id="leaderboard-modal">
+        <button class="btn-close-modal" onclick="closeLeaderboard()">✕</button>
+        <h2>TOP BRICK COMMANDERS</h2>
+        <div id="leaderboard-content" class="leaderboard-list">
+            Loading...
+        </div>
+    </div>
+
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+</div>
 
 <script>
+    // --- SUPABASE CONFIGURATION (Must match your VAHub index.html) ---
+    const _supabaseUrl = 'https://esjxzcmfxtestkettdyp.supabase.co';
+    const _supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzanh6Y21meHRlc3RrZXR0ZHlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTQ3MzksImV4cCI6MjA5MzczMDczOX0.G9i7nrGVzD8WrKFg7642HvRs9GeTPgkRMuFw8vQ-6C0';
+    const _supabase = supabase.createClient(_supabaseUrl, _supabaseKey);
+
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
+    // Game State
     let score = 0;
+    let totalScore = 0; // Score across all levels
     let lives = 3;
+    let level = 1;
+    let isGameRunning = false;
+    let maxLevels = 3;
+    let vaDataRef = null;
 
-    // Ball properties
+    // Ball properties (Larger screen, slightly faster)
+    let ballRadius = 10;
     let x = canvas.width / 2;
-    let y = canvas.height - 30;
-    let dx = 2;
-    let dy = -2;
-    const ballRadius = 8;
+    let y = canvas.height - 40;
+    let baseDx = 4;
+    let baseDy = -4;
+    let dx = baseDx;
+    let dy = baseDy;
 
-    // Paddle properties
-    const paddleHeight = 10;
-    const paddleWidth = 75;
+    // Paddle properties (Larger screen, wider paddle)
+    const paddleHeight = 12;
+    const paddleWidth = 110;
     let paddleX = (canvas.width - paddleWidth) / 2;
 
     // Controls
     let rightPressed = false;
     let leftPressed = false;
 
-    // Bricks
-    const brickRowCount = 3;
-    const brickColumnCount = 5;
-    const brickWidth = 75;
-    const brickHeight = 20;
-    const brickPadding = 10;
-    const brickOffsetTop = 30;
-    const brickOffsetLeft = 30;
+    // Bricks Config
+    let brickRowCount = 0;
+    let brickColumnCount = 0;
+    let brickWidth = 0;
+    let brickHeight = 25;
+    let brickPadding = 12;
+    let brickOffsetTop = 60;
+    let brickOffsetLeft = 0; 
+    let bricks = [];
 
-    const bricks = [];
-    for (let c = 0; c < brickColumnCount; c++) {
-        bricks[c] = [];
-        for (let r = 0; r < brickRowCount; r++) {
-            bricks[c][r] = { x: 0, y: 0, status: 1 };
+    // --- LEVEL DEFINITIONS ---
+    function initLevel(lvl) {
+        level = lvl;
+        score = 0; 
+        bricks = [];
+        x = canvas.width / 2;
+        y = canvas.height - 40;
+        dx = baseDx + (level * 0.5); // Increase speed per level
+        dy = baseDy - (level * 0.5);
+        paddleX = (canvas.width - paddleWidth) / 2;
+
+        if (level === 1) {
+            // Level 1: Classic Rectangular Wall
+            brickRowCount = 4;
+            brickColumnCount = 8;
+            brickWidth = 80;
+            brickOffsetLeft = (canvas.width - (brickColumnCount * (brickWidth + brickPadding))) / 2;
+
+            for (let c = 0; c < brickColumnCount; c++) {
+                bricks[c] = [];
+                for (let r = 0; r < brickRowCount; r++) {
+                    bricks[c][r] = { x: 0, y: 0, status: 1 };
+                }
+            }
+        } else if (level === 2) {
+            // Level 2: The Pyramid
+            brickColumnCount = 11;
+            brickWidth = 60;
+            brickPadding = 8;
+            brickOffsetLeft = (canvas.width - (brickColumnCount * (brickWidth + brickPadding))) / 2;
+
+            for (let c = 0; c < brickColumnCount; c++) {
+                bricks[c] = [];
+                // Pyramid logic: columns closer to center have more bricks
+                const midpoint = Math.floor(brickColumnCount / 2);
+                const count = midpoint + 1 - Math.abs(midpoint - c);
+                
+                for (let r = 0; r < count; r++) {
+                    bricks[c][r] = { x: 0, y: 0, status: 1 };
+                }
+            }
+        } else if (level === 3) {
+            // Level 3: The Cross (Final Level)
+            brickColumnCount = 11;
+            brickRowCount = 7;
+            brickWidth = 60;
+            brickPadding = 8;
+            brickOffsetLeft = (canvas.width - (brickColumnCount * (brickWidth + brickPadding))) / 2;
+
+            for (let c = 0; c < brickColumnCount; c++) {
+                bricks[c] = [];
+                for (let r = 0; r < brickRowCount; r++) {
+                    // Draw only if it forms a cross shape
+                    const midpointC = Math.floor(brickColumnCount / 2);
+                    const midpointR = Math.floor(brickRowCount / 2);
+                    
+                    if (c === midpointC || r === midpointR) {
+                        bricks[c][r] = { x: 0, y: 0, status: 1 };
+                    } else {
+                        bricks[c][r] = { x: 0, y: 0, status: 0 }; // Pre-destroyed
+                    }
+                }
+            }
         }
     }
 
+    // --- EVENT LISTENERS ---
     document.addEventListener("keydown", keyDownHandler, false);
     document.addEventListener("keyup", keyUpHandler, false);
     document.addEventListener("mousemove", mouseMoveHandler, false);
@@ -88,6 +181,7 @@
     function keyDownHandler(e) {
         if (e.key === "Right" || e.key === "ArrowRight") rightPressed = true;
         else if (e.key === "Left" || e.key === "ArrowLeft") leftPressed = true;
+        else if (e.key === "Esc" || e.key === "Escape") toggleMenu();
     }
 
     function keyUpHandler(e) {
@@ -96,24 +190,65 @@
     }
 
     function mouseMoveHandler(e) {
+        if (!isGameRunning) return;
         const relativeX = e.clientX - canvas.offsetLeft;
         if (relativeX > 0 && relativeX < canvas.width) {
             paddleX = relativeX - paddleWidth / 2;
         }
     }
 
+    // --- MENU LOGIC ---
+    function toggleMenu() {
+        if (!isGameRunning) return; // Can't pause if not playing
+        const overlay = document.getElementById('menu-overlay');
+        overlay.style.display = (overlay.style.display === 'flex') ? 'none' : 'flex';
+        // You could add logic here to properly pause dx/dy
+    }
+
+    function startGame() {
+        document.getElementById('menu-overlay').style.display = 'none';
+        isGameRunning = true;
+        totalScore = 0;
+        score = 0;
+        lives = 3;
+        initLevel(1);
+        draw(); 
+    }
+
+    function countActiveBricks() {
+        let count = 0;
+        for (let c = 0; c < bricks.length; c++) {
+            if (!bricks[c]) continue;
+            for (let r = 0; r < bricks[c].length; r++) {
+                if (bricks[c][r] && bricks[c][r].status === 1) count++;
+            }
+        }
+        return count;
+    }
+
+    // --- CORE GAME ENGINE ---
     function collisionDetection() {
-        for (let c = 0; c < brickColumnCount; c++) {
-            for (let r = 0; r < brickRowCount; r++) {
+        const totalBricksThisLevel = countActiveBricks();
+
+        for (let c = 0; c < bricks.length; c++) {
+            if (!bricks[c]) continue;
+            for (let r = 0; r < bricks[c].length; r++) {
                 const b = bricks[c][r];
-                if (b.status === 1) {
+                if (b && b.status === 1) {
                     if (x > b.x && x < b.x + brickWidth && y > b.y && y < b.y + brickHeight) {
                         dy = -dy;
                         b.status = 0;
                         score++;
-                        if (score === brickRowCount * brickColumnCount) {
-                            alert("CONGRATULATIONS! YOU WIN!");
-                            document.location.reload();
+                        totalScore++;
+
+                        // Level Complete Logic
+                        if (countActiveBricks() === 0) {
+                            if (level < maxLevels) {
+                                alert(`LEVEL ${level} COMPLETE! Preparing Level ${level + 1}...`);
+                                initLevel(level + 1);
+                            } else {
+                                handleGameWin();
+                            }
                         }
                     }
                 }
@@ -121,33 +256,41 @@
         }
     }
 
+    // ... (rest of the draw functions are optimized for the larger screen) ...
+
     function drawBall() {
         ctx.beginPath();
         ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
-        ctx.fillStyle = "#10b981";
+        ctx.fillStyle = "#10b981"; // LAVA Accent
         ctx.fill();
         ctx.closePath();
     }
 
     function drawPaddle() {
         ctx.beginPath();
-        ctx.rect(paddleX, canvas.height - paddleHeight, paddleWidth, paddleHeight);
-        ctx.fillStyle = "#2563eb";
+        ctx.rect(paddleX, canvas.height - paddleHeight - 5, paddleWidth, paddleHeight);
+        ctx.fillStyle = "#3b82f6"; // LAVA Primary
         ctx.fill();
         ctx.closePath();
     }
 
     function drawBricks() {
-        for (let c = 0; c < brickColumnCount; c++) {
-            for (let r = 0; r < brickRowCount; r++) {
-                if (bricks[c][r].status === 1) {
+        for (let c = 0; c < bricks.length; c++) {
+            if (!bricks[c]) continue;
+            for (let r = 0; r < bricks[c].length; r++) {
+                if (bricks[c][r] && bricks[c][r].status === 1) {
                     const brickX = c * (brickWidth + brickPadding) + brickOffsetLeft;
                     const brickY = r * (brickHeight + brickPadding) + brickOffsetTop;
                     bricks[c][r].x = brickX;
                     bricks[c][r].y = brickY;
                     ctx.beginPath();
                     ctx.rect(brickX, brickY, brickWidth, brickHeight);
-                    ctx.fillStyle = "#ef4444";
+                    
+                    // Different color per level
+                    if (level === 1) ctx.fillStyle = "#ef4444"; // Red
+                    else if (level === 2) ctx.fillStyle = "#f97316"; // Orange
+                    else ctx.fillStyle = "#a855f7"; // Purple
+                    
                     ctx.fill();
                     ctx.closePath();
                 }
@@ -156,61 +299,172 @@
     }
 
     function drawScore() {
-        ctx.font = "16px Inter";
+        ctx.font = "bold 18px Inter";
         ctx.fillStyle = "#ffffff";
-        ctx.fillText("Score: " + score, 8, 20);
+        ctx.fillText("Score: " + totalScore, 15, 30);
+    }
+
+    function drawLevel() {
+        ctx.font = "bold 18px Inter";
+        ctx.fillStyle = "#60a5fa";
+        ctx.fillText("Level: " + level, canvas.width / 2 - 40, 30);
     }
 
     function drawLives() {
-        ctx.font = "16px Inter";
+        ctx.font = "bold 18px Inter";
         ctx.fillStyle = "#ffffff";
-        ctx.fillText("Lives: " + lives, canvas.width - 65, 20);
+        ctx.fillText("Lives: " + lives, canvas.width - 90, 30);
     }
 
     function draw() {
+        if (!isGameRunning) return;
+        const overlay = document.getElementById('menu-overlay');
+        if (overlay.style.display === 'flex') {
+            requestAnimationFrame(draw); // Keep the loop alive but don't clear/draw
+            return;
+        }
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawBricks();
         drawBall();
         drawPaddle();
         drawScore();
+        drawLevel();
         drawLives();
         collisionDetection();
 
-        if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) {
-            dx = -dx;
-        }
-        if (y + dy < ballRadius) {
-            dy = -dy;
-        } else if (y + dy > canvas.height - ballRadius) {
+        // Wall collisions (Larger bounds)
+        if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) dx = -dx;
+        if (y + dy < ballRadius) dy = -dy;
+        else if (y + dy > canvas.height - ballRadius - 5) {
             if (x > paddleX && x < paddleX + paddleWidth) {
+                // Ball hits paddle
                 dy = -dy;
             } else {
                 lives--;
                 if (!lives) {
-                    alert("GAME OVER");
-                    document.location.reload();
+                    handleGameOver();
                 } else {
+                    // Reset ball/paddle position
                     x = canvas.width / 2;
-                    y = canvas.height - 30;
-                    dx = 2;
-                    dy = -2;
+                    y = canvas.height - 40;
+                    dx = baseDx + (level * 0.5); 
+                    dy = baseDy - (level * 0.5);
                     paddleX = (canvas.width - paddleWidth) / 2;
                 }
             }
         }
 
-        if (rightPressed && paddleX < canvas.width - paddleWidth) {
-            paddleX += 7;
-        } else if (leftPressed && paddleX > 0) {
-            paddleX -= 7;
-        }
+        // Paddle movement speed increased for larger screen
+        if (rightPressed && paddleX < canvas.width - paddleWidth) paddleX += 9;
+        else if (leftPressed && paddleX > 0) paddleX -= 9;
 
         x += dx;
         y += dy;
         requestAnimationFrame(draw);
     }
 
-    draw();
+    // --- END GAME & SUPABASE LOGIC ---
+    function handleGameOver() {
+        isGameRunning = false;
+        saveHighScore(totalScore); // Try saving score
+        alert("GAME OVER! Your Score: " + totalScore);
+        location.reload(); 
+    }
+
+    function handleGameWin() {
+        isGameRunning = false;
+        totalScore += 100; // Bonus for completion
+        saveHighScore(totalScore); 
+        alert("CONGRATULATIONS COMMANDER! YOU DESTROYED ALL LEVELS! Final Score: " + totalScore);
+        location.reload();
+    }
+
+    // --- AUTH & DATA INTEGRATION ---
+    async function loadVAData() {
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (!session) return;
+        const vaUser = session.user;
+
+        const { data, error } = await _supabase.from('va_data').select('*').eq('user_id', vaUser.id).single();
+        if (data) {
+            vaDataRef = data;
+            const highScore = data.games_data?.brickBreaker?.highScore || 0;
+            document.getElementById('main-high-score').innerText = `Your High Score: ${highScore}`;
+        }
+    }
+
+    async function saveHighScore(currentScore) {
+        if (!vaDataRef || !vaDataRef.user_id) return;
+
+        const oldHighScore = vaDataRef.games_data?.brickBreaker?.highScore || 0;
+        
+        if (currentScore > oldHighScore) {
+            // New High Score found
+            const updatedGamesData = {
+                ...vaDataRef.games_data,
+                brickBreaker: {
+                    highScore: currentScore,
+                    lastPlayed: new Date()
+                }
+            };
+
+            const { error } = await _supabase.from('va_data').upsert({
+                user_id: vaDataRef.user_id,
+                games_data: updatedGamesData,
+                updated_at: new Date()
+            }, { onConflict: 'user_id' });
+
+            if (!error) {
+                // Also update the dashboard value immediately
+                document.getElementById('main-high-score').innerText = `Your High Score: ${currentScore} (New!)`;
+            }
+        }
+    }
+
+    // --- LEADERBOARD LOGIC ---
+    async function showLeaderboard() {
+        const modal = document.getElementById('leaderboard-modal');
+        const content = document.getElementById('leaderboard-content');
+        modal.style.display = 'block';
+        content.innerHTML = 'Loading Top VAs...';
+
+        const { data, error } = await _supabase.from('va_data').select('profile_data, games_data').not('games_data', 'is', null);
+
+        if (error) {
+            content.innerHTML = 'Error loading scores.';
+            return;
+        }
+
+        // Filter and sort the data manually since it's nested JSONB
+        const leaderboard = data
+            .filter(va => va.games_data?.brickBreaker?.highScore) // VAs who have played
+            .map(va => ({
+                name: va.profile_data.name || 'Unknown VA',
+                score: va.games_data.brickBreaker.highScore
+            }))
+            .sort((a, b) => b.score - a.score) // Sort descending
+            .slice(0, 10); // Get Top 10
+
+        if (leaderboard.length === 0) {
+            content.innerHTML = 'No scores recorded yet!';
+        } else {
+            content.innerHTML = leaderboard.map((entry, index) => `
+                <div class="leaderboard-item">
+                    <span class="leaderboard-name">${index + 1}. ${entry.name}</span>
+                    <span class="leaderboard-score">${entry.score} pts</span>
+                </div>
+            `).join('');
+        }
+    }
+
+    function closeLeaderboard() {
+        document.getElementById('leaderboard-modal').style.display = 'none';
+    }
+
+    // Initialize Menu/Data
+    loadVAData();
+
 </script>
 </body>
 </html>
