@@ -71,7 +71,6 @@
         
         .trivia-controls { background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
         .trivia-controls:hover { background: rgba(255,255,255,0.2); }
-        .trivia-controls span { font-size: 0.8rem; }
 
         .task-tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
         .task-tag { background: #eff6ff; color: #2563eb; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; border: 1px solid #dbeafe; }
@@ -126,6 +125,7 @@
                 <div class="nav-item" onclick="toggleDropdown('games-dropdown', 'games-arrow')">LAVA Games <span class="arrow" id="games-arrow">▼</span></div>
                 <div class="dropdown-container" id="games-dropdown">
                     <div class="dropdown-item" onclick="window.open('brick breaker.html', '_blank')">Brick Breaker Elite</div>
+                    <div class="dropdown-item" onclick="window.open('underwriter.html', '_blank')">Underwriter’s Ledger</div>
                 </div>
             </div>
             <div class="nav-item logout-btn" onclick="handleLogout()">Logout</div>
@@ -244,7 +244,7 @@
         const btn = document.getElementById('trivia-btn');
         if(isTriviaPaused) {
             icon.innerText = "▶";
-            btn.style.background = "rgba(16, 185, 129, 0.4)"; // Subtle green when paused/ready to play
+            btn.style.background = "rgba(16, 185, 129, 0.4)";
         } else {
             icon.innerText = "⏸";
             btn.style.background = "rgba(255, 255, 255, 0.1)";
