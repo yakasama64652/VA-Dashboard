@@ -73,6 +73,10 @@
         .leave-stat span { font-size: 1.4rem; font-weight: 800; color: var(--dark); }
         .leave-btns { margin-top: 8px; display: flex; justify-content: center; gap: 5px; }
         .leave-btns button { padding: 2px 8px; font-size: 0.7rem; cursor: pointer; border-radius: 4px; border: 1px solid #cbd5e1; }
+
+        /* Task Tags Display */
+        .task-tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
+        .task-tag { background: #eff6ff; color: #2563eb; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; border: 1px solid #dbeafe; }
     </style>
 </head>
 <body>
@@ -87,7 +91,6 @@
         <span class="toggle-link" onclick="toggleAuth('magic')">Forgot Password? Use Magic Link</span>
         <span class="toggle-link" onclick="toggleAuth('signup')">Need an account? Signup</span>
     </div>
-
     <div class="auth-card" id="signup-card" style="display:none;">
         <img src="https://raw.githubusercontent.com/yakasama64652/PTO/main/kling_20260422_VIDEO__1217_0.png" alt="LAVA Logo">
         <h2>VA Signup</h2>
@@ -96,7 +99,6 @@
         <button class="btn-prime" onclick="handleSignup()">Sign Up</button>
         <span class="toggle-link" onclick="toggleAuth('login')">Back to Login</span>
     </div>
-
     <div class="auth-card" id="magic-card" style="display:none;">
         <img src="https://raw.githubusercontent.com/yakasama64652/PTO/main/kling_20260422_VIDEO__1217_0.png" alt="LAVA Logo">
         <h2>Magic Login</h2>
@@ -117,19 +119,13 @@
             <div class="nav-container">
                 <div class="nav-item">Dashboard</div>
                 <div class="nav-item">SOP Vault</div>
-                
-                <div class="nav-item" onclick="toggleDropdown('report-dropdown', 'report-arrow')">
-                    Reports <span class="arrow" id="report-arrow">▼</span>
-                </div>
+                <div class="nav-item" onclick="toggleDropdown('report-dropdown', 'report-arrow')">Reports <span class="arrow" id="report-arrow">▼</span></div>
                 <div class="dropdown-container" id="report-dropdown">
                     <div class="dropdown-item">Attendance</div>
                     <div class="dropdown-item">Payslips</div>
                     <div class="dropdown-item">Time Off Records</div>
                 </div>
-                
-                <div class="nav-item" onclick="toggleDropdown('games-dropdown', 'games-arrow')">
-                    LAVA Games <span class="arrow" id="games-arrow">▼</span>
-                </div>
+                <div class="nav-item" onclick="toggleDropdown('games-dropdown', 'games-arrow')">LAVA Games <span class="arrow" id="games-arrow">▼</span></div>
                 <div class="dropdown-container" id="games-dropdown">
                     <div class="dropdown-item" onclick="window.open('brick breaker.html', '_blank')">Brick Breaker Elite</div>
                 </div>
@@ -154,9 +150,13 @@
                                 <span id="display-gender">Gender</span> • <span id="display-birthday">Birthday</span>
                             </div>
                             
-                            <div style="font-size: 0.9rem; margin-top: 5px;">
+                            <div style="font-size: 0.9rem; margin-top: 8px;">
                                 Agency: <b id="display-agency">Agency Name</b> 
                                 <span style="color: #64748b; font-size: 0.8rem; margin-left: 5px;">(Joined: <span id="display-join-date">Date</span>)</span>
+                            </div>
+
+                            <div style="font-size: 0.85rem; margin-top: 10px; color: var(--danger); font-weight: 600;">
+                                Emergency Contact: <span id="display-emergency" style="color: var(--dark);">None</span>
                             </div>
                         </div>
                     </div>
@@ -175,6 +175,11 @@
                 </div>
             </div>
 
+            <div class="card" id="task-card" style="display:none;">
+                <h3 style="margin-top:0; font-size: 1rem;">Core Tasks & Responsibilities</h3>
+                <div id="display-tasks" class="task-tag-container"></div>
+            </div>
+
             <div class="card" id="gaming-stats-card" style="display:none;">
                 <h3>Gaming High Scores</h3>
                 <div style="background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
@@ -189,7 +194,7 @@
 <script>
     const _supabase = supabase.createClient('https://esjxzcmfxtestkettdyp.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzanh6Y21meHRlc3RrZXR0ZHlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTQ3MzksImV4cCI6MjA5MzczMDczOX0.G9i7nrGVzD8WrKFg7642HvRs9GeTPgkRMuFw8vQ-6C0');
     let currentUser = null;
-    let data = { profile: { name: "", role: "", agency: "", pto: 10, sick: 5, photo: "", gender: "", birthday: "", joinDate: "" }, games: { brickBreaker: { highScore: 0 } } };
+    let data = { profile: { name: "", role: "", agency: "", pto: 10, sick: 5, photo: "", gender: "", birthday: "", joinDate: "", emergency: "", tasks: [] }, games: { brickBreaker: { highScore: 0 } } };
 
     function toggleDropdown(menuId, arrowId) {
         const dropdown = document.getElementById(menuId);
@@ -220,23 +225,13 @@
 
     async function handleMagicLink() {
         const email = document.getElementById('magic-email').value;
-        const { error } = await _supabase.auth.signInWithOtp({ 
-            email: email,
-            options: { emailRedirectTo: window.location.href }
-        });
+        const { error } = await _supabase.auth.signInWithOtp({ email: email, options: { emailRedirectTo: window.location.href } });
         if (error) alert(error.message); else alert("Magic link sent! Check your inbox.");
     }
 
-    async function handleLogout() {
-        await _supabase.auth.signOut();
-        checkSession();
-    }
+    async function handleLogout() { await _supabase.auth.signOut(); checkSession(); }
 
-    _supabase.auth.onAuthStateChange((event, session) => {
-        if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
-            checkSession();
-        }
-    });
+    _supabase.auth.onAuthStateChange((event, session) => { if (event === "SIGNED_IN" || event === "INITIAL_SESSION") { checkSession(); } });
 
     async function checkSession() {
         const { data: { session } } = await _supabase.auth.getSession();
@@ -259,19 +254,12 @@
             data.profile = dbData.profile_data;
             data.games = dbData.games_data || { brickBreaker: { highScore: 0 } };
             renderAll();
-        } else {
-            await saveToSupabase();
-        }
+        } else { await saveToSupabase(); }
     }
 
     async function saveToSupabase() {
         if (!currentUser) return;
-        await _supabase.from('va_data').upsert({ 
-            user_id: currentUser.id, 
-            profile_data: data.profile, 
-            games_data: data.games,
-            updated_at: new Date()
-        }, { onConflict: 'user_id' });
+        await _supabase.from('va_data').upsert({ user_id: currentUser.id, profile_data: data.profile, games_data: data.games, updated_at: new Date() }, { onConflict: 'user_id' });
         renderAll();
     }
 
@@ -288,6 +276,19 @@
         document.getElementById('display-join-date').innerText = p.joinDate || "Date";
         document.getElementById('pto-val').innerText = p.pto || 0;
         document.getElementById('sick-val').innerText = p.sick || 0;
+
+        // Render Emergency Contact
+        document.getElementById('display-emergency').innerText = p.emergency || "None";
+
+        // Render Tasks Tags
+        const taskCard = document.getElementById('task-card');
+        const taskContainer = document.getElementById('display-tasks');
+        if (p.tasks && p.tasks.length > 0) {
+            taskCard.style.display = 'block';
+            taskContainer.innerHTML = p.tasks.map(t => `<div class="task-tag">${t}</div>`).join('');
+        } else {
+            taskCard.style.display = 'none';
+        }
 
         const highscore = data.games?.brickBreaker?.highScore || 0;
         document.getElementById('pto-brickbreaker-score').innerText = highscore + " pts";
