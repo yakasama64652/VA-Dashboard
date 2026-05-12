@@ -3,33 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LAVA Games | Brick Breaker Enhanced</title>
+    <title>LAVA Games | Brick Breaker Elite (Updated Paddle)</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background-color: #0f172a; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
         .ui { margin-bottom: 20px; text-align: center; }
-        h1 { margin: 0 0 10px 0; color: #3b82f6; text-transform: uppercase; letter-spacing: 2px; }
+        h1 { margin: 0 0 10px 0; color: #ef4444; text-transform: uppercase; letter-spacing: 2px; } /* Updated Title Color for PaddleRed */
         p { color: #94a3b8; font-size: 0.9rem; margin: 0; }
         
         #game-container { position: relative; width: 800px; height: 600px; }
-        canvas { background: #1e293b; display: block; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); border: 4px solid #3b82f6; width: 100%; height: 100%; }
+        canvas { background: #1e293b; display: block; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); border: 4px solid #ef4444; width: 100%; height: 100%; } /* Canvas Border update to Red */
 
         /* Menu Overlay */
         #menu-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
-        .menu-title { font-size: 3rem; color: #60a5fa; margin-bottom: 30px; font-weight: 800; text-shadow: 0 0 15px rgba(96,165,250,0.5); }
+        .menu-title { font-size: 3rem; color: #ef4444; margin-bottom: 30px; font-weight: 800; text-shadow: 0 0 15px rgba(239,68,68,0.5); }
         .menu-btns { display: flex; flex-direction: column; gap: 15px; width: 300px; }
-        .btn-menu { background: #3b82f6; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; font-weight: 600; text-transform: uppercase; transition: 0.2s; }
-        .btn-menu:hover { background: #2563eb; transform: translateY(-2px); }
+        .btn-menu { background: #ef4444; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; font-weight: 600; text-transform: uppercase; transition: 0.2s; }
+        .btn-menu:hover { background: #dc2626; transform: translateY(-2px); }
         .high-score-tag { margin-top: 20px; color: #10b981; font-weight: bold; }
 
         /* Leaderboard Modal */
-        #leaderboard-modal { display: none; position: absolute; top: 50px; left: 50%; transform: translateX(-50%); width: 600px; background: #1e293b; padding: 30px; border-radius: 16px; border: 2px solid #3b82f6; z-index: 20; box-shadow: 0 20px 40px rgba(0,0,0,0.8); }
+        #leaderboard-modal { display: none; position: absolute; top: 50px; left: 50%; transform: translateX(-50%); width: 600px; background: #1e293b; padding: 30px; border-radius: 16px; border: 2px solid #ef4444; z-index: 20; box-shadow: 0 20px 40px rgba(0,0,0,0.8); }
         #leaderboard-modal h2 { color: #10b981; text-align: center; margin-top: 0; }
         .leaderboard-list { margin-top: 20px; }
         .leaderboard-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #334155; }
         .leaderboard-item:last-child { border-bottom: none; }
         .leaderboard-name { color: white; font-weight: 600; }
-        .leaderboard-score { color: #60a5fa; }
+        .leaderboard-score { color: #ef4444; }
         .btn-close-modal { position: absolute; top: 15px; right: 15px; background: transparent; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer; }
     </style>
 </head>
@@ -70,6 +70,14 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
+    // --- 1. NEW: LOAD PADDLE IMAGE ---
+    const paddleImage = new Image();
+    paddleImage.src = 'paddleRed.png'; // Make sure this file is in the same GitHub folder
+    let paddleLoaded = false;
+    paddleImage.onload = () => {
+        paddleLoaded = true;
+    };
+
     // Game State
     let score = 0;
     let totalScore = 0; // Score across all levels
@@ -88,9 +96,9 @@
     let dx = baseDx;
     let dy = baseDy;
 
-    // Paddle properties (Larger screen, wider paddle)
-    const paddleHeight = 12;
-    const paddleWidth = 110;
+    // Paddle properties (Updated for the image aspect ratio)
+    const paddleHeight = 16; // Slightly increased height for visibility
+    const paddleWidth = 120; // Slightly widened paddle
     let paddleX = (canvas.width - paddleWidth) / 2;
 
     // Controls
@@ -107,7 +115,7 @@
     let brickOffsetLeft = 0; 
     let bricks = [];
 
-    // --- LEVEL DEFINITIONS ---
+    // --- LEVEL DEFINITIONS (Unchanged) ---
     function initLevel(lvl) {
         level = lvl;
         score = 0; 
@@ -119,7 +127,6 @@
         paddleX = (canvas.width - paddleWidth) / 2;
 
         if (level === 1) {
-            // Level 1: Classic Rectangular Wall
             brickRowCount = 4;
             brickColumnCount = 8;
             brickWidth = 80;
@@ -132,7 +139,6 @@
                 }
             }
         } else if (level === 2) {
-            // Level 2: The Pyramid
             brickColumnCount = 11;
             brickWidth = 60;
             brickPadding = 8;
@@ -140,7 +146,6 @@
 
             for (let c = 0; c < brickColumnCount; c++) {
                 bricks[c] = [];
-                // Pyramid logic: columns closer to center have more bricks
                 const midpoint = Math.floor(brickColumnCount / 2);
                 const count = midpoint + 1 - Math.abs(midpoint - c);
                 
@@ -149,7 +154,6 @@
                 }
             }
         } else if (level === 3) {
-            // Level 3: The Cross (Final Level)
             brickColumnCount = 11;
             brickRowCount = 7;
             brickWidth = 60;
@@ -159,7 +163,6 @@
             for (let c = 0; c < brickColumnCount; c++) {
                 bricks[c] = [];
                 for (let r = 0; r < brickRowCount; r++) {
-                    // Draw only if it forms a cross shape
                     const midpointC = Math.floor(brickColumnCount / 2);
                     const midpointR = Math.floor(brickRowCount / 2);
                     
@@ -173,7 +176,7 @@
         }
     }
 
-    // --- EVENT LISTENERS ---
+    // --- EVENT LISTENERS (Unchanged) ---
     document.addEventListener("keydown", keyDownHandler, false);
     document.addEventListener("keyup", keyUpHandler, false);
     document.addEventListener("mousemove", mouseMoveHandler, false);
@@ -197,12 +200,11 @@
         }
     }
 
-    // --- MENU LOGIC ---
+    // --- MENU LOGIC (Unchanged) ---
     function toggleMenu() {
-        if (!isGameRunning) return; // Can't pause if not playing
+        if (!isGameRunning) return; 
         const overlay = document.getElementById('menu-overlay');
         overlay.style.display = (overlay.style.display === 'flex') ? 'none' : 'flex';
-        // You could add logic here to properly pause dx/dy
     }
 
     function startGame() {
@@ -226,10 +228,8 @@
         return count;
     }
 
-    // --- CORE GAME ENGINE ---
+    // --- CORE GAME ENGINE (Unchanged Collision) ---
     function collisionDetection() {
-        const totalBricksThisLevel = countActiveBricks();
-
         for (let c = 0; c < bricks.length; c++) {
             if (!bricks[c]) continue;
             for (let r = 0; r < bricks[c].length; r++) {
@@ -256,22 +256,27 @@
         }
     }
 
-    // ... (rest of the draw functions are optimized for the larger screen) ...
-
     function drawBall() {
         ctx.beginPath();
         ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
-        ctx.fillStyle = "#10b981"; // LAVA Accent
+        ctx.fillStyle = "#10b981"; // Ball Color remains Emerald
         ctx.fill();
         ctx.closePath();
     }
 
+    // --- 2. UPDATED: DRAW PADDLE USING THE IMAGE ---
     function drawPaddle() {
-        ctx.beginPath();
-        ctx.rect(paddleX, canvas.height - paddleHeight - 5, paddleWidth, paddleHeight);
-        ctx.fillStyle = "#3b82f6"; // LAVA Primary
-        ctx.fill();
-        ctx.closePath();
+        if (paddleLoaded) {
+            // Draw the paddleRed.png file
+            ctx.drawImage(paddleImage, paddleX, canvas.height - paddleHeight - 5, paddleWidth, paddleHeight);
+        } else {
+            // Fallback: If image fails to load, draw the original red rectangle
+            ctx.beginPath();
+            ctx.rect(paddleX, canvas.height - paddleHeight - 5, paddleWidth, paddleHeight);
+            ctx.fillStyle = "#ef4444"; 
+            ctx.fill();
+            ctx.closePath();
+        }
     }
 
     function drawBricks() {
@@ -287,9 +292,9 @@
                     ctx.rect(brickX, brickY, brickWidth, brickHeight);
                     
                     // Different color per level
-                    if (level === 1) ctx.fillStyle = "#ef4444"; // Red
-                    else if (level === 2) ctx.fillStyle = "#f97316"; // Orange
-                    else ctx.fillStyle = "#a855f7"; // Purple
+                    if (level === 1) ctx.fillStyle = "#3b82f6"; // level 1 blue
+                    else if (level === 2) ctx.fillStyle = "#10b981"; // level 2 emerald
+                    else ctx.fillStyle = "#ef4444"; // level 3 red
                     
                     ctx.fill();
                     ctx.closePath();
@@ -297,6 +302,8 @@
             }
         }
     }
+
+    // drawScore, drawLevel, drawLives (Unchanged text drawing)
 
     function drawScore() {
         ctx.font = "bold 18px Inter";
@@ -306,7 +313,7 @@
 
     function drawLevel() {
         ctx.font = "bold 18px Inter";
-        ctx.fillStyle = "#60a5fa";
+        ctx.fillStyle = "#ffffff"; // level text in White
         ctx.fillText("Level: " + level, canvas.width / 2 - 40, 30);
     }
 
@@ -320,27 +327,33 @@
         if (!isGameRunning) return;
         const overlay = document.getElementById('menu-overlay');
         if (overlay.style.display === 'flex') {
-            requestAnimationFrame(draw); // Keep the loop alive but don't clear/draw
+            requestAnimationFrame(draw); 
             return;
         }
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawBricks();
         drawBall();
-        drawPaddle();
+        drawPaddle(); // Updated function is called here
         drawScore();
         drawLevel();
         drawLives();
         collisionDetection();
 
-        // Wall collisions (Larger bounds)
+        // Wall collisions (bounds adjusted for image paddle)
         if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) dx = -dx;
         if (y + dy < ballRadius) dy = -dy;
         else if (y + dy > canvas.height - ballRadius - 5) {
-            if (x > paddleX && x < paddleX + paddleWidth) {
+            // Collision detection with the image paddle area
+            if (x > paddleX && x < paddleX + paddleWidth && y + dy > canvas.height - paddleHeight - ballRadius - 5) {
                 // Ball hits paddle
                 dy = -dy;
-            } else {
+                // Add minor DX variance depending on where it hit the paddle
+                dx = dx + ( (x - (paddleX + paddleWidth/2)) / (paddleWidth/2) );
+                if(dx > 6) dx = 6;
+                if(dx < -6) dx = -6;
+            } else if(y + dy > canvas.height - ballRadius) {
+                // Ball completely missed the paddle
                 lives--;
                 if (!lives) {
                     handleGameOver();
@@ -364,10 +377,10 @@
         requestAnimationFrame(draw);
     }
 
-    // --- END GAME & SUPABASE LOGIC ---
+    // --- END GAME & SUPABASE LOGIC (Unchanged) ---
     function handleGameOver() {
         isGameRunning = false;
-        saveHighScore(totalScore); // Try saving score
+        saveHighScore(totalScore); 
         alert("GAME OVER! Your Score: " + totalScore);
         location.reload(); 
     }
@@ -380,7 +393,7 @@
         location.reload();
     }
 
-    // --- AUTH & DATA INTEGRATION ---
+    // --- AUTH & DATA INTEGRATION (Unchanged) ---
     async function loadVAData() {
         const { data: { session } } = await _supabase.auth.getSession();
         if (!session) return;
@@ -400,7 +413,6 @@
         const oldHighScore = vaDataRef.games_data?.brickBreaker?.highScore || 0;
         
         if (currentScore > oldHighScore) {
-            // New High Score found
             const updatedGamesData = {
                 ...vaDataRef.games_data,
                 brickBreaker: {
@@ -416,13 +428,12 @@
             }, { onConflict: 'user_id' });
 
             if (!error) {
-                // Also update the dashboard value immediately
                 document.getElementById('main-high-score').innerText = `Your High Score: ${currentScore} (New!)`;
             }
         }
     }
 
-    // --- LEADERBOARD LOGIC ---
+    // --- LEADERBOARD LOGIC (Unchanged) ---
     async function showLeaderboard() {
         const modal = document.getElementById('leaderboard-modal');
         const content = document.getElementById('leaderboard-content');
@@ -436,15 +447,14 @@
             return;
         }
 
-        // Filter and sort the data manually since it's nested JSONB
         const leaderboard = data
-            .filter(va => va.games_data?.brickBreaker?.highScore) // VAs who have played
+            .filter(va => va.games_data?.brickBreaker?.highScore) 
             .map(va => ({
                 name: va.profile_data.name || 'Unknown VA',
                 score: va.games_data.brickBreaker.highScore
             }))
-            .sort((a, b) => b.score - a.score) // Sort descending
-            .slice(0, 10); // Get Top 10
+            .sort((a, b) => b.score - a.score) 
+            .slice(0, 10); 
 
         if (leaderboard.length === 0) {
             content.innerHTML = 'No scores recorded yet!';
