@@ -41,7 +41,7 @@
 
         .logout-btn { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); margin-top: auto; justify-content: center; width: 100%; }
 
-        /* Fixed: Expanded Main Content width */
+        /* Main Content */
         .main-content { margin-left: 280px; padding: 40px; flex-grow: 1; width: calc(100% - 280px); box-sizing: border-box; }
         .card { background: white; padding: 25px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; position: relative; height: 100%; box-sizing: border-box; }
         
@@ -52,28 +52,29 @@
         .edit-btn { position: absolute; top: 20px; right: 20px; background: #f1f5f9; border: 1px solid #e2e8f0; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--dark); transition: 0.2s; z-index: 50; }
         .edit-btn:hover { background: #e2e8f0; }
 
-        /* Fixed: Fluid Three Column Grid to use full width */
+        /* Fluid Three Column Grid */
         .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; align-items: stretch; width: 100%; }
 
-        .btn-prime { background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600; transition: 0.2s; }
-        .btn-prime:hover { filter: brightness(1.1); }
-        
         .leave-stat { background: #f1f5f9; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0; margin-bottom: 10px; }
         .leave-stat label { font-size: 0.7rem; font-weight: 800; color: #64748b; display: block; margin-bottom: 5px; }
         .leave-stat span { font-size: 1.4rem; font-weight: 800; color: var(--dark); }
         .leave-btns { margin-top: 8px; display: flex; justify-content: center; gap: 5px; }
         .leave-btns button { padding: 2px 8px; font-size: 0.7rem; cursor: pointer; border-radius: 4px; border: 1px solid #cbd5e1; }
 
-        /* Insurance Trivia Card */
+        /* Trivia Card & Controls */
         .trivia-card { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; border: none; min-height: 250px; }
-        .trivia-card h4 { margin: 0 0 10px 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); }
+        .trivia-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .trivia-card h4 { margin: 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); }
         .trivia-text { font-size: 1rem; line-height: 1.6; transition: opacity 0.5s ease-in-out; opacity: 1; }
         .trivia-text.fade { opacity: 0; }
         .trivia-icon { position: absolute; bottom: -10px; right: -10px; font-size: 5rem; opacity: 0.1; transform: rotate(-15deg); pointer-events: none; }
+        
+        .trivia-controls { background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+        .trivia-controls:hover { background: rgba(255,255,255,0.2); }
+        .trivia-controls span { font-size: 0.8rem; }
 
         .task-tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
         .task-tag { background: #eff6ff; color: #2563eb; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; border: 1px solid #dbeafe; }
-        
         .gaming-score-row { background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; width: 100%; box-sizing: border-box; }
     </style>
 </head>
@@ -85,7 +86,7 @@
         <h2>VA Command Center</h2>
         <input type="email" id="login-email" placeholder="Email">
         <input type="password" id="login-pass" placeholder="Password">
-        <button class="btn-prime" onclick="handleLogin()">Login</button>
+        <button class="btn-prime" onclick="handleLogin()" style="background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600;">Login</button>
         <span class="toggle-link" onclick="toggleAuth('magic')">Forgot Password? Use Magic Link</span>
         <span class="toggle-link" onclick="toggleAuth('signup')">Need an account? Signup</span>
     </div>
@@ -94,14 +95,14 @@
         <h2>VA Signup</h2>
         <input type="email" id="reg-email" placeholder="Email">
         <input type="password" id="reg-pass" placeholder="Password">
-        <button class="btn-prime" onclick="handleSignup()">Sign Up</button>
+        <button class="btn-prime" onclick="handleSignup()" style="background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600;">Sign Up</button>
         <span class="toggle-link" onclick="toggleAuth('login')">Back to Login</span>
     </div>
     <div class="auth-card" id="magic-card" style="display:none;">
         <img src="https://raw.githubusercontent.com/yakasama64652/PTO/main/kling_20260422_VIDEO__1217_0.png" alt="LAVA Logo">
         <h2>Magic Login</h2>
         <input type="email" id="magic-email" placeholder="Enter your email">
-        <button class="btn-prime" id="magic-btn" onclick="handleMagicLink()">Send Magic Link</button>
+        <button class="btn-prime" id="magic-btn" onclick="handleMagicLink()" style="background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600;">Send Magic Link</button>
         <span class="toggle-link" onclick="toggleAuth('login')">Back to Password Login</span>
     </div>
 </div>
@@ -168,7 +169,12 @@
                 </div>
 
                 <div class="card trivia-card">
-                    <h4>Did you know?</h4>
+                    <div class="trivia-header">
+                        <h4>Did you know?</h4>
+                        <button class="trivia-controls" onclick="toggleTrivia()" id="trivia-btn">
+                            <span id="play-pause-icon">⏸</span>
+                        </button>
+                    </div>
                     <div id="trivia-display" class="trivia-text">Loading insurance facts...</div>
                     <div class="trivia-icon">🛡️</div>
                 </div>
@@ -211,7 +217,11 @@
     ];
 
     let triviaIndex = 0;
+    let triviaInterval;
+    let isTriviaPaused = false;
+
     function rotateTrivia() {
+        if(isTriviaPaused) return;
         const display = document.getElementById('trivia-display');
         if(!display) return;
         display.classList.add('fade');
@@ -221,8 +231,27 @@
             triviaIndex = (triviaIndex + 1) % insuranceTrivia.length;
         }, 500);
     }
-    setInterval(rotateTrivia, 6000);
-    rotateTrivia();
+
+    function startTrivia() {
+        clearInterval(triviaInterval);
+        rotateTrivia();
+        triviaInterval = setInterval(rotateTrivia, 6000);
+    }
+
+    function toggleTrivia() {
+        isTriviaPaused = !isTriviaPaused;
+        const icon = document.getElementById('play-pause-icon');
+        const btn = document.getElementById('trivia-btn');
+        if(isTriviaPaused) {
+            icon.innerText = "▶";
+            btn.style.background = "rgba(16, 185, 129, 0.4)"; // Subtle green when paused/ready to play
+        } else {
+            icon.innerText = "⏸";
+            btn.style.background = "rgba(255, 255, 255, 0.1)";
+        }
+    }
+
+    startTrivia();
 
     function toggleDropdown(menuId, arrowId) {
         const dropdown = document.getElementById(menuId);
