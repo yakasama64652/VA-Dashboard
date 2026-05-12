@@ -61,7 +61,7 @@
             font-size: 0.85rem; 
             color: var(--dark); 
             transition: 0.2s;
-            z-index: 5; 
+            z-index: 50; 
         }
         .edit-btn:hover { background: #e2e8f0; }
 
@@ -73,9 +73,6 @@
         .leave-stat span { font-size: 1.4rem; font-weight: 800; color: var(--dark); }
         .leave-btns { margin-top: 8px; display: flex; justify-content: center; gap: 5px; }
         .leave-btns button { padding: 2px 8px; font-size: 0.7rem; cursor: pointer; border-radius: 4px; border: 1px solid #cbd5e1; }
-
-        .task-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: #f8fafc; border-radius: 10px; margin-bottom: 8px; border-left: 4px solid var(--primary); text-align: left; }
-        .task-item.completed { opacity: 0.5; text-decoration: line-through; }
     </style>
 </head>
 <body>
@@ -185,15 +182,6 @@
                     <span id="pto-brickbreaker-score" style="font-weight:bold; font-size:1.1rem;">0 pts</span>
                 </div>
             </div>
-
-            <div class="card">
-                <h3>Task List</h3>
-                <div style="display:flex; gap: 10px; margin-bottom: 20px;">
-                    <input type="text" id="task-input" placeholder="What's the goal for today?" style="flex:1; padding: 12px; border: 1px solid #ddd; border-radius: 8px;">
-                    <button onclick="addTask()" class="btn-prime" style="width: auto;">Add Task</button>
-                </div>
-                <div id="task-list"></div>
-            </div>
         </div>
     </div>
 </div>
@@ -201,7 +189,7 @@
 <script>
     const _supabase = supabase.createClient('https://esjxzcmfxtestkettdyp.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzanh6Y21meHRlc3RrZXR0ZHlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTQ3MzksImV4cCI6MjA5MzczMDczOX0.G9i7nrGVzD8WrKFg7642HvRs9GeTPgkRMuFw8vQ-6C0');
     let currentUser = null;
-    let data = { profile: { name: "", role: "", agency: "", pto: 10, sick: 5, photo: "", gender: "", birthday: "", joinDate: "" }, tasks: [], games: { brickBreaker: { highScore: 0 } } };
+    let data = { profile: { name: "", role: "", agency: "", pto: 10, sick: 5, photo: "", gender: "", birthday: "", joinDate: "" }, games: { brickBreaker: { highScore: 0 } } };
 
     function toggleDropdown(menuId, arrowId) {
         const dropdown = document.getElementById(menuId);
@@ -269,7 +257,6 @@
         const { data: dbData } = await _supabase.from('va_data').select('*').eq('user_id', currentUser.id).single();
         if (dbData) {
             data.profile = dbData.profile_data;
-            data.tasks = dbData.tasks_data || [];
             data.games = dbData.games_data || { brickBreaker: { highScore: 0 } };
             renderAll();
         } else {
@@ -282,7 +269,6 @@
         await _supabase.from('va_data').upsert({ 
             user_id: currentUser.id, 
             profile_data: data.profile, 
-            tasks_data: data.tasks,
             games_data: data.games,
             updated_at: new Date()
         }, { onConflict: 'user_id' });
@@ -306,25 +292,9 @@
         const highscore = data.games?.brickBreaker?.highScore || 0;
         document.getElementById('pto-brickbreaker-score').innerText = highscore + " pts";
         document.getElementById('gaming-stats-card').style.display = (highscore > 0) ? 'block' : 'none';
-        
-        document.getElementById('task-list').innerHTML = data.tasks.map((t, i) => `
-            <div class="task-item ${t.done ? 'completed' : ''}">
-                <span onclick="toggleTask(${i})" style="cursor:pointer; flex:1">${t.text}</span>
-                <span onclick="deleteTask(${i})" style="color:var(--danger); cursor:pointer;">✕</span>
-            </div>
-        `).join('');
     }
 
     function updateLeave(type, amt) { data.profile[type] = (data.profile[type] || 0) + amt; saveToSupabase(); }
-    function addTask() {
-        const val = document.getElementById('task-input').value;
-        if (!val) return;
-        data.tasks.push({ text: val, done: false });
-        document.getElementById('task-input').value = "";
-        saveToSupabase();
-    }
-    function toggleTask(i) { data.tasks[i].done = !data.tasks[i].done; saveToSupabase(); }
-    function deleteTask(i) { data.tasks.splice(i, 1); saveToSupabase(); }
 
     checkSession();
 </script>
