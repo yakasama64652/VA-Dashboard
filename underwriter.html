@@ -3,22 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Underwriter Ledger - Pro Edition</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>Underwriter Ledger - Exact Clone</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; cursor: url('https://cur.cursors-4u.net/games/gam-4/gam382.cur'), auto; }
 
         body {
-            background-color: #1a252f;
+            background-color: #34495e;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
             margin: 0;
             font-family: 'VT323', monospace;
-            color: #333;
         }
 
         #game-container {
@@ -31,173 +29,240 @@
             image-rendering: pixelated;
         }
 
-        /* Screens */
-        .screen {
+        /* Top Left HUD */
+        .hud-left {
             position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 500;
-            background: #e2e2e2;
+            top: 20px;
+            left: 25px;
+            font-size: 28px;
+            line-height: 1;
+            z-index: 10;
         }
 
-        .hidden { display: none !important; }
-
-        /* Menu Styling */
-        h1 { font-size: 60px; margin-bottom: 20px; text-shadow: 4px 4px 0px rgba(0,0,0,0.1); }
-        button {
-            background: #000; color: #fff;
-            border: none; padding: 10px 30px;
-            font-family: 'VT323', monospace;
-            font-size: 32px; cursor: pointer;
-            margin: 10px;
-            transition: 0.1s;
-        }
-        button:hover { background: #444; transform: scale(1.05); }
-
-        /* Leaderboard Table */
-        table { width: 60%; border-collapse: collapse; font-size: 24px; margin-top: 10px; }
-        th { border-bottom: 4px solid #000; }
-        td { text-align: center; padding: 5px; }
-
-        /* Game Elements (Keeping your UI) */
-        .hud-left { position: absolute; top: 20px; left: 25px; font-size: 28px; line-height: 1; }
+        .heart-container { margin-top: 5px; }
         .heart { display: inline-block; width: 20px; height: 20px; background: #ff4757; margin-right: 5px; border: 2px solid #000; }
         .heart.empty { background: #57606f; }
-        .bucket-row { display: flex; justify-content: center; gap: 40px; margin-top: 20px; }
-        .bucket { width: 90px; height: 100px; border: 4px solid #000; border-radius: 0 0 20px 20px; position: relative; display: flex; align-items: center; justify-content: center; }
-        .approve { background: #6ab04c; } .deny { background: #eb4d4b; } .investigate { background: #f9ca24; }
-        
+
+        /* Bucket Navigation */
+        .bucket-row {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 20px;
+            z-index: 5;
+        }
+
+        .bucket-container { text-align: center; font-size: 24px; font-weight: bold; }
+
+        .bucket {
+            width: 90px;
+            height: 100px;
+            border: 4px solid #000;
+            border-bottom-left-radius: 20px;
+            border-bottom-right-radius: 20px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 10px;
+            box-shadow: inset -6px 0px 0px rgba(0,0,0,0.1);
+        }
+
+        .bucket::after {
+            content: "";
+            position: absolute;
+            top: -5px;
+            width: 104%;
+            height: 15px;
+            border: 4px solid #000;
+            border-radius: 5px;
+            background: inherit;
+        }
+
+        .approve { background-color: #6ab04c; }
+        .deny { background-color: #eb4d4b; }
+        .investigate { background-color: #f9ca24; }
+
+        .icon { width: 40px; height: 40px; border: 3px solid #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: white; font-size: 20px; }
+
+        /* Conveyor Belt */
+        .conveyor {
+            position: absolute;
+            bottom: 65px;
+            width: 100%;
+            height: 60px;
+            background: #7f8c8d;
+            border-top: 4px solid #000;
+            border-bottom: 4px solid #000;
+            display: flex;
+            align-items: center;
+        }
+
+        .roller {
+            width: 20px;
+            height: 20px;
+            border: 3px solid #000;
+            border-radius: 50%;
+            background: #bdc3c7;
+            margin-left: 50px;
+            animation: spin 2s linear infinite;
+        }
+
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* Folder Layout */
         #active-folder {
-            position: absolute; left: 50%; bottom: 60px; transform: translateX(-50%);
-            width: 280px; height: 180px; background: #f7e1ad; border: 4px solid #000;
-            padding: 15px; z-index: 100; cursor: grab;
+            position: absolute;
+            left: 50%;
+            bottom: 40px;
+            transform: translateX(-50%);
+            width: 280px;
+            height: 190px;
+            background: #f7e1ad;
+            border: 4px solid #000;
+            z-index: 100;
+            padding: 15px;
+            box-shadow: 8px 8px 0px rgba(0,0,0,0.1);
+        }
+
+        #active-folder::before {
+            content: "";
+            position: absolute;
+            top: -15px;
+            left: -4px;
+            width: 100px;
+            height: 12px;
+            background: #f7e1ad;
+            border: 4px solid #000;
+            border-bottom: none;
+        }
+
+        .folder-content h2 { margin: 0; font-size: 26px; border-bottom: 3px solid #000; display: inline-block; margin-bottom: 10px; }
+        .folder-content p { margin: 4px 0; font-size: 19px; text-transform: uppercase; line-height: 1.1; font-weight: bold; }
+
+        /* Background Folders */
+        .bg-folder {
+            width: 120px;
+            height: 80px;
+            background: #d1d1d1;
+            border: 2px solid #000;
+            position: absolute;
+            bottom: 90px;
+            opacity: 0.7;
+        }
+
+        /* Footer */
+        .footer-text {
+            position: absolute;
+            bottom: 15px;
+            width: 100%;
+            text-align: center;
+            font-size: 22px;
+            letter-spacing: 2px;
         }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    
-    <div id="start-screen" class="screen">
-        <h1>UNDERWRITER'S LEDGER</h1>
-        <input type="text" id="username" placeholder="ENTER NAME" style="font-family:'VT323'; font-size: 24px; padding: 5px; text-align: center; margin-bottom: 10px;">
-        <button onclick="startGame()">START GAME</button>
-        <button onclick="showLeaderboard()">LEADERBOARD</button>
+    <div class="hud-left">
+        SCORE:<br>
+        <span id="score">2400</span><br><br>
+        LIVES:<br>
+        <div id="lives" class="heart-container">
+            <div class="heart"></div><div class="heart"></div><div class="heart"></div>
+        </div><br>
+        LEVEL:<br>
+        3
     </div>
 
-    <div id="leaderboard-screen" class="screen hidden">
-        <h1>TOP UNDERWRITERS</h1>
-        <table id="leaderboard-table">
-            <thead><tr><th>RANK</th><th>NAME</th><th>SCORE</th></tr></thead>
-            <tbody id="leaderboard-body"></tbody>
-        </table>
-        <button onclick="showMenu()">BACK TO MENU</button>
-    </div>
-
-    <div id="game-ui" class="hidden">
-        <div class="hud-left">
-            SCORE:<br><span id="score-val">0</span><br><br>
-            LIVES:<br><div id="lives-container"><div class="heart"></div><div class="heart"></div><div class="heart"></div></div>
+    <div class="bucket-row">
+        <div class="bucket-container">
+            APPROVE
+            <div class="bucket approve" ondrop="handleDrop(event, 'approve')" ondragover="allow(event)">
+                <div class="icon">😊</div>
+            </div>
         </div>
-
-        <div class="bucket-row">
-            <div class="bucket approve" ondrop="handleDrop(event, 'approve')" ondragover="allow(event)">APPROVE</div>
-            <div class="bucket deny" ondrop="handleDrop(event, 'deny')" ondragover="allow(event)">DENY</div>
-            <div class="bucket investigate" ondrop="handleDrop(event, 'investigate')" ondragover="allow(event)">CHECK</div>
+        <div class="bucket-container">
+            DENY
+            <div class="bucket deny" ondrop="handleDrop(event, 'deny')" ondragover="allow(event)">
+                <div class="icon">🚫</div>
+            </div>
         </div>
-
-        <div id="active-folder" draggable="true" ondragstart="drag(event)">
-            <div id="folder-data"></div>
+        <div class="bucket-container">
+            INVESTIGATE
+            <div class="bucket investigate" ondrop="handleDrop(event, 'investigate')" ondragover="allow(event)">
+                <div class="icon">🔍</div>
+            </div>
         </div>
     </div>
+
+    <div class="conveyor">
+        <div class="roller"></div><div class="roller"></div><div class="roller"></div>
+        <div class="roller"></div><div class="roller"></div><div class="roller"></div>
+        <div class="roller"></div><div class="roller"></div><div class="roller"></div>
+    </div>
+
+    <div class="bg-folder" style="left: 100px;"></div>
+    <div class="bg-folder" style="right: 100px;"></div>
+
+    <div id="active-folder" draggable="true" ondragstart="drag(event)">
+        <div class="folder-content" id="data">
+            </div>
+    </div>
+
+    <div class="footer-text">DRAG TO BIN</div>
 </div>
 
 <script>
-    // 1. INITIALIZE SUPABASE
-    const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-    const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-    let score = 0;
+    let score = 2400;
     let lives = 3;
-    let username = "Anonymous";
 
-    // 2. NAVIGATION FUNCTIONS
-    function showMenu() {
-        document.querySelectorAll('.screen, #game-ui').forEach(el => el.classList.add('hidden'));
-        document.getElementById('start-screen').classList.remove('hidden');
-    }
-
-    async function showLeaderboard() {
-        document.getElementById('start-screen').classList.add('hidden');
-        document.getElementById('leaderboard-screen').classList.remove('hidden');
-        
-        const { data, error } = await supabase
-            .from('leaderboard')
-            .select('*')
-            .order('score', { ascending: false })
-            .limit(5);
-
-        const body = document.getElementById('leaderboard-body');
-        body.innerHTML = data.map((entry, i) => `
-            <tr><td>#${i+1}</td><td>${entry.username}</td><td>${entry.score}</td></tr>
-        `).join('');
-    }
-
-    function startGame() {
-        const input = document.getElementById('username').value;
-        if(input) username = input;
-        
-        document.getElementById('start-screen').classList.add('hidden');
-        document.getElementById('game-ui').classList.remove('hidden');
-        score = 0; lives = 3;
-        updateUI();
-        loadCard();
-    }
-
-    // 3. GAME LOGIC
     const deck = [
-        { name: "JOHN D.", year: 1955, claims: 3, ans: "deny" },
-        { name: "MARY L.", year: 1990, claims: 0, ans: "approve" },
-        { name: "S. ROBERTS", year: 2015, claims: 1, ans: "investigate" }
+        { name: "JOHN D.", year: 1955, fault: "1 MILE", claims: 3, factor: "LARGE TREE OVER ROOF", ans: "deny" },
+        { name: "MARY L.", year: 1990, fault: "50 MILES", claims: 0, factor: "NO CLAIMS", ans: "approve" },
+        { name: "S. ROBERTS", year: 2015, fault: "10 MILES", claims: 1, factor: "MISSING DOCUMENTS", ans: "investigate" }
     ];
 
-    function loadCard() {
+    function load() {
         const r = deck[Math.floor(Math.random() * deck.length)];
-        document.getElementById('folder-data').innerHTML = `<h2>${r.name}</h2><p>YEAR: ${r.year}</p><p>CLAIMS: ${r.claims}</p>`;
+        document.getElementById('data').innerHTML = `
+            <h2>RISK PROFILE:</h2>
+            <p>APPLICANT: ${r.name}</p>
+            <p>HOME BUILT: ${r.year}</p>
+            <p>DISTANCE TO FAULT LINE: ${r.fault}</p>
+            <p>RECENT AUTO CLAIMS: ${r.claims}</p>
+            <p>ADDITIONAL FACTOR: ${r.factor}</p>
+        `;
         document.getElementById('active-folder').dataset.ans = r.ans;
     }
 
     function allow(e) { e.preventDefault(); }
     function drag(e) { e.dataTransfer.setData("text", e.target.id); }
 
-    async function handleDrop(e, choice) {
+    function handleDrop(e, choice) {
         e.preventDefault();
         const ans = document.getElementById('active-folder').dataset.ans;
-        if(choice === ans) score += 400;
-        else lives--;
-
-        updateUI();
-        if(lives <= 0) await endGame();
-        else loadCard();
+        if(choice === ans) {
+            score += 400;
+        } else {
+            lives--;
+            updateLives();
+        }
+        document.getElementById('score').innerText = score;
+        load();
     }
 
-    function updateUI() {
-        document.getElementById('score-val').innerText = score;
-        const hearts = document.querySelectorAll('.heart');
-        hearts.forEach((h, i) => i >= lives ? h.classList.add('empty') : h.classList.remove('empty'));
+    function updateLives() {
+        const hs = document.querySelectorAll('.heart');
+        for(let i=0; i<3; i++) {
+            if(i >= lives) hs[i].classList.add('empty');
+        }
+        if(lives <= 0) { alert("GAME OVER"); location.reload(); }
     }
 
-    async function endGame() {
-        alert(`GAME OVER! SCORE: ${score}`);
-        // Save to Supabase
-        await supabase.from('leaderboard').insert([{ username: username, score: score }]);
-        showMenu();
-    }
+    load();
 </script>
+
 </body>
 </html>
