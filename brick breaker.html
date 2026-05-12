@@ -3,20 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LAVA Games | Brick Breaker Elite (Updated Paddle)</title>
+    <title>LAVA Games | Brick Breaker Elite</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background-color: #0f172a; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; color: white; font-family: 'Inter', sans-serif; overflow: hidden; }
         .ui { margin-bottom: 20px; text-align: center; }
-        h1 { margin: 0 0 10px 0; color: #ef4444; text-transform: uppercase; letter-spacing: 2px; } /* Updated Title Color for PaddleRed */
         p { color: #94a3b8; font-size: 0.9rem; margin: 0; }
         
         #game-container { position: relative; width: 800px; height: 600px; }
-        canvas { background: #1e293b; display: block; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); border: 4px solid #ef4444; width: 100%; height: 100%; } /* Canvas Border update to Red */
+        canvas { background: #1e293b; display: block; border-radius: 12px; box-shadow: 0 20px 50px rgba(0,0,0,0.7); border: 4px solid #ef4444; width: 100%; height: 100%; }
 
         /* Menu Overlay */
-        #menu-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.9); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
-        .menu-title { font-size: 3rem; color: #ef4444; margin-bottom: 30px; font-weight: 800; text-shadow: 0 0 15px rgba(239,68,68,0.5); }
+        #menu-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.95); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+        
+        /* Logo Styling */
+        .menu-logo { max-width: 180px; margin-bottom: 10px; filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.3)); }
+        
+        .menu-title { font-size: 2.5rem; color: #ef4444; margin-bottom: 30px; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; text-shadow: 0 0 15px rgba(239,68,68,0.5); }
         .menu-btns { display: flex; flex-direction: column; gap: 15px; width: 300px; }
         .btn-menu { background: #ef4444; color: white; border: none; padding: 15px 30px; border-radius: 8px; cursor: pointer; font-size: 1.1rem; font-weight: 600; text-transform: uppercase; transition: 0.2s; }
         .btn-menu:hover { background: #dc2626; transform: translateY(-2px); }
@@ -36,13 +39,13 @@
 <body>
 
 <div class="ui">
-    <h1>LAVA BRICK BREAKER ELITE</h1>
     <p>Mouse/Arrow Keys Move | Esc to Pause</p>
 </div>
 
 <div id="game-container">
     <div id="menu-overlay">
-        <div class="menu-title">COMMANDER</div>
+        <img src="kling_20260422_VIDEO__1217_0.png" alt="LAVA Logo" class="menu-logo">
+        <div class="menu-title">LAVA BRICK BREAKER</div>
         <div class="menu-btns">
             <button class="btn-menu" onclick="startGame()">Start New Game</button>
             <button class="btn-menu" style="background: #10b981;" onclick="showLeaderboard()">Leaderboard</button>
@@ -62,7 +65,7 @@
 </div>
 
 <script>
-    // --- SUPABASE CONFIGURATION (Must match your VAHub index.html) ---
+    // --- SUPABASE CONFIGURATION ---
     const _supabaseUrl = 'https://esjxzcmfxtestkettdyp.supabase.co';
     const _supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzanh6Y21meHRlc3RrZXR0ZHlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTQ3MzksImV4cCI6MjA5MzczMDczOX0.G9i7nrGVzD8WrKFg7642HvRs9GeTPgkRMuFw8vQ-6C0';
     const _supabase = supabase.createClient(_supabaseUrl, _supabaseKey);
@@ -70,24 +73,22 @@
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    // --- 1. NEW: LOAD PADDLE IMAGE ---
+    // --- LOAD PADDLE IMAGE ---
     const paddleImage = new Image();
-    paddleImage.src = 'paddleRed.png'; // Make sure this file is in the same GitHub folder
+    paddleImage.src = 'paddleRed.png';
     let paddleLoaded = false;
-    paddleImage.onload = () => {
-        paddleLoaded = true;
-    };
+    paddleImage.onload = () => { paddleLoaded = true; };
 
     // Game State
     let score = 0;
-    let totalScore = 0; // Score across all levels
+    let totalScore = 0;
     let lives = 3;
     let level = 1;
     let isGameRunning = false;
     let maxLevels = 3;
     let vaDataRef = null;
 
-    // Ball properties (Larger screen, slightly faster)
+    // Ball properties
     let ballRadius = 10;
     let x = canvas.width / 2;
     let y = canvas.height - 40;
@@ -96,9 +97,9 @@
     let dx = baseDx;
     let dy = baseDy;
 
-    // Paddle properties (Updated for the image aspect ratio)
-    const paddleHeight = 16; // Slightly increased height for visibility
-    const paddleWidth = 120; // Slightly widened paddle
+    // Paddle properties
+    const paddleHeight = 16;
+    const paddleWidth = 120;
     let paddleX = (canvas.width - paddleWidth) / 2;
 
     // Controls
@@ -115,14 +116,13 @@
     let brickOffsetLeft = 0; 
     let bricks = [];
 
-    // --- LEVEL DEFINITIONS (Unchanged) ---
     function initLevel(lvl) {
         level = lvl;
         score = 0; 
         bricks = [];
         x = canvas.width / 2;
         y = canvas.height - 40;
-        dx = baseDx + (level * 0.5); // Increase speed per level
+        dx = baseDx + (level * 0.5);
         dy = baseDy - (level * 0.5);
         paddleX = (canvas.width - paddleWidth) / 2;
 
@@ -131,7 +131,6 @@
             brickColumnCount = 8;
             brickWidth = 80;
             brickOffsetLeft = (canvas.width - (brickColumnCount * (brickWidth + brickPadding))) / 2;
-
             for (let c = 0; c < brickColumnCount; c++) {
                 bricks[c] = [];
                 for (let r = 0; r < brickRowCount; r++) {
@@ -143,12 +142,10 @@
             brickWidth = 60;
             brickPadding = 8;
             brickOffsetLeft = (canvas.width - (brickColumnCount * (brickWidth + brickPadding))) / 2;
-
             for (let c = 0; c < brickColumnCount; c++) {
                 bricks[c] = [];
                 const midpoint = Math.floor(brickColumnCount / 2);
                 const count = midpoint + 1 - Math.abs(midpoint - c);
-                
                 for (let r = 0; r < count; r++) {
                     bricks[c][r] = { x: 0, y: 0, status: 1 };
                 }
@@ -159,24 +156,21 @@
             brickWidth = 60;
             brickPadding = 8;
             brickOffsetLeft = (canvas.width - (brickColumnCount * (brickWidth + brickPadding))) / 2;
-
             for (let c = 0; c < brickColumnCount; c++) {
                 bricks[c] = [];
                 for (let r = 0; r < brickRowCount; r++) {
                     const midpointC = Math.floor(brickColumnCount / 2);
                     const midpointR = Math.floor(brickRowCount / 2);
-                    
                     if (c === midpointC || r === midpointR) {
                         bricks[c][r] = { x: 0, y: 0, status: 1 };
                     } else {
-                        bricks[c][r] = { x: 0, y: 0, status: 0 }; // Pre-destroyed
+                        bricks[c][r] = { x: 0, y: 0, status: 0 };
                     }
                 }
             }
         }
     }
 
-    // --- EVENT LISTENERS (Unchanged) ---
     document.addEventListener("keydown", keyDownHandler, false);
     document.addEventListener("keyup", keyUpHandler, false);
     document.addEventListener("mousemove", mouseMoveHandler, false);
@@ -200,7 +194,6 @@
         }
     }
 
-    // --- MENU LOGIC (Unchanged) ---
     function toggleMenu() {
         if (!isGameRunning) return; 
         const overlay = document.getElementById('menu-overlay');
@@ -228,7 +221,6 @@
         return count;
     }
 
-    // --- CORE GAME ENGINE (Unchanged Collision) ---
     function collisionDetection() {
         for (let c = 0; c < bricks.length; c++) {
             if (!bricks[c]) continue;
@@ -240,8 +232,6 @@
                         b.status = 0;
                         score++;
                         totalScore++;
-
-                        // Level Complete Logic
                         if (countActiveBricks() === 0) {
                             if (level < maxLevels) {
                                 alert(`LEVEL ${level} COMPLETE! Preparing Level ${level + 1}...`);
@@ -259,18 +249,15 @@
     function drawBall() {
         ctx.beginPath();
         ctx.arc(x, y, ballRadius, 0, Math.PI * 2);
-        ctx.fillStyle = "#10b981"; // Ball Color remains Emerald
+        ctx.fillStyle = "#10b981";
         ctx.fill();
         ctx.closePath();
     }
 
-    // --- 2. UPDATED: DRAW PADDLE USING THE IMAGE ---
     function drawPaddle() {
         if (paddleLoaded) {
-            // Draw the paddleRed.png file
             ctx.drawImage(paddleImage, paddleX, canvas.height - paddleHeight - 5, paddleWidth, paddleHeight);
         } else {
-            // Fallback: If image fails to load, draw the original red rectangle
             ctx.beginPath();
             ctx.rect(paddleX, canvas.height - paddleHeight - 5, paddleWidth, paddleHeight);
             ctx.fillStyle = "#ef4444"; 
@@ -290,20 +277,15 @@
                     bricks[c][r].y = brickY;
                     ctx.beginPath();
                     ctx.rect(brickX, brickY, brickWidth, brickHeight);
-                    
-                    // Different color per level
-                    if (level === 1) ctx.fillStyle = "#3b82f6"; // level 1 blue
-                    else if (level === 2) ctx.fillStyle = "#10b981"; // level 2 emerald
-                    else ctx.fillStyle = "#ef4444"; // level 3 red
-                    
+                    if (level === 1) ctx.fillStyle = "#3b82f6";
+                    else if (level === 2) ctx.fillStyle = "#10b981";
+                    else ctx.fillStyle = "#ef4444";
                     ctx.fill();
                     ctx.closePath();
                 }
             }
         }
     }
-
-    // drawScore, drawLevel, drawLives (Unchanged text drawing)
 
     function drawScore() {
         ctx.font = "bold 18px Inter";
@@ -313,7 +295,7 @@
 
     function drawLevel() {
         ctx.font = "bold 18px Inter";
-        ctx.fillStyle = "#ffffff"; // level text in White
+        ctx.fillStyle = "#ffffff";
         ctx.fillText("Level: " + level, canvas.width / 2 - 40, 30);
     }
 
@@ -334,31 +316,25 @@
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawBricks();
         drawBall();
-        drawPaddle(); // Updated function is called here
+        drawPaddle();
         drawScore();
         drawLevel();
         drawLives();
         collisionDetection();
 
-        // Wall collisions (bounds adjusted for image paddle)
         if (x + dx > canvas.width - ballRadius || x + dx < ballRadius) dx = -dx;
         if (y + dy < ballRadius) dy = -dy;
         else if (y + dy > canvas.height - ballRadius - 5) {
-            // Collision detection with the image paddle area
             if (x > paddleX && x < paddleX + paddleWidth && y + dy > canvas.height - paddleHeight - ballRadius - 5) {
-                // Ball hits paddle
                 dy = -dy;
-                // Add minor DX variance depending on where it hit the paddle
                 dx = dx + ( (x - (paddleX + paddleWidth/2)) / (paddleWidth/2) );
                 if(dx > 6) dx = 6;
                 if(dx < -6) dx = -6;
             } else if(y + dy > canvas.height - ballRadius) {
-                // Ball completely missed the paddle
                 lives--;
                 if (!lives) {
                     handleGameOver();
                 } else {
-                    // Reset ball/paddle position
                     x = canvas.width / 2;
                     y = canvas.height - 40;
                     dx = baseDx + (level * 0.5); 
@@ -368,7 +344,6 @@
             }
         }
 
-        // Paddle movement speed increased for larger screen
         if (rightPressed && paddleX < canvas.width - paddleWidth) paddleX += 9;
         else if (leftPressed && paddleX > 0) paddleX -= 9;
 
@@ -377,7 +352,6 @@
         requestAnimationFrame(draw);
     }
 
-    // --- END GAME & SUPABASE LOGIC (Unchanged) ---
     function handleGameOver() {
         isGameRunning = false;
         saveHighScore(totalScore); 
@@ -387,18 +361,16 @@
 
     function handleGameWin() {
         isGameRunning = false;
-        totalScore += 100; // Bonus for completion
+        totalScore += 100;
         saveHighScore(totalScore); 
         alert("CONGRATULATIONS COMMANDER! YOU DESTROYED ALL LEVELS! Final Score: " + totalScore);
         location.reload();
     }
 
-    // --- AUTH & DATA INTEGRATION (Unchanged) ---
     async function loadVAData() {
         const { data: { session } } = await _supabase.auth.getSession();
         if (!session) return;
         const vaUser = session.user;
-
         const { data, error } = await _supabase.from('va_data').select('*').eq('user_id', vaUser.id).single();
         if (data) {
             vaDataRef = data;
@@ -409,56 +381,37 @@
 
     async function saveHighScore(currentScore) {
         if (!vaDataRef || !vaDataRef.user_id) return;
-
         const oldHighScore = vaDataRef.games_data?.brickBreaker?.highScore || 0;
-        
         if (currentScore > oldHighScore) {
             const updatedGamesData = {
                 ...vaDataRef.games_data,
-                brickBreaker: {
-                    highScore: currentScore,
-                    lastPlayed: new Date()
-                }
+                brickBreaker: { highScore: currentScore, lastPlayed: new Date() }
             };
-
-            const { error } = await _supabase.from('va_data').upsert({
+            await _supabase.from('va_data').upsert({
                 user_id: vaDataRef.user_id,
                 games_data: updatedGamesData,
                 updated_at: new Date()
             }, { onConflict: 'user_id' });
-
-            if (!error) {
-                document.getElementById('main-high-score').innerText = `Your High Score: ${currentScore} (New!)`;
-            }
+            document.getElementById('main-high-score').innerText = `Your High Score: ${currentScore} (New!)`;
         }
     }
 
-    // --- LEADERBOARD LOGIC (Unchanged) ---
     async function showLeaderboard() {
         const modal = document.getElementById('leaderboard-modal');
         const content = document.getElementById('leaderboard-content');
         modal.style.display = 'block';
         content.innerHTML = 'Loading Top VAs...';
-
         const { data, error } = await _supabase.from('va_data').select('profile_data, games_data').not('games_data', 'is', null);
-
-        if (error) {
-            content.innerHTML = 'Error loading scores.';
-            return;
-        }
+        if (error) { content.innerHTML = 'Error loading scores.'; return; }
 
         const leaderboard = data
             .filter(va => va.games_data?.brickBreaker?.highScore) 
-            .map(va => ({
-                name: va.profile_data.name || 'Unknown VA',
-                score: va.games_data.brickBreaker.highScore
-            }))
+            .map(va => ({ name: va.profile_data.name || 'Unknown VA', score: va.games_data.brickBreaker.highScore }))
             .sort((a, b) => b.score - a.score) 
             .slice(0, 10); 
 
-        if (leaderboard.length === 0) {
-            content.innerHTML = 'No scores recorded yet!';
-        } else {
+        if (leaderboard.length === 0) { content.innerHTML = 'No scores recorded yet!'; } 
+        else {
             content.innerHTML = leaderboard.map((entry, index) => `
                 <div class="leaderboard-item">
                     <span class="leaderboard-name">${index + 1}. ${entry.name}</span>
@@ -468,13 +421,8 @@
         }
     }
 
-    function closeLeaderboard() {
-        document.getElementById('leaderboard-modal').style.display = 'none';
-    }
-
-    // Initialize Menu/Data
+    function closeLeaderboard() { document.getElementById('leaderboard-modal').style.display = 'none'; }
     loadVAData();
-
 </script>
 </body>
 </html>
