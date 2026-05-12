@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Underwriter's Ledger - Pixel Edition</title>
+    <title>Underwriter's Ledger - Fixed</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
 
         :root {
-            --bg-gray: #e0e0e0;
+            --bg-gray: #d1d1d1;
             --folder-tan: #f3e5ab;
             --belt-gray: #4a4a4a;
             --pixel-font: 'VT323', monospace;
@@ -22,54 +22,55 @@
             height: 100vh;
             margin: 0;
             font-family: var(--pixel-font);
-            color: #333;
+            overflow: hidden;
         }
 
         #game-screen {
             width: 800px;
-            height: 450px;
+            height: 500px;
             background-color: var(--bg-gray);
-            border: 8px solid #000;
+            border: 10px solid #000;
             position: relative;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
         }
 
-        /* Top HUD */
+        /* HUD Section */
         .hud {
-            display: flex;
-            justify-content: space-between;
-            padding: 20px;
-            font-size: 28px;
-            line-height: 1;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 32px;
+            line-height: 1.2;
+            z-index: 100;
         }
 
-        /* Buckets */
+        /* Buckets Section - Fixed Visibility */
         .buckets {
             display: flex;
             justify-content: center;
-            gap: 40px;
-            margin-top: -10px;
+            gap: 50px;
+            margin-top: 20px;
+            z-index: 100;
         }
 
         .bucket {
-            width: 100px;
+            width: 120px;
             text-align: center;
-            transition: transform 0.1s;
+            cursor: pointer;
         }
 
         .bucket-img {
-            width: 80px;
-            height: 80px;
-            border: 4px solid #000;
-            border-radius: 10px;
+            width: 90px;
+            height: 90px;
+            border: 5px solid #000;
+            border-radius: 15px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 40px;
+            font-size: 50px;
             background: white;
-            margin-bottom: 5px;
+            margin: 0 auto 5px auto;
         }
 
         .approve .bucket-img { background: #4CAF50; }
@@ -79,88 +80,82 @@
         /* Conveyor Belt */
         .conveyor-container {
             position: absolute;
-            bottom: 60px;
+            bottom: 80px;
             width: 100%;
-            height: 120px;
+            height: 140px;
             background: var(--belt-gray);
-            border-top: 4px solid #000;
-            border-bottom: 4px solid #000;
+            border-top: 5px solid #000;
+            border-bottom: 5px solid #000;
             display: flex;
             align-items: center;
-            overflow: hidden;
+            z-index: 1;
         }
 
         .belt-marks {
             position: absolute;
             width: 200%;
             height: 100%;
-            background-image: linear-gradient(90deg, transparent 95%, #000 95%);
-            background-size: 50px 100%;
-            animation: moveBelt 4s linear infinite;
+            background-image: linear-gradient(90deg, transparent 95%, #333 95%);
+            background-size: 60px 100%;
+            animation: moveBelt 3s linear infinite;
         }
 
         @keyframes moveBelt {
             from { transform: translateX(0); }
-            to { transform: translateX(-50px); }
+            to { transform: translateX(-60px); }
         }
 
-        /* The Main Active Folder */
+        /* The Draggable Folder - High Z-Index */
         #active-folder {
             position: absolute;
             left: 50%;
-            top: 55%;
-            transform: translate(-50%, -50%);
-            width: 280px;
-            height: 180px;
+            bottom: 100px;
+            transform: translateX(-50%);
+            width: 300px;
+            height: 200px;
             background: var(--folder-tan);
-            border: 4px solid #000;
-            padding: 15px;
-            z-index: 10;
+            border: 5px solid #000;
+            padding: 20px;
+            z-index: 200; /* Ensure it is above everything */
             cursor: grab;
-            box-shadow: 8px 8px 0 rgba(0,0,0,0.2);
+            box-shadow: 10px 10px 0 rgba(0,0,0,0.3);
+            user-select: none;
         }
+
+        #active-folder:active { cursor: grabbing; }
 
         #active-folder::before {
             content: "";
             position: absolute;
-            top: -14px;
-            left: -4px;
-            width: 100px;
-            height: 10px;
+            top: -19px;
+            left: -5px;
+            width: 120px;
+            height: 15px;
             background: var(--folder-tan);
-            border: 4px solid #000;
+            border: 5px solid #000;
             border-bottom: none;
         }
 
-        .folder-text h2 { margin: 0; font-size: 24px; text-decoration: underline; }
-        .folder-text p { margin: 5px 0; font-size: 18px; font-weight: bold; }
+        .folder-text h2 { margin: 0 0 10px 0; font-size: 28px; text-decoration: underline; }
+        .folder-text p { margin: 5px 0; font-size: 20px; font-weight: bold; }
 
-        /* Background Static Folders */
         .bg-folder {
-            width: 120px;
-            height: 80px;
-            background: #dcdde1;
-            border: 2px solid #000;
-            margin: 0 40px;
+            width: 140px;
+            height: 90px;
+            background: rgba(255,255,255,0.2);
+            border: 3px solid #000;
+            margin: 0 50px;
             flex-shrink: 0;
-            opacity: 0.6;
         }
-
-        .heart { color: red; font-size: 30px; }
     </style>
 </head>
 <body>
 
 <div id="game-screen">
     <div class="hud">
-        <div>
-            SCORE:<br><span id="score">0000</span><br><br>
-            LIVES:<br><span id="lives-display">❤️❤️❤️</span><br><br>
-            LEVEL:<br><span>1</span>
-        </div>
-        <div style="text-align: right;">
-            <img src="https://cdn-icons-png.flaticon.com/512/1021/1021264.png" width="40" style="filter: grayscale(1);">
-        </div>
+        SCORE: <span id="score">0000</span><br>
+        LIVES: <span id="lives-display">❤️❤️❤️</span><br>
+        LEVEL: 1
     </div>
 
     <div class="buckets">
@@ -168,19 +163,18 @@
             <div class="bucket-img">😊</div>
             <span>APPROVE</span>
         </div>
-        <div class="bucket deny" ondrop="drop(event, 'deny')" ondragover="allowDrop(event)">
-            <div class="bucket-img">🚫</div>
-            <span>DENY</span>
-        </div>
         <div class="bucket investigate" ondrop="drop(event, 'investigate')" ondragover="allowDrop(event)">
             <div class="bucket-img">🔍</div>
             <span>INVESTIGATE</span>
+        </div>
+        <div class="bucket deny" ondrop="drop(event, 'deny')" ondragover="allowDrop(event)">
+            <div class="bucket-img">🚫</div>
+            <span>DENY</span>
         </div>
     </div>
 
     <div class="conveyor-container">
         <div class="belt-marks"></div>
-        <div class="bg-folder"></div>
         <div class="bg-folder"></div>
         <div class="bg-folder"></div>
         <div class="bg-folder"></div>
@@ -196,16 +190,16 @@
     let score = 0;
     let lives = 3;
 
-    const data = [
+    const scenarios = [
+        { title: "ALEX G.", year: 2022, fault: "100 MILES", claims: 0, factor: "CLEAN RECORD", ans: "approve" },
         { title: "JOHN D.", year: 1955, fault: "1 MILE", claims: 3, factor: "LARGE TREE OVER ROOF", ans: "deny" },
-        { title: "MARY L.", year: 1990, fault: "50 MILES", claims: 0, factor: "NEW SECURITY SYSTEM", ans: "approve" },
-        { title: "CASE #402", year: 2010, fault: "10 MILES", claims: 1, factor: "MISSING ID PHOTO", ans: "investigate" },
-        { title: "PETE S.", year: 1940, fault: "5 MILES", claims: 5, factor: "WOOD BURNING STOVE", ans: "deny" },
-        { title: "ALEX G.", year: 2022, fault: "100 MILES", claims: 0, factor: "CLEAN RECORD", ans: "approve" }
+        { title: "SARAH P.", year: 2010, fault: "20 MILES", claims: 1, factor: "MISSING SIGNATURE", ans: "investigate" },
+        { title: "MIKE R.", year: 1985, fault: "5 MILES", claims: 4, factor: "STUNT DRIVER", ans: "deny" },
+        { title: "TECH CORP", year: 2024, fault: "N/A", claims: 0, factor: "NEW VENTURE", ans: "investigate" }
     ];
 
     function loadCard() {
-        const item = data[Math.floor(Math.random() * data.length)];
+        const item = scenarios[Math.floor(Math.random() * scenarios.length)];
         const html = `
             <h2>RISK PROFILE:</h2>
             <p>APPLICANT: ${item.title}</p>
@@ -216,27 +210,41 @@
         `;
         document.getElementById('content').innerHTML = html;
         document.getElementById('active-folder').dataset.answer = item.ans;
+        
+        // Reset position in case of glitches
+        const folder = document.getElementById('active-folder');
+        folder.style.left = "50%";
+        folder.style.bottom = "100px";
     }
 
-    function allowDrop(ev) { ev.preventDefault(); }
-    function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
+    function allowDrop(ev) {
+        ev.preventDefault();
+    }
+
+    function drag(ev) {
+        ev.dataTransfer.setData("text", ev.target.id);
+    }
 
     function drop(ev, choice) {
         ev.preventDefault();
-        const correct = document.getElementById('active-folder').dataset.answer;
-        
-        if (choice === correct) {
-            score += 400;
+        const folder = document.getElementById('active-folder');
+        const correctAnswer = folder.dataset.answer;
+
+        if (choice === correctAnswer) {
+            score += 100;
         } else {
             lives--;
-            alert("MISCALCULATED RISK!");
+            alert("WRONG ASSESSMENT!");
         }
 
         updateUI();
-        if (lives > 0) loadCard();
-        else {
-            alert("TERMINATED. Final Score: " + score);
-            location.reload();
+        if (lives > 0) {
+            loadCard();
+        } else {
+            alert("GAME OVER! Score: " + score);
+            score = 0; lives = 3;
+            updateUI();
+            loadCard();
         }
     }
 
@@ -245,6 +253,7 @@
         document.getElementById('lives-display').innerText = "❤️".repeat(lives);
     }
 
+    // Initial Start
     loadCard();
 </script>
 
