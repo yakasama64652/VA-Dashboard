@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Underwriter's Ledger: Risk Sorter</title>
+    <style>
+        :root {
+            --paper: #fdf6e3;
+            --ink: #2c3e50;
+            --approve: #27ae60;
+            --deny: #c0392b;
+            --investigate: #f39c12;
+        }
+
+        body {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #dcdde1;
+            color: var(--ink);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        #game-container {
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            background: #fff;
+            padding: 10px;
+            border: 3px solid var(--ink);
+        }
+
+        /* Buckets Area */
+        .buckets {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+        }
+
+        .bucket {
+            width: 120px;
+            height: 120px;
+            border: 4px dashed var(--ink);
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        .bucket.hover { transform: scale(1.1); background: rgba(0,0,0,0.05); }
+        .bucket[data-type="approve"] { color: var(--approve); border-color: var(--approve); }
+        .bucket[data-type="deny"] { color: var(--deny); border-color: var(--deny); }
+        .bucket[data-type="investigate"] { color: var(--investigate); border-color: var(--investigate); }
+
+        /* The File Folder */
+        #file-card {
+            width: 300px;
+            height: 200px;
+            background: var(--paper);
+            border: 2px solid #b2bec3;
+            box-shadow: 10px 10px 0px rgba(0,0,0,0.1);
+            margin: 0 auto;
+            padding: 20px;
+            cursor: grab;
+            position: relative;
+            text-align: left;
+            user-select: none;
+        }
+
+        #file-card::before {
+            content: "";
+            position: absolute;
+            top: -15px;
+            left: 0;
+            width: 80px;
+            height: 15px;
+            background: var(--paper);
+            border: 2px solid #b2bec3;
+            border-bottom: none;
+        }
+
+        #file-card:active { cursor: grabbing; }
+
+        .file-content h3 { margin-top: 0; text-decoration: underline; font-size: 1rem; }
+        .file-content p { font-size: 0.85rem; margin: 5px 0; }
+
+        .instructions {
+            margin-top: 40px;
+            font-style: italic;
+            color: #7f8c8d;
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .new-file { animation: slideIn 0.4s ease-out; }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div class="stats">
+        <span>Score: <span id="score">0</span></span>
+        <span>Lives: <span id="lives">3</span></span>
+    </div>
+
+    <div class="buckets">
+        <div class="bucket" data-type="approve" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+            <span>APPROVE</span>
+        </div>
+        <div class="bucket" data-type="investigate" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+            <span>INVESTIGATE</span>
+        </div>
+        <div class="bucket" data-type="deny" ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
+            <span>DENY</span>
+        </div>
+    </div>
+
+    <div id="file-card" draggable="true" ondragstart="drag(event)" class="new-file">
+        <div class="file-content" id="content">
+            </div>
+    </div>
+
+    <p class="instructions">Drag the file to the correct bucket based on risk!</p>
+</div>
+
+<script>
+    let score = 0;
+    let lives = 3;
+
+    const scenarios = [
+        { text: "<h3>Applicant: John Doe</h3><p>Home: 1990 Build</p><p>Claims: None in 10 years</p><p>Location: Low-risk Zone</p>", answer: "approve" },
+        { text: "<h3>Applicant: Jane Smith</h3><p>Auto: 3 accidents in 1 year</p><p>Credit Score: 400</p><p>Status: High Speeding History</p>", answer: "deny" },
+        { text: "<h3>Applicant: Acme Corp</h3><p>Liability: $10M requested</p><p>Note: Missing signature on Page 4</p><p>Safety: No record on file</p>", answer: "investigate" },
+        { text: "<h3>Applicant: Bob V.</h3><p>Home: Beachfront Property</p><p>Note: No Hurricane shutters installed</p><p>Area: High-risk Flood Zone</p>", answer: "deny" },
+        { text: "<h3>Applicant: Startup LLC</h3><p>New Business</p><p>History: None available</p><p>Risk: Unknown Industry</p>", answer: "investigate" },
+        { text: "<h3>Applicant: Sarah L.</h3><p>Good Credit</p><p>Safe Driver Discount</p><p>Policy: Standard Auto Renewal</p>", answer: "approve" }
+    ];
+
+    let currentScenario = {};
+
+    function loadNewScenario() {
+        if (lives <= 0) {
+            alert("Game Over! Your final score: " + score);
+            score = 0; lives = 3;
+            updateStats();
+        }
+        
+        const card = document.getElementById('file-card');
+        card.classList.remove('new-file');
+        void card.offsetWidth; // Trigger reflow
+        card.classList.add('new-file');
+
+        currentScenario = scenarios[Math.floor(Math.random() * scenarios.length)];
+        document.getElementById('content').innerHTML = currentScenario.text;
+    }
+
+    function updateStats() {
+        document.getElementById('score').innerText = score;
+        document.getElementById('lives').innerText = lives;
+    }
+
+    // Drag and Drop Logic
+    function allowDrop(ev) {
+        ev.preventDefault();
+        ev.target.closest('.bucket').classList.add('hover');
+    }
+
+    function dragLeave(ev) {
+        ev.target.closest('.bucket').classList.remove('hover');
+    }
+
+    function drag(ev) {
+        ev.dataTransfer.setData("text", ev.target.id);
+    }
+
+    function drop(ev) {
+        ev.preventDefault();
+        const bucket = ev.target.closest('.bucket');
+        bucket.classList.remove('hover');
+        const choice = bucket.getAttribute('data-type');
+
+        if (choice === currentScenario.answer) {
+            score += 100;
+            bucket.style.backgroundColor = "rgba(39, 174, 96, 0.2)";
+        } else {
+            lives--;
+            bucket.style.backgroundColor = "rgba(192, 57, 43, 0.2)";
+            alert("Wrong! That was a " + currentScenario.answer.toUpperCase() + " case.");
+        }
+
+        setTimeout(() => {
+            bucket.style.backgroundColor = "transparent";
+        }, 300);
+
+        updateStats();
+        loadNewScenario();
+    }
+
+    // Initialize
+    loadNewScenario();
+</script>
+
+</body>
+</html>
