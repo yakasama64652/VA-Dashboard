@@ -6,7 +6,7 @@
     <title>LAVA Automation | VA Command Center</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; --dark: #1e293b; --accent: #10b981; --danger: #ef4444; --white: #ffffff; }
+        :root { --primary: #2563eb; --bg: #f8fafc; --dark: #1e293b; --accent: #10b981; --danger: #ef4444; --white: #ffffff; --purple: #8b5cf6; }
         body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: var(--dark); min-height: 100vh; overflow-x: hidden; }
         
         /* Auth Screens */
@@ -52,7 +52,7 @@
         .edit-btn { position: absolute; top: 20px; right: 20px; background: #f1f5f9; border: 1px solid #e2e8f0; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--dark); transition: 0.2s; z-index: 50; }
         .edit-btn:hover { background: #e2e8f0; }
 
-        /* Fluid Three Column Grid */
+        /* Fluid Grid */
         .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; align-items: stretch; width: 100%; }
 
         .leave-stat { background: #f1f5f9; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0; margin-bottom: 10px; }
@@ -61,16 +61,24 @@
         .leave-btns { margin-top: 8px; display: flex; justify-content: center; gap: 5px; }
         .leave-btns button { padding: 2px 8px; font-size: 0.7rem; cursor: pointer; border-radius: 4px; border: 1px solid #cbd5e1; }
 
-        /* Trivia Card & Controls */
-        .trivia-card { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); color: white; border: none; min-height: 250px; }
-        .trivia-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-        .trivia-card h4 { margin: 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); }
-        .trivia-text { font-size: 1rem; line-height: 1.6; transition: opacity 0.5s ease-in-out; opacity: 1; }
-        .trivia-text.fade { opacity: 0; }
-        .trivia-icon { position: absolute; bottom: -10px; right: -10px; font-size: 5rem; opacity: 0.1; transform: rotate(-15deg); pointer-events: none; }
+        /* Flash Card Logic (Trivia & Classroom) */
+        .flash-card { color: white; border: none; min-height: 250px; }
+        .trivia-card { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); }
+        .classroom-card { background: linear-gradient(135deg, #4c1d95 0%, #6d28d9 100%); }
         
-        .trivia-controls { background: rgba(255,255,255,0.1); border: none; color: white; border-radius: 50%; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-        .trivia-controls:hover { background: rgba(255,255,255,0.2); }
+        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+        .card-header h4 { margin: 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); }
+        .classroom-card .card-header h4 { color: #ddd6fe; }
+        
+        .fade-text { font-size: 1rem; line-height: 1.6; transition: opacity 0.5s ease-in-out; opacity: 1; }
+        .fade-text.fade { opacity: 0; }
+        .card-icon { position: absolute; bottom: -10px; right: -10px; font-size: 5rem; opacity: 0.1; transform: rotate(-15deg); pointer-events: none; }
+        
+        .status-tag { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; margin-bottom: 10px; }
+        .tag-live { background: #ef4444; animation: blink 1.5s infinite; }
+        .tag-scheduled { background: #10b981; }
+
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
         .task-tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
         .task-tag { background: #eff6ff; color: #2563eb; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; border: 1px solid #dbeafe; }
@@ -162,6 +170,28 @@
                     </div>
                 </div>
 
+                <div class="card flash-card classroom-card">
+                    <div class="card-header">
+                        <h4>Classroom Status</h4>
+                    </div>
+                    <div id="classroom-tag" class="status-tag tag-scheduled">Scheduled</div>
+                    <div id="classroom-display" class="fade-text" style="font-weight: 600;">Checking classroom schedule...</div>
+                    <div class="card-icon">🎓</div>
+                </div>
+
+                <div class="card flash-card trivia-card">
+                    <div class="card-header">
+                        <h4>Did you know?</h4>
+                        <button class="trivia-controls" onclick="toggleTrivia()" id="trivia-btn">
+                            <span id="play-pause-icon">⏸</span>
+                        </button>
+                    </div>
+                    <div id="trivia-display" class="fade-text">Loading insurance facts...</div>
+                    <div class="card-icon">🛡️</div>
+                </div>
+            </div>
+
+            <div class="dashboard-grid" style="margin-top: 25px;">
                 <div class="card">
                     <h3 style="margin-top:0; font-size: 1rem;">Leave Credits</h3>
                     <div style="display: flex; flex-direction: column; gap: 10px;">
@@ -174,24 +204,13 @@
                     </div>
                 </div>
 
-                <div class="card trivia-card">
-                    <div class="trivia-header">
-                        <h4>Did you know?</h4>
-                        <button class="trivia-controls" onclick="toggleTrivia()" id="trivia-btn">
-                            <span id="play-pause-icon">⏸</span>
-                        </button>
-                    </div>
-                    <div id="trivia-display" class="trivia-text">Loading insurance facts...</div>
-                    <div class="trivia-icon">🛡️</div>
-                </div>
-            </div>
-
-            <div id="gaming-stats-card" style="display:none; margin-top: 25px; width: 100%;">
-                <div class="card">
-                    <h3>Gaming High Scores</h3>
-                    <div class="gaming-score-row">
-                        <b style="color:var(--primary);">Brick Breaker Elite:</b>
-                        <span id="pto-brickbreaker-score" style="font-weight:bold; font-size:1.1rem;">0 pts</span>
+                <div id="gaming-stats-card" style="display:none; grid-column: span 2;">
+                    <div class="card">
+                        <h3>Gaming High Scores</h3>
+                        <div class="gaming-score-row">
+                            <b style="color:var(--primary);">Brick Breaker Elite:</b>
+                            <span id="pto-brickbreaker-score" style="font-weight:bold; font-size:1.1rem;">0 pts</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -204,28 +223,32 @@
     let currentUser = null;
     let data = { profile: { name: "", role: "", agency: "", pto: 10, sick: 5, photo: "", gender: "", birthday: "", joinDate: "", emergency: "", tasks: [] }, games: { brickBreaker: { highScore: 0 } } };
 
+    // Trivia Data
     const insuranceTrivia = [
         "Benjamin Franklin founded the first successful U.S. property insurance company in 1752.",
         "The first auto insurance policy was issued in 1897, when there were fewer than 100 cars on the road.",
         "Alien Abduction Insurance is a real product, with over 30,000 policies sold in the U.S.",
-        "In the 1800s, 'Fire Marks' were plaques on houses used to tell fire brigades which homes were insured.",
-        "State Farm is the largest property and casualty insurance provider in the United States.",
         "Lloyd's of London famously insured Bruce Springsteen’s voice and Gene Simmons’ tongue.",
         "The term 'Underwriter' comes from the 17th century when people wrote names under risk descriptions.",
-        "Actuaries use complex math to predict the future, including calculating exactly when a person is likely to die.",
-        "Life insurance was once considered 'gambling on God's will' and was banned in several states.",
-        "The Pinkerton Agency was originally hired by insurance companies to catch train robbers.",
-        "The first Social Security check was issued in 1940 to Ida May Fuller for the amount of $22.54.",
-        "A 'Floater' policy is named because it covers property that 'floats' or moves (like jewelry).",
         "Pet Insurance was first sold in the U.S. in 1982—the first policyholder was the dog who played Lassie.",
-        "Standard homeowners' insurance policies almost never cover damage from floods without a special rider.",
         "Usage-Based Insurance (UBI) uses telematics to track braking and acceleration to determine rates."
     ];
 
+    // Classroom Schedule Data
+    const classroomSchedule = [
+        { day: "Monday", class: "Underwriting Mastery", time: "09:00 AM - 11:00 AM", isLive: true },
+        { day: "Tuesday", class: "SOP Documentation Workshop", time: "02:00 PM - 03:30 PM", isLive: false },
+        { day: "Wednesday", class: "Advanced Data Entry Training", time: "10:00 AM - 12:00 PM", isLive: true },
+        { day: "Thursday", class: "Client Communication Lab", time: "01:00 PM - 02:30 PM", isLive: false },
+        { day: "Friday", class: "Weekly Compliance Review", time: "04:00 PM - 05:00 PM", isLive: false },
+        { day: "Weekend", class: "No classes scheduled.", time: "Self-paced study available", isLive: false }
+    ];
+
     let triviaIndex = 0;
-    let triviaInterval;
+    let scheduleIndex = 0;
     let isTriviaPaused = false;
 
+    // Trivia Rotation
     function rotateTrivia() {
         if(isTriviaPaused) return;
         const display = document.getElementById('trivia-display');
@@ -238,10 +261,35 @@
         }, 500);
     }
 
-    function startTrivia() {
-        clearInterval(triviaInterval);
+    // Classroom Rotation (New)
+    function rotateClassroom() {
+        const display = document.getElementById('classroom-display');
+        const tag = document.getElementById('classroom-tag');
+        if(!display || !tag) return;
+        
+        display.classList.add('fade');
+        setTimeout(() => {
+            const current = classroomSchedule[scheduleIndex];
+            display.innerHTML = `${current.day}: ${current.class}<br><small style="opacity: 0.8">${current.time}</small>`;
+            
+            if(current.isLive) {
+                tag.innerText = "Live Now";
+                tag.className = "status-tag tag-live";
+            } else {
+                tag.innerText = "Scheduled";
+                tag.className = "status-tag tag-scheduled";
+            }
+            
+            display.classList.remove('fade');
+            scheduleIndex = (scheduleIndex + 1) % classroomSchedule.length;
+        }, 500);
+    }
+
+    function startRotators() {
         rotateTrivia();
-        triviaInterval = setInterval(rotateTrivia, 6000);
+        rotateClassroom();
+        setInterval(rotateTrivia, 6000);
+        setInterval(rotateClassroom, 5000); // Rotates slightly faster than trivia
     }
 
     function toggleTrivia() {
@@ -256,8 +304,6 @@
             btn.style.background = "rgba(255, 255, 255, 0.1)";
         }
     }
-
-    startTrivia();
 
     function toggleDropdown(menuId, arrowId) {
         const dropdown = document.getElementById(menuId);
@@ -283,12 +329,8 @@
         const email = document.getElementById('reg-email').value;
         const password = document.getElementById('reg-pass').value;
         const { data, error } = await _supabase.auth.signUp({ email, password });
-        if (error) {
-            alert("Signup Error: " + error.message);
-        } else {
-            alert("Signup Successful! You can now log in.");
-            toggleAuth('login');
-        }
+        if (error) alert("Signup Error: " + error.message);
+        else { alert("Signup Successful! You can now log in."); toggleAuth('login'); }
     }
 
     async function handleMagicLink() {
@@ -302,9 +344,7 @@
     async function handleLogout() { await _supabase.auth.signOut(); checkSession(); }
 
     _supabase.auth.onAuthStateChange(async (event, session) => { 
-        if (event === "SIGNED_IN" || event === "INITIAL_SESSION") { 
-            checkSession(); 
-        } 
+        if (event === "SIGNED_IN" || event === "INITIAL_SESSION") { checkSession(); } 
         if (event === "PASSWORD_RECOVERY") {
             const newPassword = prompt("Please enter your new password:");
             if (newPassword) {
@@ -369,11 +409,12 @@
 
         const highscore = data.games?.brickBreaker?.highScore || 0;
         document.getElementById('pto-brickbreaker-score').innerText = highscore + " pts";
-        document.getElementById('gaming-stats-card').style.display = (highscore > 0) ? 'block' : 'none';
+        document.getElementById('gaming-stats-card').style.display = (highscore > 0) ? 'grid' : 'none';
     }
 
     function updateLeave(type, amt) { data.profile[type] = (data.profile[type] || 0) + amt; saveToSupabase(); }
 
+    startRotators();
     checkSession();
 </script>
 </body>
