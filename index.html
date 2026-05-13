@@ -267,27 +267,33 @@
     }
 
     function rotateClassroom() {
-        const display = document.getElementById('classroom-display');
-        const tag = document.getElementById('classroom-tag');
-        if(!display || !tag) return;
+    const display = document.getElementById('classroom-display');
+    const tag = document.getElementById('classroom-tag');
+    if(!display || !tag) return;
+    
+    display.classList.add('fade');
+    setTimeout(() => {
+        const current = classroomSchedule[scheduleIndex];
         
-        display.classList.add('fade');
-        setTimeout(() => {
-            const current = classroomSchedule[scheduleIndex];
-            display.innerHTML = `${current.day}: ${current.class_name}<br><small style="opacity: 0.8">${current.class_time}</small>`;
-            
-            if(current.is_live === true || current.is_live === "TRUE") {
-                tag.innerText = "Live Now";
-                tag.className = "status-tag tag-live";
-            } else {
-                tag.innerText = "Scheduled";
-                tag.className = "status-tag tag-scheduled";
-            }
-            
-            display.classList.remove('fade');
-            scheduleIndex = (scheduleIndex + 1) % classroomSchedule.length;
-        }, 500);
-    }
+        // Added Trainer Name display here
+        display.innerHTML = `
+            ${current.day}: ${current.class_name}<br>
+            <small style="opacity: 0.9">Trainer: ${current.trainer_name || 'TBA'}</small><br>
+            <small style="opacity: 0.7">${current.class_time}</small>
+        `;
+        
+        if(current.is_live === true || current.is_live === "TRUE") {
+            tag.innerText = "Live Now";
+            tag.className = "status-tag tag-live";
+        } else {
+            tag.innerText = "Scheduled";
+            tag.className = "status-tag tag-scheduled";
+        }
+        
+        display.classList.remove('fade');
+        scheduleIndex = (scheduleIndex + 1) % classroomSchedule.length;
+    }, 500);
+}
 
     async function startRotators() {
         await fetchLiveSchedule(); // Initial fetch
