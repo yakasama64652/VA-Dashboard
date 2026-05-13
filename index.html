@@ -99,9 +99,9 @@
     </div>
     <div class="auth-card" id="magic-card" style="display:none;">
         <img src="https://raw.githubusercontent.com/yakasama64652/PTO/main/kling_20260422_VIDEO__1217_0.png" alt="LAVA Logo">
-        <h2>Magic Login</h2>
+        <h2>Reset Password</h2>
         <input type="email" id="magic-email" placeholder="Enter your email">
-        <button class="btn-prime" id="magic-btn" onclick="handleMagicLink()" style="background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600;">Send Magic Link</button>
+        <button class="btn-prime" id="magic-btn" onclick="handleMagicLink()" style="background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600;">Send Reset Link</button>
         <span class="toggle-link" onclick="toggleAuth('login')">Back to Password Login</span>
     </div>
 </div>
@@ -126,6 +126,12 @@
                 <div class="dropdown-container" id="games-dropdown">
                     <div class="dropdown-item" onclick="window.open('brick breaker.html', '_blank')">Brick Breaker Elite</div>
                     <div class="dropdown-item" onclick="window.open('underwriter.html', '_blank')">Underwriter’s Ledger</div>
+                </div>
+                <div class="nav-item" onclick="toggleDropdown('courses-dropdown', 'courses-arrow')">LAVA Courses <span class="arrow" id="courses-arrow">▼</span></div>
+                <div class="dropdown-container" id="courses-dropdown">
+                    <div class="dropdown-item">Underwriting 101</div>
+                    <div class="dropdown-item">VA Onboarding</div>
+                    <div class="dropdown-item">Ethics & Compliance</div>
                 </div>
             </div>
             <div class="nav-item logout-btn" onclick="handleLogout()">Logout</div>
@@ -276,19 +282,38 @@
     async function handleSignup() {
         const email = document.getElementById('reg-email').value;
         const password = document.getElementById('reg-pass').value;
-        const { error } = await _supabase.auth.signUp({ email, password });
-        if (error) alert(error.message); else alert("Check your email to verify!");
+        const { data, error } = await _supabase.auth.signUp({ email, password });
+        if (error) {
+            alert("Signup Error: " + error.message);
+        } else {
+            alert("Signup Successful! You can now log in.");
+            toggleAuth('login');
+        }
     }
 
     async function handleMagicLink() {
         const email = document.getElementById('magic-email').value;
-        const { error } = await _supabase.auth.signInWithOtp({ email: email, options: { emailRedirectTo: window.location.href } });
-        if (error) alert(error.message); else alert("Magic link sent! Check your inbox.");
+        const { error } = await _supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin + window.location.pathname,
+        });
+        if (error) alert(error.message); else alert("Password reset link sent! Check your inbox.");
     }
 
     async function handleLogout() { await _supabase.auth.signOut(); checkSession(); }
 
-    _supabase.auth.onAuthStateChange((event, session) => { if (event === "SIGNED_IN" || event === "INITIAL_SESSION") { checkSession(); } });
+    _supabase.auth.onAuthStateChange(async (event, session) => { 
+        if (event === "SIGNED_IN" || event === "INITIAL_SESSION") { 
+            checkSession(); 
+        } 
+        if (event === "PASSWORD_RECOVERY") {
+            const newPassword = prompt("Please enter your new password:");
+            if (newPassword) {
+                const { error } = await _supabase.auth.updateUser({ password: newPassword });
+                if (error) alert("Error updating password: " + error.message);
+                else alert("Password updated successfully! You can now login.");
+            }
+        }
+    });
 
     async function checkSession() {
         const { data: { session } } = await _supabase.auth.getSession();
