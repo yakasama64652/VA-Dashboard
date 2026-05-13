@@ -27,12 +27,10 @@
             height: 100vh; 
             color: var(--white); 
             overflow: hidden;
-            /* CRT Scanline Background */
             background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
             background-size: 100% 4px, 3px 100%;
         }
 
-        /* Scanline Overlay */
         body::after {
             content: " ";
             display: block;
@@ -44,7 +42,6 @@
             pointer-events: none;
         }
 
-        /* LARGER CONTAINER: Increased from 500px/600px to 900px */
         #game-container { 
             background: var(--card); 
             padding: 40px; 
@@ -94,7 +91,6 @@
             gap: 20px; 
         }
         
-        /* LARGER BUTTONS */
         .action-btn { 
             background: #1f2937; 
             border: 4px solid #374151; 
@@ -105,25 +101,36 @@
         }
 
         .action-btn:hover { background: #374151; border-color: var(--neon-cyan); transform: translateY(-5px); }
-        .action-btn:active { transform: translateY(2px); }
-
         .action-btn img { width: 100px; height: 100px; object-fit: contain; margin-bottom: 15px; }
         .action-btn span { display: block; font-size: 10px; color: #fff; text-transform: uppercase; }
 
         #menu-overlay { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
             background: rgba(0, 0, 0, 0.95); 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; 
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start; z-index: 10; 
+            padding-top: 40px;
+            overflow-y: auto;
         }
 
         .btn-start { 
             background: var(--neon-pink); color: white; border: none; 
             padding: 25px 50px; font-family: 'Press Start 2P'; font-size: 20px; 
             cursor: pointer; box-shadow: 6px 6px 0px #9d174d;
-            transition: 0.2s;
+            margin-bottom: 20px;
         }
 
-        .btn-start:hover { transform: scale(1.1); background: #ff44ff; }
+        /* Leaderboard UI */
+        #leaderboard-box {
+            width: 80%;
+            margin-top: 20px;
+            border-top: 4px double var(--neon-cyan);
+            padding-top: 20px;
+        }
+        .lb-title { font-size: 14px; color: var(--neon-cyan); margin-bottom: 15px; }
+        .lb-table { width: 100%; font-size: 10px; border-collapse: collapse; }
+        .lb-table td { padding: 8px; text-align: left; }
+        .lb-table .score-cell { text-align: right; color: var(--neon-pink); }
+        .lb-table tr:nth-child(even) { background: rgba(255,255,255,0.05); }
 
         .combo-text { 
             position: absolute; color: var(--neon-cyan); 
@@ -138,10 +145,18 @@
 
 <div id="game-container">
     <div id="menu-overlay">
-        <h1 style="color: var(--neon-cyan); margin-bottom: 25px; font-size: 32px; line-height: 1.4;">UNDERWRITER<br>LEDGER</h1>
-        <p style="color: #6b7280; margin-bottom: 50px; font-size: 12px; letter-spacing: 2px;">INSERT COIN TO START</p>
+        <h1 style="color: var(--neon-cyan); margin-bottom: 15px; font-size: 32px; line-height: 1.4;">UNDERWRITER<br>LEDGER</h1>
+        <p id="high-score-display" style="margin-bottom: 20px; font-size: 12px; color: var(--neon-cyan);"></p>
         <button class="btn-start" onclick="startGame()">START GAME</button>
-        <p id="high-score-display" style="margin-top: 40px; font-size: 12px; color: var(--neon-cyan);"></p>
+
+        <div id="leaderboard-box">
+            <div class="lb-title">-- GLOBAL TOP 5 --</div>
+            <table class="lb-table">
+                <tbody id="leaderboard-body">
+                    <tr><td colspan="2" style="text-align:center">LOADING...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <div class="stats">
@@ -152,8 +167,7 @@
 
     <div class="case-file" id="case-display">
         <h2>CASE #<span id="case-num">001</span></h2>
-        <div id="case-content">
-            </div>
+        <div id="case-content"></div>
     </div>
 
     <div class="actions">
@@ -197,12 +211,34 @@
 
     async function loadVAData() {
         const { data: { session } } = await _supabase.auth.getSession();
-        if (!session) return;
+        if (!session) {
+            fetchGlobalLeaderboard(); // Still load global LB if not logged in
+            return;
+        }
         const { data } = await _supabase.from('va_data').select('*').eq('user_id', session.user.id).single();
         if (data) {
             vaDataRef = data;
             const hs = data.games_data?.underwriter?.highScore || 0;
-            document.getElementById('high-score-display').innerText = `HI-SCORE: ${hs.toString().padStart(5, '0')}`;
+            document.getElementById('high-score-display').innerText = `PERSONAL HI-SCORE: ${hs.toString().padStart(5, '0')}`;
+        }
+        fetchGlobalLeaderboard();
+    }
+
+    async function fetchGlobalLeaderboard() {
+        const { data, error } = await _supabase
+            .from('leaderboard')
+            .select('player_name, score')
+            .order('score', { ascending: false })
+            .limit(5);
+
+        if (!error && data) {
+            const lbBody = document.getElementById('leaderboard-body');
+            lbBody.innerHTML = data.map((entry, index) => `
+                <tr>
+                    <td>${index + 1}. ${entry.player_name.substring(0,10)}</td>
+                    <td class="score-cell">${entry.score.toString().padStart(5, '0')}</td>
+                </tr>
+            `).join('');
         }
     }
 
@@ -256,7 +292,12 @@
 
     async function endGame() {
         clearInterval(timer);
-        alert(`GAME OVER\nTOTAL SCORE: ${score}`);
+        const playerName = prompt(`GAME OVER\nSCORE: ${score}\nEnter your name for the Global Leaderboard:`, "AGENT");
+        
+        if (playerName) {
+            await _supabase.from('leaderboard').insert([{ player_name: playerName, score: score }]);
+        }
+
         await saveHighScore(score);
         location.reload();
     }
