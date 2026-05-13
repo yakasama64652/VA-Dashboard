@@ -226,7 +226,7 @@
 
     async function fetchGlobalLeaderboard() {
         const { data, error } = await _supabase
-            .from('leaderboard')
+            .from('underwriter_leaderboard')
             .select('player_name, score')
             .order('score', { ascending: false })
             .limit(5);
@@ -295,7 +295,7 @@
         const playerName = prompt(`GAME OVER\nSCORE: ${score}\nEnter your name for the Global Leaderboard:`, "AGENT");
         
         if (playerName) {
-            await _supabase.from('leaderboard').insert([{ player_name: playerName, score: score }]);
+            await _supabase.from('underwriter_leaderboard').insert([{ player_name: playerName, score: score }]);
         }
 
         await saveHighScore(score);
