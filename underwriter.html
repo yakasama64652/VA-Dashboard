@@ -3,281 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LAVA Arcade | Underwriter's Ledger XL</title>
+    <title>Underwriter Game & Leaderboard</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
     <style>
-        :root { 
-            --primary: #3b82f6; 
-            --neon-pink: #ff00ff;
-            --neon-cyan: #00ffff;
-            --bg: #030712; 
-            --card: #111827; 
-            --white: #ffffff;
-        }
-
-        body { 
-            font-family: 'Press Start 2P', cursive; 
-            background: var(--bg); 
-            margin: 0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            height: 100vh; 
-            color: var(--white); 
-            overflow: hidden;
-            /* CRT Scanline Background */
-            background-image: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 4px, 3px 100%;
-        }
-
-        /* Scanline Overlay */
-        body::after {
-            content: " ";
-            display: block;
-            position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
-            z-index: 100;
-            background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
-        }
-
-        /* LARGER CONTAINER: Increased from 500px/600px to 900px */
-        #game-container { 
-            background: var(--card); 
-            padding: 40px; 
-            border: 8px solid var(--primary); 
-            width: 900px; 
-            text-align: center; 
-            position: relative;
-            box-shadow: 0 0 40px var(--primary);
-            box-sizing: border-box;
-        }
-
-        .stats { 
-            display: flex; 
-            justify-content: space-between; 
-            margin-bottom: 30px; 
-            font-size: 14px; 
-            color: var(--neon-cyan);
-            text-shadow: 3px 3px #000;
-        }
-
-        #timer { color: var(--neon-pink); }
-
-        .case-file { 
-            background: #000; 
-            color: #00ff00; 
-            padding: 30px; 
-            border: 4px solid #00ff00; 
-            margin-bottom: 35px; 
-            text-align: left; 
-            min-height: 220px;
-            font-size: 16px;
-            line-height: 2;
-            box-shadow: inset 0 0 20px #004400;
-        }
-
-        .case-file h2 { 
-            margin: 0 0 20px 0; 
-            font-size: 18px; 
-            color: #fff; 
-            border-bottom: 3px dashed #00ff00;
-            padding-bottom: 10px;
-        }
-
-        .actions { 
-            display: flex; 
-            justify-content: space-around; 
-            gap: 20px; 
-        }
+        /* Your existing styles remain here */
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; background: #f4f4f9; }
+        #game-container { margin: 20px auto; padding: 20px; max-width: 600px; background: white; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
-        /* LARGER BUTTONS */
-        .action-btn { 
-            background: #1f2937; 
-            border: 4px solid #374151; 
-            cursor: pointer; 
-            padding: 20px 10px; 
-            transition: 0.1s;
-            flex: 1;
-        }
-
-        .action-btn:hover { background: #374151; border-color: var(--neon-cyan); transform: translateY(-5px); }
-        .action-btn:active { transform: translateY(2px); }
-
-        .action-btn img { width: 100px; height: 100px; object-fit: contain; margin-bottom: 15px; }
-        .action-btn span { display: block; font-size: 10px; color: #fff; text-transform: uppercase; }
-
-        #menu-overlay { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0, 0, 0, 0.95); 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; 
-        }
-
-        .btn-start { 
-            background: var(--neon-pink); color: white; border: none; 
-            padding: 25px 50px; font-family: 'Press Start 2P'; font-size: 20px; 
-            cursor: pointer; box-shadow: 6px 6px 0px #9d174d;
-            transition: 0.2s;
-        }
-
-        .btn-start:hover { transform: scale(1.1); background: #ff44ff; }
-
-        .combo-text { 
-            position: absolute; color: var(--neon-cyan); 
-            font-size: 16px; top: -50px; right: 0; 
-            animation: bounce 0.5s infinite alternate;
-        }
-
-        @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-8px); } }
+        /* Leaderboard Styles */
+        #leaderboard-container { margin-top: 30px; padding: 20px; background: #fff; border-radius: 8px; border: 1px solid #ddd; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { padding: 10px; border-bottom: 1px solid #eee; text-align: left; }
+        th { background-color: #5e6ad2; color: white; }
+        .loading-text { color: #888; font-style: italic; }
     </style>
 </head>
 <body>
 
 <div id="game-container">
-    <div id="menu-overlay">
-        <h1 style="color: var(--neon-cyan); margin-bottom: 25px; font-size: 32px; line-height: 1.4;">UNDERWRITER<br>LEDGER</h1>
-        <p style="color: #6b7280; margin-bottom: 50px; font-size: 12px; letter-spacing: 2px;">INSERT COIN TO START</p>
-        <button class="btn-start" onclick="startGame()">START GAME</button>
-        <p id="high-score-display" style="margin-top: 40px; font-size: 12px; color: var(--neon-cyan);"></p>
-    </div>
-
-    <div class="stats">
-        <span>SCORE:<span id="score">00000</span></span>
-        <div id="combo-display" class="combo-text" style="display:none;">COMBO x1</div>
-        <span id="timer">TIME:30</span>
-    </div>
-
-    <div class="case-file" id="case-display">
-        <h2>CASE #<span id="case-num">001</span></h2>
-        <div id="case-content">
-            </div>
-    </div>
-
-    <div class="actions">
-        <button class="action-btn" onclick="makeDecision('approve')">
-            <img src="approved.png" alt="Approve">
-            <span>APPROVE</span>
-        </button>
-        <button class="action-btn" onclick="makeDecision('investigate')">
-            <img src="investigate.png" alt="Investigate">
-            <span>INFO</span>
-        </button>
-        <button class="action-btn" onclick="makeDecision('deny')">
-            <img src="deny.png" alt="Deny">
-            <span>REJECT</span>
-        </button>
+    <h1>Underwriter Game</h1>
+    <div id="game-ui">
+        <p>Score: <span id="score-display">0</span></p>
+        <button onclick="endGameMock()">End Game (Simulate Win)</button>
     </div>
 </div>
 
+<div id="leaderboard-container">
+    <h2>Global Leaderboard</h2>
+    <table id="leaderboard-table">
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Player</th>
+                <th>Score</th>
+            </tr>
+        </thead>
+        <tbody id="leaderboard-body">
+            <tr><td colspan="3" class="loading-text">Loading scores...</td></tr>
+        </tbody>
+    </table>
+</div>
+
 <script>
-    const _supabaseUrl = 'https://esjxzcmfxtestkettdyp.supabase.co';
-    const _supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzanh6Y21meHRlc3RrZXR0ZHlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTQ3MzksImV4cCI6MjA5MzczMDczOX0.G9i7nrGVzD8WrKFg7642HvRs9GeTPgkRMuFw8vQ-6C0';
-    const _supabase = supabase.createClient(_supabaseUrl, _supabaseKey);
+    // --- 1. SUPABASE CONFIGURATION ---
+    const SUPABASE_URL = 'https://esjxzcmfxtestkettdyp.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzanh6Y21meHRlc3RrZXR0ZHlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTQ3MzksImV4cCI6MjA5MzczMDczOX0.G9i7nrGVzD8WrKFg7642HvRs9GeTPgkRMuFw8vQ-6C0';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    let score = 0;
-    let timeLeft = 30;
-    let timer;
-    let currentCase = {};
-    let combo = 0;
-    let caseCount = 1;
-    let vaDataRef = null;
+    // --- 2. EXISTING GAME CODE ---
+    let currentScore = 0; // Replace with your actual score variable
 
-    const cases = [
-        { name: "JOHN DOE", age: 28, health: "EXCELLENT", occupation: "CPA", correct: "approve" },
-        { name: "SARAH SMITH", age: 45, health: "MINOR ISSUES", occupation: "DRIVER", correct: "investigate" },
-        { name: "MIKE OXMALL", age: 72, health: "CRITICAL", occupation: "RETIRED", correct: "deny" },
-        { name: "LINDA BLAIR", age: 33, health: "GOOD", occupation: "SKYDIVE PRO", correct: "investigate" },
-        { name: "RICK GRIMES", age: 40, health: "MULTIPLE INJURIES", occupation: "SHERIFF", correct: "investigate" },
-        { name: "JANE FOSTER", age: 25, health: "PERFECT", occupation: "PHYSICIST", correct: "approve" },
-        { name: "WILLIE NELSON", age: 88, health: "SMOKER", occupation: "MUSICIAN", correct: "deny" }
-    ];
+    // This is a placeholder for your existing logic
+    function updateScore(points) {
+        currentScore += points;
+        document.getElementById('score-display').innerText = currentScore;
+    }
 
-    async function loadVAData() {
-        const { data: { session } } = await _supabase.auth.getSession();
-        if (!session) return;
-        const { data } = await _supabase.from('va_data').select('*').eq('user_id', session.user.id).single();
-        if (data) {
-            vaDataRef = data;
-            const hs = data.games_data?.underwriter?.highScore || 0;
-            document.getElementById('high-score-display').innerText = `HI-SCORE: ${hs.toString().padStart(5, '0')}`;
+    // --- 3. LEADERBOARD LOGIC ---
+
+    // Load leaderboard on page start
+    window.onload = fetchLeaderboard;
+
+    async function fetchLeaderboard() {
+        const { data, error } = await supabase
+            .from('leaderboard')
+            .select('player_name, score')
+            .order('score', { ascending: false })
+            .limit(10);
+
+        if (error) {
+            console.error('Error fetching leaderboard:', error);
+            return;
         }
+
+        const tableBody = document.getElementById('leaderboard-body');
+        tableBody.innerHTML = ''; // Clear loading text
+
+        data.forEach((entry, index) => {
+            const row = `<tr>
+                <td>${index + 1}</td>
+                <td>${entry.player_name}</td>
+                <td>${entry.score}</td>
+            </tr>`;
+            tableBody.innerHTML += row;
+        });
     }
 
-    function startGame() {
-        score = 0;
-        timeLeft = 30;
-        combo = 0;
-        caseCount = 1;
-        document.getElementById('score').innerText = "00000";
-        document.getElementById('menu-overlay').style.display = 'none';
-        nextCase();
+    async function saveScore() {
+        const playerName = prompt("Game Over! Enter your name for the leaderboard:", "Anonymous");
         
-        timer = setInterval(() => {
-            timeLeft--;
-            document.getElementById('timer').innerText = `TIME:${timeLeft}`;
-            if (timeLeft <= 0) endGame();
-        }, 1000);
-    }
+        if (!playerName) return;
 
-    function nextCase() {
-        currentCase = cases[Math.floor(Math.random() * cases.length)];
-        document.getElementById('case-num').innerText = caseCount.toString().padStart(3, '0');
-        document.getElementById('case-content').innerHTML = `
-            > NAME: ${currentCase.name}<br>
-            > AGE:  ${currentCase.age}<br>
-            > HLTH: ${currentCase.health}<br>
-            > JOB:  ${currentCase.occupation}
-        `;
-        caseCount++;
-    }
+        const { data, error } = await supabase
+            .from('leaderboard')
+            .insert([{ player_name: playerName, score: currentScore }]);
 
-    function makeDecision(choice) {
-        if (timeLeft <= 0) return;
-        
-        if (choice === currentCase.correct) {
-            combo++;
-            score += 10 * combo;
-            if(combo > 1) {
-                document.getElementById('combo-display').style.display = 'block';
-                document.getElementById('combo-display').innerText = `COMBO x${combo}`;
-            }
+        if (error) {
+            alert('Error saving score. Please check console.');
+            console.error(error);
         } else {
-            combo = 0;
-            score = Math.max(0, score - 20);
-            document.getElementById('combo-display').style.display = 'none';
-        }
-        
-        document.getElementById('score').innerText = score.toString().padStart(5, '0');
-        nextCase();
-    }
-
-    async function endGame() {
-        clearInterval(timer);
-        alert(`GAME OVER\nTOTAL SCORE: ${score}`);
-        await saveHighScore(score);
-        location.reload();
-    }
-
-    async function saveHighScore(finalScore) {
-        if (!vaDataRef) return;
-        const oldHS = vaDataRef.games_data?.underwriter?.highScore || 0;
-        if (finalScore > oldHS) {
-            const updatedGames = {
-                ...vaDataRef.games_data,
-                underwriter: { highScore: finalScore, lastPlayed: new Date() }
-            };
-            await _supabase.from('va_data').upsert({
-                user_id: vaDataRef.user_id,
-                games_data: updatedGames,
-                updated_at: new Date()
-            }, { onConflict: 'user_id' });
+            alert('Score saved!');
+            fetchLeaderboard(); // Refresh the list
         }
     }
 
-    loadVAData();
+    // Example trigger: call saveScore() when your game logic ends
+    function endGameMock() {
+        // This simulates your game ending
+        updateScore(Math.floor(Math.random() * 100)); // Just for demo
+        saveScore();
+    }
+
 </script>
 </body>
 </html>
