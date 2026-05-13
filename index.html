@@ -175,7 +175,7 @@
                         <h4>Classroom Status</h4>
                     </div>
                     <div id="classroom-tag" class="status-tag tag-scheduled">Scheduled</div>
-                    <div id="classroom-display" class="fade-text" style="font-weight: 600;">Checking classroom schedule...</div>
+                    <div id="classroom-display" class="fade-text" style="font-weight: 600;">Syncing schedule...</div>
                     <div class="card-icon">🎓</div>
                 </div>
 
@@ -223,32 +223,37 @@
     let currentUser = null;
     let data = { profile: { name: "", role: "", agency: "", pto: 10, sick: 5, photo: "", gender: "", birthday: "", joinDate: "", emergency: "", tasks: [] }, games: { brickBreaker: { highScore: 0 } } };
 
-    // Trivia Data
+    // Constant Data
     const insuranceTrivia = [
         "Benjamin Franklin founded the first successful U.S. property insurance company in 1752.",
         "The first auto insurance policy was issued in 1897, when there were fewer than 100 cars on the road.",
         "Alien Abduction Insurance is a real product, with over 30,000 policies sold in the U.S.",
-        "Lloyd's of London famously insured Bruce Springsteen’s voice and Gene Simmons’ tongue.",
         "The term 'Underwriter' comes from the 17th century when people wrote names under risk descriptions.",
         "Pet Insurance was first sold in the U.S. in 1982—the first policyholder was the dog who played Lassie.",
         "Usage-Based Insurance (UBI) uses telematics to track braking and acceleration to determine rates."
     ];
 
-    // Classroom Schedule Data
-    const classroomSchedule = [
-        { day: "Monday", class: "Underwriting Mastery", time: "09:00 AM - 11:00 AM", isLive: true },
-        { day: "Tuesday", class: "SOP Documentation Workshop", time: "02:00 PM - 03:30 PM", isLive: false },
-        { day: "Wednesday", class: "Advanced Data Entry Training", time: "10:00 AM - 12:00 PM", isLive: true },
-        { day: "Thursday", class: "Client Communication Lab", time: "01:00 PM - 02:30 PM", isLive: false },
-        { day: "Friday", class: "Weekly Compliance Review", time: "04:00 PM - 05:00 PM", isLive: false },
-        { day: "Weekend", class: "No classes scheduled.", time: "Self-paced study available", isLive: false }
-    ];
+    // Placeholder until Supabase responds
+    let classroomSchedule = [{ day: "Syncing", class_name: "Loading...", class_time: "Please wait", is_live: false }];
 
     let triviaIndex = 0;
     let scheduleIndex = 0;
     let isTriviaPaused = false;
 
-    // Trivia Rotation
+    // FETCH LIVE SCHEDULE (From Supabase Table updated by Google Sheets)
+    async function fetchLiveSchedule() {
+        const { data: schedule, error } = await _supabase
+            .from('classroom_schedule')
+            .select('*')
+            .order('id', { ascending: true });
+
+        if (error) console.error("Schedule error:", error);
+        else if (schedule && schedule.length > 0) {
+            classroomSchedule = schedule;
+        }
+    }
+
+    // Rotators
     function rotateTrivia() {
         if(isTriviaPaused) return;
         const display = document.getElementById('trivia-display');
@@ -261,7 +266,6 @@
         }, 500);
     }
 
-    // Classroom Rotation (New)
     function rotateClassroom() {
         const display = document.getElementById('classroom-display');
         const tag = document.getElementById('classroom-tag');
@@ -270,9 +274,9 @@
         display.classList.add('fade');
         setTimeout(() => {
             const current = classroomSchedule[scheduleIndex];
-            display.innerHTML = `${current.day}: ${current.class}<br><small style="opacity: 0.8">${current.time}</small>`;
+            display.innerHTML = `${current.day}: ${current.class_name}<br><small style="opacity: 0.8">${current.class_time}</small>`;
             
-            if(current.isLive) {
+            if(current.is_live === true || current.is_live === "TRUE") {
                 tag.innerText = "Live Now";
                 tag.className = "status-tag tag-live";
             } else {
@@ -285,31 +289,27 @@
         }, 500);
     }
 
-    function startRotators() {
+    async function startRotators() {
+        await fetchLiveSchedule(); // Initial fetch
         rotateTrivia();
         rotateClassroom();
         setInterval(rotateTrivia, 6000);
-        setInterval(rotateClassroom, 5000); // Rotates slightly faster than trivia
+        setInterval(rotateClassroom, 5000);
+        setInterval(fetchLiveSchedule, 60000); // Re-sync with Supabase every minute
     }
 
+    // Logic Functions
     function toggleTrivia() {
         isTriviaPaused = !isTriviaPaused;
         const icon = document.getElementById('play-pause-icon');
         const btn = document.getElementById('trivia-btn');
-        if(isTriviaPaused) {
-            icon.innerText = "▶";
-            btn.style.background = "rgba(16, 185, 129, 0.4)";
-        } else {
-            icon.innerText = "⏸";
-            btn.style.background = "rgba(255, 255, 255, 0.1)";
-        }
+        icon.innerText = isTriviaPaused ? "▶" : "⏸";
+        btn.style.background = isTriviaPaused ? "rgba(16, 185, 129, 0.4)" : "rgba(255, 255, 255, 0.1)";
     }
 
     function toggleDropdown(menuId, arrowId) {
-        const dropdown = document.getElementById(menuId);
-        const arrow = document.getElementById(arrowId);
-        dropdown.classList.toggle('dropdown-active');
-        arrow.classList.toggle('rotated');
+        document.getElementById(menuId).classList.toggle('dropdown-active');
+        document.getElementById(arrowId).classList.toggle('rotated');
     }
 
     function toggleAuth(view) {
@@ -328,7 +328,7 @@
     async function handleSignup() {
         const email = document.getElementById('reg-email').value;
         const password = document.getElementById('reg-pass').value;
-        const { data, error } = await _supabase.auth.signUp({ email, password });
+        const { error } = await _supabase.auth.signUp({ email, password });
         if (error) alert("Signup Error: " + error.message);
         else { alert("Signup Successful! You can now log in."); toggleAuth('login'); }
     }
@@ -338,7 +338,7 @@
         const { error } = await _supabase.auth.resetPasswordForEmail(email, {
             redirectTo: window.location.origin + window.location.pathname,
         });
-        if (error) alert(error.message); else alert("Password reset link sent! Check your inbox.");
+        if (error) alert(error.message); else alert("Password reset link sent!");
     }
 
     async function handleLogout() { await _supabase.auth.signOut(); checkSession(); }
@@ -349,8 +349,8 @@
             const newPassword = prompt("Please enter your new password:");
             if (newPassword) {
                 const { error } = await _supabase.auth.updateUser({ password: newPassword });
-                if (error) alert("Error updating password: " + error.message);
-                else alert("Password updated successfully! You can now login.");
+                if (error) alert("Error: " + error.message);
+                else alert("Password updated!");
             }
         }
     });
