@@ -91,11 +91,13 @@
             color: #fff;
         }
 
-        /* Visual Arena */
+        /* Visual Arena - Changed background image to an inline retro grid style CSS pattern */
         .visual-stage {
             display: flex;
-            background: url('https://i.imgur.com/8vWp7S8.png') no-repeat center center; /* Pixel art office outline background */
-            background-size: cover;
+            background: linear-gradient(180deg, #130924 0%, #23123a 100%);
+            background-image: linear-gradient(rgba(52, 232, 158, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(52, 232, 158, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: center bottom;
             border: 4px solid #331a40;
             height: 220px;
             position: relative;
@@ -105,7 +107,7 @@
             justify-content: space-around;
             align-items: flex-end;
             padding: 10px;
-            box-shadow: inset 0 -30px 40px rgba(0,0,0,0.6);
+            box-shadow: inset 0 -30px 40px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.8);
         }
 
         .pixel-avatar {
@@ -223,7 +225,7 @@
 
     <div class="game-container">
         <div class="screen" id="game-screen">
-            </div>
+        </div>
     </div>
 
 <script>
@@ -231,12 +233,19 @@
     let currentScore = 100;
     let currentNode = "start";
     
-    // Pixel characters URLs (External Retro Assets)
+    // Fixed Character Assets using crisp, pixelated SVG data URIs
     const characters = {
-        agent: "https://i.imgur.com/vH9Y8XG.png",      // Pixel Agent Guy
-        client1: "https://i.imgur.com/5wN7bte.png",    // Pixel Business Owner (Commercial P&C)
-        client2: "https://i.imgur.com/6Xy1KnY.png",    // Pixel Homeowner (Personal Line)
-        boss: "https://i.imgur.com/B949w6M.png"        // Pixel Compliance Director
+        // Pixel Agent: Blue/grey suit silhouette with headphones
+        agent: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" width="110" height="140" style="image-rendering:pixelated;"><rect x="6" y="2" width="12" height="12" fill="%23e0a98c"/><rect x="4" y="5" width="2" height="6" fill="%23ff0055"/><rect x="18" y="5" width="2" height="6" fill="%23ff0055"/><rect x="6" y="4" width="12" height="2" fill="%23ff0055"/><rect x="8" y="6" width="3" height="2" fill="%23222"/><rect x="13" y="6" width="3" height="2" fill="%23222"/><rect x="10" y="10" width="4" height="2" fill="%23dd7777"/><rect x="3" y="14" width="18" height="18" fill="%233a4f7c"/><rect x="8" y="14" width="8" height="6" fill="%23fff"/><rect x="10" y="14" width="4" height="8" fill="%23222"/></svg>`,
+        
+        // Pixel Business Owner (Arthur): Brown suit, moustache, white shirt
+        client1: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" width="110" height="140" style="image-rendering:pixelated;"><rect x="6" y="4" width="12" height="12" fill="%23f3bf9d"/><rect x="6" y="2" width="12" height="3" fill="%23664422"/><rect x="8" y="8" width="2" height="2" fill="%23222"/><rect x="14" y="8" width="2" height="2" fill="%23222"/><rect x="8" y="11" width="8" height="2" fill="%23664422"/><rect x="2" y="16" width="20" height="16" fill="%237c523a"/><rect x="9" y="16" width="6" height="5" fill="%23fff"/><rect x="11" y="16" width="2" height="10" fill="%23d11a2a"/></svg>`,
+        
+        // Pixel Homeowner (Brenda): Grey hair, glasses, pink sweater
+        client2: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" width="110" height="140" style="image-rendering:pixelated;"><rect x="6" y="4" width="12" height="11" fill="%23fcd0a1"/><rect x="5" y="1" width="14" height="5" fill="%23b0b0b0"/><rect x="5" y="6" width="2" height="4" fill="%23b0b0b0"/><rect x="17" y="6" width="2" height="4" fill="%23b0b0b0"/><rect x="7" y="7" width="4" height="2" fill="%2300ffff"/><rect x="13" y="7" width="4" height="2" fill="%2300ffff"/><rect x="9" y="12" width="6" height="1" fill="%23e27272"/><rect x="3" y="15" width="18" height="17" fill="%23d6417a"/><rect x="7" y="15" width="10" height="4" fill="%23fcd0a1"/></svg>`,
+        
+        // Pixel Compliance Director: Severe look, red tie, dark grey suit, glasses
+        boss: `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 32" width="110" height="140" style="image-rendering:pixelated;"><rect x="6" y="3" width="12" height="12" fill="%23e8b595"/><rect x="6" y="1" width="12" height="3" fill="%23222"/><rect x="7" y="6" width="10" height="2" fill="%23ffea00"/><rect x="8" y="6" width="2" height="2" fill="%23000"/><rect x="14" y="6" width="2" height="2" fill="%23000"/><rect x="9" y="11" width="6" height="2" fill="%23993333"/><rect x="2" y="15" width="20" height="17" fill="%23333"/><rect x="9" y="15" width="6" height="4" fill="%23fff"/><rect x="11" y="15" width="2" height="12" fill="%23ff0055"/></svg>`
     };
 
     // The Entire Dialogue Tree Database (P&C Focus)
