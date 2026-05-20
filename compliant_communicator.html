@@ -3,428 +3,538 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LAVA Automation | VA Command Center</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <title>The Compliant Communicator: P&C Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    
     <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; --dark: #1e293b; --accent: #10b981; --danger: #ef4444; --white: #ffffff; --purple: #8b5cf6; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg); margin: 0; color: var(--dark); min-height: 100vh; overflow-x: hidden; }
-        
-        /* Auth Screens */
-        #auth-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: var(--dark); }
-        .auth-card { background: white; padding: 40px; border-radius: 20px; width: 350px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        .auth-card img { max-height: 80px; margin-bottom: 20px; }
-        .auth-card input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        .auth-card h2 { margin-bottom: 20px; color: var(--dark); font-size: 1.2rem; }
-        .toggle-link { color: var(--primary); cursor: pointer; font-size: 0.85rem; margin-top: 15px; display: block; text-decoration: none; }
+        :root {
+            --bg-color: #1a1a2e;
+            --terminal-dark: #0f3443;
+            --terminal-light: #34e89e;
+            --text-color: #00ff66;
+            --accent-color: #ff0055;
+            --panel-bg: rgba(16, 20, 30, 0.9);
+        }
 
-        /* Dashboard Layout */
-        #dashboard-wrapper { display: none; }
-        .main-layout { display: flex; width: 100%; }
+        * {
+            box-sizing: border-box;
+            font-family: 'Press Start 2P', monospace;
+        }
 
-        /* Sidebar */
-        .sidebar { width: 280px; background: var(--dark); color: white; padding: 30px 20px; position: fixed; height: 100vh; box-sizing: border-box; z-index: 10; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .brand-logo { width: auto; max-width: 80%; max-height: 80px; margin-bottom: 15px; object-fit: contain; }
-        .sidebar h2 { font-size: 1.1rem; margin: 0 0 5px 0; color: var(--primary); letter-spacing: 1px; text-transform: uppercase; }
-        .va-role-tag { font-size: 0.85rem; color: #94a3b8; margin-bottom: 30px; display: block; font-style: italic; }
-        
-        /* Navigation */
-        .nav-container { width: 100%; text-align: left; flex-grow: 1; }
-        .nav-item { padding: 12px 15px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: 0.3s; margin-bottom: 5px; width: 100%; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; }
-        .nav-item:hover { background: rgba(255,255,255,0.05); color: var(--primary); }
-        
-        .dropdown-container { display: none; background: rgba(255,255,255,0.03); border-radius: 8px; margin-bottom: 10px; overflow: hidden; }
-        .dropdown-item { padding: 10px 30px; font-size: 0.85rem; color: #94a3b8; cursor: pointer; transition: 0.2s; }
-        .dropdown-item:hover { color: white; background: rgba(255,255,255,0.05); }
-        .dropdown-active { display: block; }
-        .arrow { font-size: 0.7rem; transition: 0.3s; }
-        .rotated { transform: rotate(180deg); }
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle, #242444 10%, transparent 11%);
+            background-size: 20px 20px;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-        .logout-btn { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid var(--danger); margin-top: auto; justify-content: center; width: 100%; }
+        /* CRT Screen Effect Overlay */
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 999;
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
 
-        /* Main Content */
-        .main-content { margin-left: 280px; padding: 40px; flex-grow: 1; width: calc(100% - 280px); box-sizing: border-box; }
-        .card { background: white; padding: 25px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; position: relative; height: 100%; box-sizing: border-box; }
-        
-        /* Profile Layout Fix */
-        .profile-section { margin-bottom: 25px; width: 100%; display: flex; }
-        .profile-card-fixed { display: inline-flex; min-width: 600px; max-width: 100%; }
-        .profile-header { display: flex; align-items: center; gap: 25px; text-align: left; width: 100%; }
-        #profile-img { width: 150px; height: 150px; border-radius: 12px; object-fit: cover; border: 3px solid var(--primary); background: #eee; flex-shrink: 0; }
-        
-        .edit-btn { position: absolute; top: 20px; right: 20px; background: #f1f5f9; border: 1px solid #e2e8f0; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--dark); transition: 0.2s; z-index: 50; }
-        .edit-btn:hover { background: #e2e8f0; }
+        /* Main Cabinet Frame */
+        .game-container {
+            width: 100%;
+            max-width: 850px;
+            background: #2d1b4e;
+            border: 10px solid #4d317a;
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5);
+            padding: 15px;
+            position: relative;
+        }
 
-        /* Fluid Grid */
-        .dashboard-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; align-items: stretch; width: 100%; }
+        /* Inner Monitor Screen */
+        .screen {
+            background-color: #050510;
+            border: 6px solid #111;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: inset 0 0 40px rgba(0, 255, 100, 0.15);
+            min-height: 550px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
 
-        .leave-stat { background: #f1f5f9; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #e2e8f0; margin-bottom: 10px; }
-        .leave-stat label { font-size: 0.7rem; font-weight: 800; color: #64748b; display: block; margin-bottom: 5px; }
-        .leave-stat span { font-size: 1.4rem; font-weight: 800; color: var(--dark); }
-        .leave-btns { margin-top: 8px; display: flex; justify-content: center; gap: 5px; }
-        .leave-btns button { padding: 2px 8px; font-size: 0.7rem; cursor: pointer; border-radius: 4px; border: 1px solid #cbd5e1; }
+        /* Top Bar stats */
+        .header-ui {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--terminal-light);
+            border-bottom: 3px double var(--terminal-light);
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 5px var(--terminal-light);
+        }
 
-        /* Flash Card Logic (Trivia & Classroom) */
-        .flash-card { color: white; border: none; min-height: 250px; }
-        .trivia-card { background: linear-gradient(135deg, #1e293b 0%, #334155 100%); }
-        .classroom-card { background: linear-gradient(135deg, #4c1d95 0%, #6d28d9 100%); }
-        
-        .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
-        .card-header h4 { margin: 0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); }
-        .classroom-card .card-header h4 { color: #ddd6fe; }
-        
-        .fade-text { font-size: 1rem; line-height: 1.6; transition: opacity 0.5s ease-in-out; opacity: 1; }
-        .fade-text.fade { opacity: 0; }
-        .card-icon { position: absolute; bottom: -10px; right: -10px; font-size: 5rem; opacity: 0.1; transform: rotate(-15deg); pointer-events: none; }
-        
-        .status-tag { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; margin-bottom: 10px; }
-        .tag-live { background: #ef4444; animation: blink 1.5s infinite; }
-        .tag-scheduled { background: #10b981; }
+        .stat-val {
+            color: #fff;
+        }
 
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        /* Visual Arena with retro scanline grid pattern */
+        .visual-stage {
+            display: flex;
+            background: linear-gradient(180deg, #130924 0%, #23123a 100%);
+            background-image: linear-gradient(rgba(52, 232, 158, 0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(52, 232, 158, 0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: center bottom;
+            border: 4px solid #331a40;
+            height: 220px;
+            position: relative;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            justify-content: space-around;
+            align-items: flex-end;
+            padding: 10px;
+            box-shadow: inset 0 -30px 40px rgba(0,0,0,0.6), inset 0 0 20px rgba(0,0,0,0.8);
+        }
 
-        .task-tag-container { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-        .task-tag { background: #eff6ff; color: #2563eb; padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; border: 1px solid #dbeafe; }
-        .gaming-score-row { background:#f8fafc; padding:15px; border-radius:12px; border:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; width: 100%; box-sizing: border-box; }
+        .pixel-avatar-canvas {
+            width: 110px;
+            height: 140px;
+            image-rendering: pixelated;
+            filter: drop-shadow(2px 4px 0px rgba(0,0,0,0.5));
+            transition: transform 0.2s, filter 0.2s;
+        }
+
+        .pixel-avatar-canvas.active-speaker {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 8px var(--terminal-light)) drop-shadow(2px 4px 0px rgba(0,0,0,0.5));
+        }
+
+        /* Dialogue Box Area */
+        .dialogue-panel {
+            background: var(--panel-bg);
+            border: 3px solid #444;
+            border-radius: 6px;
+            padding: 15px;
+            min-height: 110px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .speaker-name {
+            font-size: 12px;
+            color: var(--accent-color);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .dialogue-text {
+            font-size: 11px;
+            line-height: 1.6;
+            color: #fff;
+            text-shadow: 1px 1px 0px #000;
+        }
+
+        /* Choice options container */
+        .choices-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .choice-btn {
+            background-color: #121225;
+            border: 2px solid #555;
+            color: #ddd;
+            padding: 12px;
+            font-size: 10px;
+            text-align: left;
+            cursor: pointer;
+            line-height: 1.4;
+            transition: all 0.1s ease;
+            border-radius: 4px;
+        }
+
+        .choice-btn:hover {
+            background-color: #1b1b3a;
+            border-color: var(--terminal-light);
+            color: var(--terminal-light);
+            box-shadow: 0 0 8px rgba(52, 232, 158, 0.4);
+            transform: translateX(4px);
+        }
+
+        /* Game Over / Win Screens */
+        .screen-center {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            text-align: center;
+            gap: 20px;
+        }
+
+        .title-accent {
+            font-size: 24px;
+            color: var(--terminal-light);
+            text-shadow: 3px 3px 0px #000;
+            margin-bottom: 10px;
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        .btn-action {
+            background: var(--accent-color);
+            border: 3px solid #fff;
+            color: #fff;
+            padding: 15px 30px;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px #000;
+        }
+
+        .btn-action:hover {
+            background: #ff3377;
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #000;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); text-shadow: 2px 2px 0px #000; }
+            100% { transform: scale(1.02); text-shadow: 4px 4px 0px #f05; }
+        }
     </style>
 </head>
 <body>
 
-<div id="auth-container">
-    <div class="auth-card" id="login-card">
-        <img src="https://raw.githubusercontent.com/yakasama64652/PTO/main/kling_20260422_VIDEO__1217_0.png" alt="LAVA Logo">
-        <h2>VA Command Center</h2>
-        <input type="email" id="login-email" placeholder="Email">
-        <input type="password" id="login-pass" placeholder="Password">
-        <button class="btn-prime" onclick="handleLogin()" style="background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600;">Login</button>
-        <span class="toggle-link" onclick="toggleAuth('magic')">Forgot Password? Use Magic Link</span>
-        <span class="toggle-link" onclick="toggleAuth('signup')">Need an account? Signup</span>
-    </div>
-    <div class="auth-card" id="signup-card" style="display:none;">
-        <img src="https://raw.githubusercontent.com/yakasama64652/PTO/main/kling_20260422_VIDEO__1217_0.png" alt="LAVA Logo">
-        <h2>VA Signup</h2>
-        <input type="email" id="reg-email" placeholder="Email">
-        <input type="password" id="reg-pass" placeholder="Password">
-        <button class="btn-prime" onclick="handleSignup()" style="background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600;">Sign Up</button>
-        <span class="toggle-link" onclick="toggleAuth('login')">Back to Login</span>
-    </div>
-    <div class="auth-card" id="magic-card" style="display:none;">
-        <img src="https://raw.githubusercontent.com/yakasama64652/PTO/main/kling_20260422_VIDEO__1217_0.png" alt="LAVA Logo">
-        <h2>Reset Password</h2>
-        <input type="email" id="magic-email" placeholder="Enter your email">
-        <button class="btn-prime" id="magic-btn" onclick="handleMagicLink()" style="background: var(--primary); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600;">Send Reset Link</button>
-        <span class="toggle-link" onclick="toggleAuth('login')">Back to Password Login</span>
-    </div>
-</div>
+    <div class="crt-overlay"></div>
 
-<div id="dashboard-wrapper">
-    <div class="main-layout">
-        <div class="sidebar">
-            <img src="https://raw.githubusercontent.com/yakasama64652/PTO/main/kling_20260422_VIDEO__1217_0.png" alt="LAVA Logo" class="brand-logo">
-            <h2>LAVA Automation</h2>
-            <div id="side-name" style="font-weight: bold; margin-top: 10px;">User</div>
-            <div id="side-role" class="va-role-tag">Role</div>
-            <div class="nav-container">
-                <div class="nav-item">Dashboard</div>
-                <div class="nav-item">SOP Vault</div>
-                <div class="nav-item" onclick="toggleDropdown('report-dropdown', 'report-arrow')">Reports <span class="arrow" id="report-arrow">▼</span></div>
-                <div class="dropdown-container" id="report-dropdown">
-                    <div class="dropdown-item">Attendance</div>
-                    <div class="dropdown-item">Payslips</div>
-                    <div class="dropdown-item">Time Off Records</div>
-                </div>
-                <div class="nav-item" onclick="toggleDropdown('games-dropdown', 'games-arrow')">LAVA Games <span class="arrow" id="games-arrow">▼</span></div>
-                <div class="dropdown-container" id="games-dropdown">
-                    <div class="dropdown-item" onclick="window.open('brick breaker.html', '_blank')">Brick Breaker Elite</div>
-                    <div class="dropdown-item" onclick="window.open('underwriter.html', '_blank')">Underwriter’s Ledger</div>
-                    <div class="dropdown-item" onclick="window.open('insurance_hangman.html', '_blank')">Insurance Hangman</div>
-                    <div class="dropdown-item" onclick="window.open('compliant_communicator.html', '_blank')">Compliant Communicator</div>
-                </div>
-                <div class="nav-item" onclick="toggleDropdown('courses-dropdown', 'courses-arrow')">LAVA Courses <span class="arrow" id="courses-arrow">▼</span></div>
-                <div class="dropdown-container" id="courses-dropdown">
-                    <div class="dropdown-item">Underwriting 101</div>
-                    <div class="dropdown-item">VA Onboarding</div>
-                    <div class="dropdown-item">Ethics & Compliance</div>
-                </div>
-            </div>
-            <div class="nav-item logout-btn" onclick="handleLogout()">Logout</div>
-        </div>
-
-        <div class="main-content">
-            <div class="profile-section">
-                <div class="card profile-card-fixed" id="profile-card">
-                    <button type="button" onclick="window.open('edit-profile.html', '_blank')" class="edit-btn">Edit Profile</button>
-                    <div class="profile-header">
-                        <div class="photo-area"><img id="profile-img" src="https://via.placeholder.com/100?text=VA" alt="Profile"></div>
-                        <div style="flex:1;">
-                            <h1 id="display-name" style="margin:0; font-size: 1.5rem;">User Name</h1>
-                            <div id="display-role" style="color: #64748b; font-weight: 600;">Position Title</div>
-                            <div style="font-size: 0.85rem; margin-top: 5px; color: #475569;"><span id="display-gender">Gender</span> • <span id="display-birthday">Birthday</span></div>
-                            <div style="font-size: 0.9rem; margin-top: 8px;">Agency: <b id="display-agency">Agency Name</b> <span style="color: #64748b; font-size: 0.8rem; margin-left: 5px;">(Joined: <span id="display-join-date">Date</span>)</span></div>
-                            <div style="font-size: 0.85rem; margin-top: 10px; color: var(--danger); font-weight: 600;">Emergency Contact: <span id="display-emergency" style="color: var(--dark);">None</span></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="dashboard-grid">
-                <div class="card" id="task-card">
-                    <h3 style="margin-top:0; font-size: 1rem;">Core Responsibilities</h3>
-                    <div id="display-tasks" class="task-tag-container">
-                        <p style="color: #94a3b8; font-size: 0.85rem;">No tasks defined.</p>
-                    </div>
-                </div>
-
-                <div class="card flash-card classroom-card">
-                    <div class="card-header">
-                        <h4>Classroom Status</h4>
-                    </div>
-                    <div id="classroom-tag" class="status-tag tag-scheduled">Scheduled</div>
-                    <div id="classroom-display" class="fade-text" style="font-weight: 600;">Syncing schedule...</div>
-                    <div class="card-icon">🎓</div>
-                </div>
-
-                <div class="card flash-card trivia-card">
-                    <div class="card-header">
-                        <h4>Did you know?</h4>
-                        <button class="trivia-controls" onclick="toggleTrivia()" id="trivia-btn">
-                            <span id="play-pause-icon">⏸</span>
-                        </button>
-                    </div>
-                    <div id="trivia-display" class="fade-text">Loading insurance facts...</div>
-                    <div class="card-icon">🛡️</div>
-                </div>
-            </div>
-
-            <div class="dashboard-grid" style="margin-top: 25px;">
-                <div class="card">
-                    <h3 style="margin-top:0; font-size: 1rem;">Leave Credits</h3>
-                    <div style="display: flex; flex-direction: column; gap: 10px;">
-                        <div class="leave-stat"><label>PTO</label><span id="pto-val">0</span>
-                            <div class="leave-btns"><button onclick="updateLeave('pto', 1)">+</button><button onclick="updateLeave('pto', -1)">-</button></div>
-                        </div>
-                        <div class="leave-stat"><label>SICK</label><span id="sick-val">0</span>
-                            <div class="leave-btns"><button onclick="updateLeave('sick', 1)">+</button><button onclick="updateLeave('sick', -1)">-</button></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="gaming-stats-card" style="display:none; grid-column: span 2;">
-                    <div class="card">
-                        <h3>Gaming High Scores</h3>
-                        <div class="gaming-score-row">
-                            <b style="color:var(--primary);">Brick Breaker Elite:</b>
-                            <span id="pto-brickbreaker-score" style="font-weight:bold; font-size:1.1rem;">0 pts</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="game-container">
+        <div class="screen" id="game-screen">
         </div>
     </div>
-</div>
 
 <script>
-    const _supabase = supabase.createClient('https://esjxzcmfxtestkettdyp.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzanh6Y21meHRlc3RrZXR0ZHlwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzgxNTQ3MzksImV4cCI6MjA5MzczMDczOX0.G9i7nrGVzD8WrKFg7642HvRs9GeTPgkRMuFw8vQ-6C0');
-    let currentUser = null;
-    let data = { profile: { name: "", role: "", agency: "", pto: 10, sick: 5, photo: "", gender: "", birthday: "", joinDate: "", emergency: "", tasks: [] }, games: { brickBreaker: { highScore: 0 } } };
-
-    // Constant Data
-    const insuranceTrivia = [
-        "Benjamin Franklin founded the first successful U.S. property insurance company in 1752.",
-        "The first auto insurance policy was issued in 1897, when there were fewer than 100 cars on the road.",
-        "Alien Abduction Insurance is a real product, with over 30,000 policies sold in the U.S.",
-        "The term 'Underwriter' comes from the 17th century when people wrote names under risk descriptions.",
-        "Pet Insurance was first sold in the U.S. in 1982—the first policyholder was the dog who played Lassie.",
-        "Usage-Based Insurance (UBI) uses telematics to track braking and acceleration to determine rates."
-    ];
-
-    // Placeholder until Supabase responds
-    let classroomSchedule = [{ day: "Syncing", class_name: "Loading...", class_time: "Please wait", is_live: false }];
-
-    let triviaIndex = 0;
-    let scheduleIndex = 0;
-    let isTriviaPaused = false;
-
-    // FETCH LIVE SCHEDULE (From Supabase Table updated by Google Sheets)
-    async function fetchLiveSchedule() {
-        const { data: schedule, error } = await _supabase
-            .from('classroom_schedule')
-            .select('*')
-            .order('id', { ascending: true });
-
-        if (error) console.error("Schedule error:", error);
-        else if (schedule && schedule.length > 0) {
-            classroomSchedule = schedule;
+    // Game State Variables
+    let currentScore = 100;
+    let currentNode = "start";
+    
+    // Core pixel instructions to paint on our canvas matrices
+    const characterSprites = {
+        agent: (ctx) => {
+            // Skin
+            ctx.fillStyle = '#e0a98c'; ctx.fillRect(6, 2, 12, 12);
+            // Headset
+            ctx.fillStyle = '#ff0055'; ctx.fillRect(4, 5, 2, 6); ctx.fillRect(18, 5, 2, 6); ctx.fillRect(6, 4, 12, 2);
+            // Eyes
+            ctx.fillStyle = '#222222'; ctx.fillRect(8, 6, 3, 2); ctx.fillRect(13, 6, 3, 2);
+            // Mouth
+            ctx.fillStyle = '#dd7777'; ctx.fillRect(10, 10, 4, 2);
+            // Suit Body
+            ctx.fillStyle = '#3a4f7c'; ctx.fillRect(3, 14, 18, 18);
+            // Shirt & Tie
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(8, 14, 8, 6);
+            ctx.fillStyle = '#222222'; ctx.fillRect(10, 14, 4, 8);
+        },
+        client1: (ctx) => {
+            // Arthur (Bakery Owner)
+            ctx.fillStyle = '#f3bf9d'; ctx.fillRect(6, 4, 12, 12);
+            ctx.fillStyle = '#664422'; ctx.fillRect(6, 2, 12, 3); // Hair
+            ctx.fillStyle = '#222222'; ctx.fillRect(8, 8, 2, 2); ctx.fillRect(14, 8, 2, 2); // Eyes
+            ctx.fillStyle = '#664422'; ctx.fillRect(8, 11, 8, 2); // Moustache
+            ctx.fillStyle = '#7c523a'; ctx.fillRect(2, 16, 20, 16); // Suit
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(9, 16, 6, 5); // Shirt
+            ctx.fillStyle = '#d11a2a'; ctx.fillRect(11, 16, 2, 10); // Red Tie
+        },
+        client2: (ctx) => {
+            // Brenda (Homeowner)
+            ctx.fillStyle = '#fcd0a1'; ctx.fillRect(6, 4, 12, 11);
+            ctx.fillStyle = '#b0b0b0'; ctx.fillRect(5, 1, 14, 5); ctx.fillRect(5, 6, 2, 4); ctx.fillRect(17, 6, 2, 4); // Grey Hair
+            ctx.fillStyle = '#00ffff'; ctx.fillRect(7, 7, 4, 2); ctx.fillRect(13, 7, 4, 2); // Glasses
+            ctx.fillStyle = '#e27272'; ctx.fillRect(9, 12, 6, 2); // Smile
+            ctx.fillStyle = '#d6417a'; ctx.fillRect(3, 15, 18, 17); // Pink Top
+            ctx.fillStyle = '#fcd0a1'; ctx.fillRect(7, 15, 10, 4); // Neckline
+        },
+        boss: (ctx) => {
+            // Compliance Director
+            ctx.fillStyle = '#e8b595'; ctx.fillRect(6, 3, 12, 12);
+            ctx.fillStyle = '#222222'; ctx.fillRect(6, 1, 12, 3); // Slick Hair
+            ctx.fillStyle = '#ffea00'; ctx.fillRect(7, 6, 10, 2); // Yellow Glasses frame
+            ctx.fillStyle = '#000000'; ctx.fillRect(8, 6, 2, 2); ctx.fillRect(14, 6, 2, 2);
+            ctx.fillStyle = '#993333'; ctx.fillRect(9, 11, 6, 2); // Frown
+            ctx.fillStyle = '#333333'; ctx.fillRect(2, 15, 20, 17); // Blazer
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(9, 15, 6, 4); // Collar
+            ctx.fillStyle = '#ff0055'; ctx.fillRect(11, 15, 2, 12); // Crimson Tie
         }
-    }
+    };
 
-    // Rotators
-    function rotateTrivia() {
-        if(isTriviaPaused) return;
-        const display = document.getElementById('trivia-display');
-        if(!display) return;
-        display.classList.add('fade');
-        setTimeout(() => {
-            display.innerText = insuranceTrivia[triviaIndex];
-            display.classList.remove('fade');
-            triviaIndex = (triviaIndex + 1) % insuranceTrivia.length;
-        }, 500);
-    }
-
-    function rotateClassroom() {
-        const display = document.getElementById('classroom-display');
-        const tag = document.getElementById('classroom-tag');
-        if(!display || !tag) return;
+    // Helper to generate dynamic, zero-latency canvas visuals 
+    function drawAvatar(canvasId, spriteKey) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        display.classList.add('fade');
-        setTimeout(() => {
-            const current = classroomSchedule[scheduleIndex];
-            
-            display.innerHTML = `
-                ${current.day}: ${current.class_name}<br>
-                <small style="opacity: 0.9">Trainer: ${current.trainer_name || 'TBA'}</small><br>
-                <small style="opacity: 0.7">${current.class_time}</small>
+        // Scale coordinate system to match a 24x32 grid space natively
+        ctx.save();
+        ctx.scale(canvas.width / 24, canvas.height / 32);
+        if(characterSprites[spriteKey]) {
+            characterSprites[spriteKey](ctx);
+        }
+        ctx.restore();
+    }
+
+    // The Entire Dialogue Tree Database (P&C Focus)
+    const dialogueTree = {
+        start: {
+            type: "menu",
+            title: "THE COMPLIANT COMMUNICATOR",
+            subtitle: "P&C Insurance Ethics Simulation",
+            text: "Ensure accurate risk exposure classification, respect bound coverage rules, and remain strictly compliant with US insurance regulations. One misstep can invite state audits or lawsuits.",
+            choices: [
+                { text: "START SHIFT", nextNode: "intro_boss" }
+            ]
+        },
+        intro_boss: {
+            type: "dialogue",
+            speaker: "Compliance Director",
+            speakerKey: "boss",
+            text: "Welcome to the floor, Agent. State regulators are cracking down on bad disclosures and binding authority errors. Keep your compliance score above 70%, or your license is history. First call coming in!",
+            choices: [
+                { text: "Put the line through.", nextNode: "case1_start" }
+            ]
+        },
+        // CASE 1: Commercial P&C (Property & Liability Risk)
+        case1_start: {
+            type: "dialogue",
+            speaker: "Arthur (Bakery Owner)",
+            speakerKey: "client1",
+            text: "Hello? I need a Commercial Package Policy ASAP. I'm opening 'Art's Oven' tomorrow. The landlord demands proof of General Liability and Commercial Property coverage today or he won't give me the keys!",
+            choices: [
+                { text: "Calm down, Arthur. I can instantly bind this right now over the phone without asking paperwork questions to speed it up.", nextNode: "case1_bad_bind", cost: 25 },
+                { text: "I can help with that, Arthur. Let's look over your exact physical building details, hazards, and underwriting profile first to ensure a proper quote.", nextNode: "case1_good_underwrite", cost: 0 }
+            ]
+        },
+        case1_bad_bind: {
+            type: "dialogue",
+            speaker: "Compliance Director",
+            speakerKey: "boss",
+            text: "CRITICAL ERROR! You just bound a high-risk commercial property line without verifying baking oven hazard safety systems or accurate property valuations. This breaks our binding authority manual!",
+            choices: [
+                { text: "Apologize and pivot back to risk verification.", nextNode: "case1_good_underwrite" }
+            ]
+        },
+        case1_good_underwrite: {
+            type: "dialogue",
+            speaker: "Arthur (Bakery Owner)",
+            speakerKey: "client1",
+            text: "Okay, fair enough. We have an industrial commercial oven, and we also offer a bicycle delivery service in the city. Do I need anything special for the delivery guys?",
+            choices: [
+                { text: "Standard Commercial General Liability protects everything on and off premises automatically. Don't worry about it.", nextNode: "case1_wrong_gl", cost: 20 },
+                { text: "Yes, you will specifically need a Hired and Non-Owned Auto (HNOA) endorsement if employees use personal or unowned assets for delivery.", nextNode: "case1_correct_hnoa", cost: 0 }
+            ]
+        },
+        case1_wrong_gl: {
+            type: "dialogue",
+            speaker: "Compliance Director",
+            speakerKey: "boss",
+            text: "WARNING! General Liability does NOT cover auto/vehicular delivery liability exposures cleanly. You exposed the client to a massive gap and violated basic coverage disclosure protocol.",
+            choices: [
+                { text: "Fix the statement to Arthur.", nextNode: "case1_correct_hnoa" }
+            ]
+        },
+        case1_correct_hnoa: {
+            type: "dialogue",
+            speaker: "Arthur (Bakery Owner)",
+            speakerKey: "client1",
+            text: "Wow, glad I asked! One more thing—my buddy told me to underreport my payroll numbers a bit to drop my Workers' Compensation premiums. Can we slide that under the rug?",
+            choices: [
+                { text: "Sure, we can adjust numbers slightly to hit your budget targets. No one checks small businesses.", nextNode: "case1_fraud", cost: 40 },
+                { text: "I cannot do that. Misrepresenting payroll numbers constitutes premium fraud, which is punishable by heavy fines and policy rescission.", nextNode: "case2_intro", cost: 0 }
+            ]
+        },
+        case1_fraud: {
+            type: "dialogue",
+            speaker: "Compliance Director",
+            speakerKey: "boss",
+            text: "FRAUD DETECTED! Assisting or facilitating premium fraud violates state insurance codes instantly. Your score took a massive hit!",
+            choices: [
+                { text: "Continue to next caller.", nextNode: "case2_intro" }
+            ]
+        },
+        // CASE 2: Personal Lines (Homeowners HO-3 / Claims handling)
+        case2_intro: {
+            type: "dialogue",
+            speaker: "Compliance Director",
+            speakerKey: "boss",
+            text: "You survived the commercial client. Line 2 is a personal lines account regarding a policyholder's Homeowners policy (HO-3). Pick up!",
+            choices: [
+                { text: "Answer Line 2", nextNode: "case2_start" }
+            ]
+        },
+        case2_start: {
+            type: "dialogue",
+            speaker: "Brenda (Homeowner)",
+            speakerKey: "client2",
+            text: "Hi dear, a massive rainstorm hit yesterday and my basement is entirely filled with water! My couch and floor are ruined. Am I covered under my standard HO-3 Policy for this?",
+            choices: [
+                { text: "Yes! Since it rained heavily outside, your standard Homeowners policy covers surface water flooding entirely.", nextNode: "case2_flood_fail", cost: 30 },
+                { text: "We need to verify the source. Standard HO-3 policies exclude ambient surface water flood damage. Did the water come from a burst pipe inside, or rising water from outside?", nextNode: "case2_flood_correct", cost: 0 }
+            ]
+        },
+        case2_fail_adjust: {
+            type: "dialogue",
+            speaker: "Compliance Director",
+            speakerKey: "boss",
+            text: "STOP! You cannot formally deny or accept liability determinations over the phone before a proper field adjuster examines the loss. You are crossing lines!",
+            choices: [
+                { text: "Rephrase clearly to Brenda.", nextNode: "case2_flood_correct" }
+            ]
+        },
+        case2_flood_fail: {
+            type: "dialogue",
+            speaker: "Compliance Director",
+            speakerKey: "boss",
+            text: "COMPLIANCE BREACH! Standard Homeowners policies explicitly exclude flood/surface water damage. Giving false hope violates unfair claims practices laws.",
+            choices: [
+                { text: "Correct your statement immediately.", nextNode: "case2_flood_correct" }
+            ]
+        },
+        case2_flood_correct: {
+            type: "dialogue",
+            speaker: "Brenda (Homeowner)",
+            speakerKey: "client2",
+            text: "Oh dear, it actually rose up from the yard outside. I don't think I bought a separate NFIP Flood Policy... But wait, I have a friend who told me I can just tell the claims adjuster it was an interior plumbing leak!",
+            choices: [
+                { text: "I didn't hear anything, Brenda. Go ahead and tell the adjuster what you need to tell them.", nextNode: "case2_collusion", cost: 35 },
+                { text: "Brenda, intentionally misrepresenting the cause of a loss to gain coverage is hard insurance fraud. I must document this accurately.", nextNode: "game_summary", cost: 0 }
+            ]
+        },
+        case2_collusion: {
+            type: "dialogue",
+            speaker: "Compliance Director",
+            speakerKey: "boss",
+            text: "DISASTER! You colluded with a client to fabricate claims narratives. This is material misrepresentation and illegal.",
+            choices: [
+                { text: "See final evaluation score.", nextNode: "game_summary" }
+            ]
+        },
+        // OUTCOME SCENARIOS
+        game_summary: {
+            type: "summary"
+        }
+    };
+
+    // Render Function to update game screen
+    function renderNode() {
+        const screen = document.getElementById("game-screen");
+        const node = dialogueTree[currentNode];
+
+        if (currentScore <= 0) {
+            renderGameOver("DE-LICENSED!", "Your compliance score bottomed out. The State Department of Insurance has revoked your license for unethical P&C practices.");
+            return;
+        }
+
+        if (node.type === "menu") {
+            screen.innerHTML = `
+                <div class="screen-center">
+                    <div class="title-accent">${node.title}</div>
+                    <div style="font-size: 9px; line-height: 1.8; color: #8a8ab0; max-width: 600px; margin-bottom: 20px;">
+                        ${node.text}
+                    </div>
+                    <button class="btn-action" onclick="goToNode('${node.choices[0].nextNode}')">${node.choices[0].text}</button>
+                </div>
             `;
-            
-            if(current.is_live === true || current.is_live === "TRUE") {
-                tag.innerText = "Live Now";
-                tag.className = "status-tag tag-live";
+        } 
+        else if (node.type === "dialogue") {
+            screen.innerHTML = `
+                <div class="header-ui">
+                    <div>ROLE: P&C PRODUCER</div>
+                    <div>COMPLIANCE SCORE: <span class="stat-val" id="score-display">${currentScore}%</span></div>
+                </div>
+
+                <div class="visual-stage">
+                    <canvas id="agentCanvas" class="pixel-avatar-canvas ${node.speaker === 'Agent' ? 'active-speaker' : ''}" width="240" height="320"></canvas>
+                    <canvas id="callerCanvas" class="pixel-avatar-canvas ${node.speaker !== 'Agent' ? 'active-speaker' : ''}" width="240" height="320"></canvas>
+                </div>
+
+                <div class="dialogue-panel">
+                    <div class="speaker-name">${node.speaker}</div>
+                    <div class="dialogue-text">${node.text}</div>
+                </div>
+
+                <div class="choices-panel" id="choices-box"></div>
+            `;
+
+            // Draw matrices after appending canvases to DOM tree
+            drawAvatar("agentCanvas", "agent");
+            drawAvatar("callerCanvas", node.speakerKey);
+
+            // Append choices dynamically
+            const choicesBox = document.getElementById("choices-box");
+            node.choices.forEach(choice => {
+                const button = document.createElement("button");
+                button.className = "choice-btn";
+                button.innerText = choice.text;
+                button.onclick = () => {
+                    if (choice.cost) {
+                        currentScore -= choice.cost;
+                    }
+                    goToNode(choice.nextNode);
+                };
+                choicesBox.appendChild(button);
+            });
+        } 
+        else if (node.type === "summary") {
+            if (currentScore >= 70) {
+                renderGameOver("COMPLIANT PRODUCER!", `CONGRATULATIONS! You completed your shift with a compliance rating of ${currentScore}%. You protected both personal and commercial policyholders while adhering strictly to state guidelines.`, true);
             } else {
-                tag.innerText = "Scheduled";
-                tag.className = "status-tag tag-scheduled";
-            }
-            
-            display.classList.remove('fade');
-            scheduleIndex = (scheduleIndex + 1) % classroomSchedule.length;
-        }, 500);
-    }
-
-    async function startRotators() {
-        await fetchLiveSchedule(); // Initial fetch
-        rotateTrivia();
-        rotateClassroom();
-        setInterval(rotateTrivia, 6000);
-        setInterval(rotateClassroom, 5000);
-        setInterval(fetchLiveSchedule, 60000); // Re-sync with Supabase every minute
-    }
-
-    // Logic Functions
-    function toggleTrivia() {
-        isTriviaPaused = !isTriviaPaused;
-        const icon = document.getElementById('play-pause-icon');
-        const btn = document.getElementById('trivia-btn');
-        icon.innerText = isTriviaPaused ? "▶" : "⏸";
-        btn.style.background = isTriviaPaused ? "rgba(16, 185, 129, 0.4)" : "rgba(255, 255, 255, 0.1)";
-    }
-
-    function toggleDropdown(menuId, arrowId) {
-        document.getElementById(menuId).classList.toggle('dropdown-active');
-        document.getElementById(arrowId).classList.toggle('rotated');
-    }
-
-    function toggleAuth(view) {
-        document.getElementById('login-card').style.display = view === 'login' ? 'block' : 'none';
-        document.getElementById('signup-card').style.display = view === 'signup' ? 'block' : 'none';
-        document.getElementById('magic-card').style.display = view === 'magic' ? 'block' : 'none';
-    }
-
-    async function handleLogin() {
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-pass').value;
-        const { error } = await _supabase.auth.signInWithPassword({ email, password });
-        if (error) alert(error.message); else checkSession();
-    }
-
-    async function handleSignup() {
-        const email = document.getElementById('reg-email').value;
-        const password = document.getElementById('reg-pass').value;
-        const { error } = await _supabase.auth.signUp({ email, password });
-        if (error) alert("Signup Error: " + error.message);
-        else { alert("Signup Successful! You can now log in."); toggleAuth('login'); }
-    }
-
-    async function handleMagicLink() {
-        const email = document.getElementById('magic-email').value;
-        const { error } = await _supabase.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin + window.location.pathname,
-        });
-        if (error) alert(error.message); else alert("Password reset link sent!");
-    }
-
-    async function handleLogout() { await _supabase.auth.signOut(); checkSession(); }
-
-    _supabase.auth.onAuthStateChange(async (event, session) => { 
-        if (event === "SIGNED_IN" || event === "INITIAL_SESSION") { checkSession(); } 
-        if (event === "PASSWORD_RECOVERY") {
-            const newPassword = prompt("Please enter your new password:");
-            if (newPassword) {
-                const { error } = await _supabase.auth.updateUser({ password: newPassword });
-                if (error) alert("Error: " + error.message);
-                else alert("Password updated!");
+                renderGameOver("AUDIT FAILED!", `Your closing score dropped to ${currentScore}%. While you finished the shift, your non-compliant handling of P&C exposures triggered a mandatory corporate audit.`, false);
             }
         }
-    });
-
-    async function checkSession() {
-        const { data: { session } } = await _supabase.auth.getSession();
-        if (session) {
-            currentUser = session.user;
-            document.getElementById('auth-container').style.display = 'none';
-            document.getElementById('dashboard-wrapper').style.display = 'block';
-            await loadUserData();
-        } else {
-            currentUser = null;
-            document.getElementById('auth-container').style.display = 'flex';
-            document.getElementById('dashboard-wrapper').style.display = 'none';
-            toggleAuth('login');
-        }
     }
 
-    async function loadUserData() {
-        const { data: dbData } = await _supabase.from('va_data').select('*').eq('user_id', currentUser.id).single();
-        if (dbData) {
-            data.profile = dbData.profile_data;
-            data.games = dbData.games_data || { brickBreaker: { highScore: 0 } };
-            renderAll();
-        } else { await saveToSupabase(); }
+    function renderGameOver(title, message, isWin = false) {
+        const screen = document.getElementById("game-screen");
+        screen.innerHTML = `
+            <div class="screen-center">
+                <div class="title-accent" style="color: ${isWin ? '#34e89e' : '#ff0055'}">${title}</div>
+                <div style="font-size: 11px; line-height: 1.8; max-width: 550px; margin-bottom: 20px;">
+                    ${message}
+                </div>
+                <div style="font-size: 14px; margin-bottom: 20px; color: #ffcc00;">FINAL SCORE: ${currentScore}%</div>
+                <button class="btn-action" onclick="resetGame()">PLAY AGAIN</button>
+            </div>
+        `;
     }
 
-    async function saveToSupabase() {
-        if (!currentUser) return;
-        await _supabase.from('va_data').upsert({ user_id: currentUser.id, profile_data: data.profile, games_data: data.games, updated_at: new Date() }, { onConflict: 'user_id' });
-        renderAll();
+    function goToNode(nodeKey) {
+        currentNode = nodeKey;
+        renderNode();
     }
 
-    function renderAll() {
-        const p = data.profile;
-        document.getElementById('display-name').innerText = p.name || "Set Name";
-        document.getElementById('side-name').innerText = p.name || "User";
-        document.getElementById('display-role').innerText = p.role || "Set Role";
-        document.getElementById('side-role').innerText = p.role || "";
-        document.getElementById('display-agency').innerText = p.agency || "Set Agency";
-        document.getElementById('profile-img').src = p.photo || "https://via.placeholder.com/100?text=VA";
-        document.getElementById('display-gender').innerText = p.gender || "Gender";
-        document.getElementById('display-birthday').innerText = p.birthday || "Birthday";
-        document.getElementById('display-join-date').innerText = p.joinDate || "Date";
-        document.getElementById('pto-val').innerText = p.pto || 0;
-        document.getElementById('sick-val').innerText = p.sick || 0;
-        document.getElementById('display-emergency').innerText = p.emergency || "None";
-
-        const taskContainer = document.getElementById('display-tasks');
-        if (p.tasks && p.tasks.length > 0) {
-            taskContainer.innerHTML = p.tasks.map(t => `<div class="task-tag">${t}</div>`).join('');
-        } else { 
-            taskContainer.innerHTML = '<p style="color: #94a3b8; font-size: 0.85rem;">No responsibilities defined.</p>'; 
-        }
-
-        const highscore = data.games?.brickBreaker?.highScore || 0;
-        document.getElementById('pto-brickbreaker-score').innerText = highscore + " pts";
-        document.getElementById('gaming-stats-card').style.display = (highscore > 0) ? 'grid' : 'none';
+    function resetGame() {
+        currentScore = 100;
+        currentNode = "start";
+        renderNode();
     }
 
-    function updateLeave(type, amt) { data.profile[type] = (data.profile[type] || 0) + amt; saveToSupabase(); }
-
-    startRotators();
-    checkSession();
+    // Initialize Game
+    window.onload = () => {
+        renderNode();
+    };
 </script>
 </body>
 </html>
