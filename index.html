@@ -134,6 +134,7 @@
                 <div class="dropdown-container" id="games-dropdown">
                     <div class="dropdown-item" onclick="window.open('brick breaker.html', '_blank')">Brick Breaker Elite</div>
                     <div class="dropdown-item" onclick="window.open('underwriter.html', '_blank')">Underwriter’s Ledger</div>
+                    <div class="dropdown-item" onclick="window.open('insurance_hangman.html', '_blank')">Insurance Hangman</div>
                 </div>
                 <div class="nav-item" onclick="toggleDropdown('courses-dropdown', 'courses-arrow')">LAVA Courses <span class="arrow" id="courses-arrow">▼</span></div>
                 <div class="dropdown-container" id="courses-dropdown">
@@ -267,33 +268,32 @@
     }
 
     function rotateClassroom() {
-    const display = document.getElementById('classroom-display');
-    const tag = document.getElementById('classroom-tag');
-    if(!display || !tag) return;
-    
-    display.classList.add('fade');
-    setTimeout(() => {
-        const current = classroomSchedule[scheduleIndex];
+        const display = document.getElementById('classroom-display');
+        const tag = document.getElementById('classroom-tag');
+        if(!display || !tag) return;
         
-        // Added Trainer Name display here
-        display.innerHTML = `
-            ${current.day}: ${current.class_name}<br>
-            <small style="opacity: 0.9">Trainer: ${current.trainer_name || 'TBA'}</small><br>
-            <small style="opacity: 0.7">${current.class_time}</small>
-        `;
-        
-        if(current.is_live === true || current.is_live === "TRUE") {
-            tag.innerText = "Live Now";
-            tag.className = "status-tag tag-live";
-        } else {
-            tag.innerText = "Scheduled";
-            tag.className = "status-tag tag-scheduled";
-        }
-        
-        display.classList.remove('fade');
-        scheduleIndex = (scheduleIndex + 1) % classroomSchedule.length;
-    }, 500);
-}
+        display.classList.add('fade');
+        setTimeout(() => {
+            const current = classroomSchedule[scheduleIndex];
+            
+            display.innerHTML = `
+                ${current.day}: ${current.class_name}<br>
+                <small style="opacity: 0.9">Trainer: ${current.trainer_name || 'TBA'}</small><br>
+                <small style="opacity: 0.7">${current.class_time}</small>
+            `;
+            
+            if(current.is_live === true || current.is_live === "TRUE") {
+                tag.innerText = "Live Now";
+                tag.className = "status-tag tag-live";
+            } else {
+                tag.innerText = "Scheduled";
+                tag.className = "status-tag tag-scheduled";
+            }
+            
+            display.classList.remove('fade');
+            scheduleIndex = (scheduleIndex + 1) % classroomSchedule.length;
+        }, 500);
+    }
 
     async function startRotators() {
         await fetchLiveSchedule(); // Initial fetch
