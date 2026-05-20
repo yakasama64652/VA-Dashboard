@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Compliant Communicator: P&C Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #1a1a2e;
+            --terminal-dark: #0f3443;
+            --terminal-light: #34e89e;
+            --text-color: #00ff66;
+            --accent-color: #ff0055;
+            --panel-bg: rgba(16, 20, 30, 0.9);
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: 'Press Start 2P', monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle, #242444 10%, transparent 11%);
+            background-size: 20px 20px;
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* CRT Screen Effect Overlay */
+        .crt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            z-index: 999;
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+        }
+
+        /* Main Cabinet Frame */
+        .game-container {
+            width: 100%;
+            max-width: 850px;
+            background: #2d1b4e;
+            border: 10px solid #4d317a;
+            border-radius: 12px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5);
+            padding: 15px;
+            position: relative;
+        }
+
+        /* Inner Monitor Screen */
+        .screen {
+            background-color: #050510;
+            border: 6px solid #111;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: inset 0 0 40px rgba(0, 255, 100, 0.15);
+            min-height: 550px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* Top Bar stats */
+        .header-ui {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--terminal-light);
+            border-bottom: 3px double var(--terminal-light);
+            padding-bottom: 12px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 5px var(--terminal-light);
+        }
+
+        .stat-val {
+            color: #fff;
+        }
+
+        /* Visual Arena */
+        .visual-stage {
+            display: flex;
+            background: url('https://i.imgur.com/8vWp7S8.png') no-repeat center center; /* Pixel art office outline background */
+            background-size: cover;
+            border: 4px solid #331a40;
+            height: 220px;
+            position: relative;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            image-rendering: pixelated;
+            justify-content: space-around;
+            align-items: flex-end;
+            padding: 10px;
+            box-shadow: inset 0 -30px 40px rgba(0,0,0,0.6);
+        }
+
+        .pixel-avatar {
+            width: 110px;
+            height: 140px;
+            image-rendering: pixelated;
+            object-fit: contain;
+            filter: drop-shadow(2px 4px 0px rgba(0,0,0,0.5));
+            transition: transform 0.2s;
+        }
+
+        .pixel-avatar.active-speaker {
+            transform: scale(1.05);
+            filter: drop-shadow(0 0 8px var(--terminal-light));
+        }
+
+        /* Dialogue Box Area */
+        .dialogue-panel {
+            background: var(--panel-bg);
+            border: 3px solid #444;
+            border-radius: 6px;
+            padding: 15px;
+            min-height: 110px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .speaker-name {
+            font-size: 12px;
+            color: var(--accent-color);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .dialogue-text {
+            font-size: 11px;
+            line-height: 1.6;
+            color: #fff;
+            text-shadow: 1px 1px 0px #000;
+        }
+
+        /* Choice options container */
+        .choices-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .choice-btn {
+            background-color: #121225;
+            border: 2px solid #555;
+            color: #ddd;
+            padding: 12px;
+            font-size: 10px;
+            text-align: left;
+            cursor: pointer;
+            line-height: 1.4;
+            transition: all 0.1s ease;
+            border-radius: 4px;
+        }
+
+        .choice-btn:hover {
+            background-color: #1b1b3a;
+            border-color: var(--terminal-light);
+            color: var(--terminal-light);
+            box-shadow: 0 0 8px rgba(52, 232, 158, 0.4);
+            transform: translateX(4px);
+        }
+
+        /* Game Over / Win Screens */
+        .screen-center {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            text-align: center;
+            gap: 20px;
+        }
+
+        .title-accent {
+            font-size: 24px;
+            color: var(--terminal-light);
+            text-shadow: 3px 3px 0px #000;
+            margin-bottom: 10px;
+            animation: pulse 1.5s infinite alternate;
+        }
+
+        .btn-action {
+            background: var(--accent-color);
+            border: 3px solid #fff;
+            color: #fff;
+            padding: 15px 30px;
+            font-size: 14px;
+            cursor: pointer;
+            box-shadow: 4px 4px 0px #000;
+        }
+
+        .btn-action:hover {
+            background: #ff3377;
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #000;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); text-shadow: 2px 2px 0px #000; }
+            100% { transform: scale(1.02); text-shadow: 4px 4px 0px #f05; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="crt-overlay"></div>
+
+    <div class="game-container">
+        <div class="screen" id="game-screen">
+            </div>
+    </div>
+
+<script>
+    // Game State Variables
+    let currentScore = 100;
+    let currentNode = "start";
+    
+    // Pixel characters URLs (External Retro Assets)
+    const characters = {
+        agent: "https://i.imgur.com/vH9Y8XG.png",      // Pixel Agent Guy
+        client1: "https://i.imgur.com/5wN7bte.png",    // Pixel Business Owner (Commercial P&C)
+        client2: "https://i.imgur.com/6Xy1KnY.png",    // Pixel Homeowner (Personal Line)
+        boss: "https://i.imgur.com/B949w6M.png"        // Pixel Compliance Director
+    };
+
+    // The Entire Dialogue Tree Database (P&C Focus)
+    const dialogueTree = {
+        start: {
+            type: "menu",
+            title: "THE COMPLIANT COMMUNICATOR",
+            subtitle: "P&C Insurance Ethics Simulation",
+            text: "Ensure accurate risk exposure classification, respect bound coverage rules, and remain strictly compliant with US insurance regulations. One misstep can invite state audits or lawsuits.",
+            choices: [
+                { text: "START SHIFT", nextNode: "intro_boss" }
+            ]
+        },
+        intro_boss: {
+            type: "dialogue",
+            speaker: "Compliance Director",
+            avatar: characters.boss,
+            text: "Welcome to the floor, Agent. State regulators are cracking down on bad disclosures and binding authority errors. Keep your compliance score above 70%, or your license is history. First call coming in!",
+            choices: [
+                { text: "Put the line through.", nextNode: "case1_start" }
+            ]
+        },
+        // CASE 1: Commercial P&C (Property & Liability Risk)
+        case1_start: {
+            type: "dialogue",
+            speaker: "Arthur (Bakery Owner)",
+            avatar: characters.client1,
+            text: "Hello? I need a Commercial Package Policy ASAP. I'm opening 'Art's Oven' tomorrow. The landlord demands proof of General Liability and Commercial Property coverage today or he won't give me the keys!",
+            choices: [
+                { text: "Calm down, Arthur. I can instantly bind this right now over the phone without asking paperwork questions to speed it up.", nextNode: "case1_bad_bind", cost: 25 },
+                { text: "I can help with that, Arthur. Let's look over your exact physical building details, hazards, and underwriting profile first to ensure a proper quote.", nextNode: "case1_good_underwrite", cost: 0 }
+            ]
+        },
+        case1_bad_bind: {
+            type: "dialogue",
+            speaker: "Compliance Director",
+            avatar: characters.boss,
+            text: "CRITICAL ERROR! You just bound a high-risk commercial property line without verifying baking oven hazard safety systems or accurate property valuations. This breaks our binding authority manual!",
+            choices: [
+                { text: "Apologize and pivot back to risk verification.", nextNode: "case1_good_underwrite" }
+            ]
+        },
+        case1_good_underwrite: {
+            type: "dialogue",
+            speaker: "Arthur (Bakery Owner)",
+            avatar: characters.client1,
+            text: "Okay, fair enough. We have an industrial commercial oven, and we also offer a bicycle delivery service in the city. Do I need anything special for the delivery guys?",
+            choices: [
+                { text: "Standard Commercial General Liability protects everything on and off premises automatically. Don't worry about it.", nextNode: "case1_wrong_gl", cost: 20 },
+                { text: "Yes, you will specifically need a Hired and Non-Owned Auto (HNOA) endorsement if employees use personal or unowned assets for delivery.", nextNode: "case1_correct_hnoa", cost: 0 }
+            ]
+        },
+        case1_wrong_gl: {
+            type: "dialogue",
+            speaker: "Compliance Director",
+            avatar: characters.boss,
+            text: "WARNING! General Liability does NOT cover auto/vehicular delivery liability exposures cleanly. You exposed the client to a massive gap and violated basic coverage disclosure protocol.",
+            choices: [
+                { text: "Fix the statement to Arthur.", nextNode: "case1_correct_hnoa" }
+            ]
+        },
+        case1_correct_hnoa: {
+            type: "dialogue",
+            speaker: "Arthur (Bakery Owner)",
+            avatar: characters.client1,
+            text: "Wow, glad I asked! One more thing—my buddy told me to underreport my payroll numbers a bit to drop my Workers' Compensation premiums. Can we slide that under the rug?",
+            choices: [
+                { text: "Sure, we can adjust numbers slightly to hit your budget targets. No one checks small businesses.", nextNode: "case1_fraud", cost: 40 },
+                { text: "I cannot do that. Misrepresenting payroll numbers constitutes premium fraud, which is punishable by heavy fines and policy rescission.", nextNode: "case2_intro", cost: 0 }
+            ]
+        },
+        case1_fraud: {
+            type: "dialogue",
+            speaker: "Compliance Director",
+            avatar: characters.boss,
+            text: "FRAUD DETECTED! Assisting or facilitating premium fraud violates state insurance codes instantly. Your score took a massive hit!",
+            choices: [
+                { text: "Continue to next caller.", nextNode: "case2_intro" }
+            ]
+        },
+        // CASE 2: Personal Lines (Homeowners HO-3 / Claims handling)
+        case2_intro: {
+            type: "dialogue",
+            speaker: "Compliance Director",
+            avatar: characters.boss,
+            text: "You survived the commercial client. Line 2 is a personal lines account regarding a policyholder's Homeowners policy (HO-3). Pick up!",
+            choices: [
+                { text: "Answer Line 2", nextNode: "case2_start" }
+            ]
+        },
+        case2_start: {
+            type: "dialogue",
+            speaker: "Brenda (Homeowner)",
+            avatar: characters.client2,
+            text: "Hi dear, a massive rainstorm hit yesterday and my basement is entirely filled with water! My couch and floor are ruined. Am I covered under my standard HO-3 Policy for this?",
+            choices: [
+                { text: "Yes! Since it rained heavily outside, your standard Homeowners policy covers surface water flooding entirely.", nextNode: "case2_flood_fail", cost: 30 },
+                { text: "We need to verify the source. Standard HO-3 policies exclude ambient surface water flood damage. Did the water come from a burst pipe inside, or rising water from outside?", nextNode: "case2_flood_correct", cost: 0 }
+            ]
+        },
+        case2_fail_adjust: {
+            type: "dialogue",
+            speaker: "Compliance Director",
+            avatar: characters.boss,
+            text: "STOP! You cannot formally deny or accept liability determinations over the phone before a proper field adjuster examines the loss. You are crossing lines!",
+            choices: [
+                { text: "Rephrase clearly to Brenda.", nextNode: "case2_flood_correct" }
+            ]
+        },
+        case2_flood_fail: {
+            type: "dialogue",
+            speaker: "Compliance Director",
+            avatar: characters.boss,
+            text: "COMPLIANCE BREACH! Standard Homeowners policies explicitly exclude flood/surface water damage. Giving false hope violates unfair claims practices laws.",
+            choices: [
+                { text: "Correct your statement immediately.", nextNode: "case2_flood_correct" }
+            ]
+        },
+        case2_flood_correct: {
+            type: "dialogue",
+            speaker: "Brenda (Homeowner)",
+            avatar: characters.client2,
+            text: "Oh dear, it actually rose up from the yard outside. I don't think I bought a separate NFIP Flood Policy... But wait, I have a friend who told me I can just tell the claims adjuster it was an interior plumbing leak!",
+            choices: [
+                { text: "I didn't hear anything, Brenda. Go ahead and tell the adjuster what you need to tell them.", nextNode: "case2_collusion", cost: 35 },
+                { text: "Brenda, intentionally misrepresenting the cause of a loss to gain coverage is hard insurance fraud. I must document this accurately.", nextNode: "game_summary", cost: 0 }
+            ]
+        },
+        case2_collusion: {
+            type: "dialogue",
+            speaker: "Compliance Director",
+            avatar: characters.boss,
+            text: "DISASTER! You colluded with a client to fabricate claims narratives. This is material misrepresentation and illegal.",
+            choices: [
+                { text: "See final evaluation score.", nextNode: "game_summary" }
+            ]
+        },
+        // OUTCOME SCENARIOS
+        game_summary: {
+            type: "summary"
+        }
+    };
+
+    // Render Function to update game screen
+    function renderNode() {
+        const screen = document.getElementById("game-screen");
+        const node = dialogueTree[currentNode];
+
+        if (currentScore <= 0) {
+            renderGameOver("DE-LICENSED!", "Your compliance score bottomed out. The State Department of Insurance has revoked your license for unethical P&C practices.");
+            return;
+        }
+
+        if (node.type === "menu") {
+            screen.innerHTML = `
+                <div class="screen-center">
+                    <div class="title-accent">${node.title}</div>
+                    <div style="font-size: 9px; line-height: 1.8; color: #8a8ab0; max-width: 600px; margin-bottom: 20px;">
+                        ${node.text}
+                    </div>
+                    <button class="btn-action" onclick="goToNode('${node.choices[0].nextNode}')">${node.choices[0].text}</button>
+                </div>
+            `;
+        } 
+        else if (node.type === "dialogue") {
+            screen.innerHTML = `
+                <div class="header-ui">
+                    <div>ROLE: P&C PRODUCER</div>
+                    <div>COMPLIANCE SCORE: <span class="stat-val" id="score-display">${currentScore}%</span></div>
+                </div>
+
+                <div class="visual-stage">
+                    <img src="${characters.agent}" class="pixel-avatar ${node.speaker === 'Agent' ? 'active-speaker' : ''}" alt="Agent">
+                    <img src="${node.avatar}" class="pixel-avatar ${node.speaker !== 'Agent' ? 'active-speaker' : ''}" alt="Caller">
+                </div>
+
+                <div class="dialogue-panel">
+                    <div class="speaker-name">${node.speaker}</div>
+                    <div class="dialogue-text">${node.text}</div>
+                </div>
+
+                <div class="choices-panel" id="choices-box"></div>
+            `;
+
+            // Append choices dynamically
+            const choicesBox = document.getElementById("choices-box");
+            node.choices.forEach(choice => {
+                const button = document.createElement("button");
+                button.className = "choice-btn";
+                button.innerText = choice.text;
+                button.onclick = () => {
+                    if (choice.cost) {
+                        currentScore -= choice.cost;
+                    }
+                    goToNode(choice.nextNode);
+                };
+                choicesBox.appendChild(button);
+            });
+        } 
+        else if (node.type === "summary") {
+            if (currentScore >= 70) {
+                renderGameOver("COMPLIANT PRODUCER!", `CONGRATULATIONS! You completed your shift with a compliance rating of ${currentScore}%. You protected both personal and commercial policyholders while adhering strictly to state guidelines.`, true);
+            } else {
+                renderGameOver("AUDIT FAILED!", `Your closing score dropped to ${currentScore}%. While you finished the shift, your non-compliant handling of P&C exposures triggered a mandatory corporate audit.`, false);
+            }
+        }
+    }
+
+    function renderGameOver(title, message, isWin = false) {
+        const screen = document.getElementById("game-screen");
+        screen.innerHTML = `
+            <div class="screen-center">
+                <div class="title-accent" style="color: ${isWin ? '#34e89e' : '#ff0055'}">${title}</div>
+                <div style="font-size: 11px; line-height: 1.8; max-width: 550px; margin-bottom: 20px;">
+                    ${message}
+                </div>
+                <div style="font-size: 14px; margin-bottom: 20px; color: #ffcc00;">FINAL SCORE: ${currentScore}%</div>
+                <button class="btn-action" onclick="resetGame()">PLAY AGAIN</button>
+            </div>
+        `;
+    }
+
+    function goToNode(nodeKey) {
+        currentNode = nodeKey;
+        renderNode();
+    }
+
+    function resetGame() {
+        currentScore = 100;
+        currentNode = "start";
+        renderNode();
+    }
+
+    // Initialize Game
+    window.onload = () => {
+        renderNode();
+    };
+</script>
+</body>
+</html>
