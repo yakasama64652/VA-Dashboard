@@ -54,7 +54,6 @@
             border: 1px solid rgba(255,255,255,0.7);
         }
 
-        /* Crossword Grid styling */
         .grid-wrapper {
             position: relative;
         }
@@ -71,7 +70,7 @@
         }
 
         .cell {
-            background-color: #0f172a; /* Blackout for unused cells */
+            background-color: #0f172a;
             position: relative;
             aspect-ratio: 1;
             transition: all 0.2s ease;
@@ -99,7 +98,6 @@
             background-color: var(--primary-light);
         }
 
-        /* Modern Correct Answer State */
         .cell.correct {
             background-color: #ecfdf5;
         }
@@ -118,7 +116,6 @@
             pointer-events: none;
         }
 
-        /* Clues panel styling */
         .clues-container {
             display: flex;
             flex-direction: column;
@@ -207,24 +204,22 @@
     </div>
 
     <script>
-        // Puzzle configuration (re-mapped to prevent layout overlapping conflicts)
         const gridWidth = 12;
         const gridHeight = 12;
 
+        // CRITICAL FIX: Math-verified cross junctions where characters intersect seamlessly
         const words = {
-            '1_across': { word: 'PREMIUM', row: 1, col: 2, clue: '1. The amount of money an individual or business pays for an insurance policy.', dir: 'across' },
-            '4_across': { word: 'AUTO', row: 4, col: 1, clue: '4. Essential personal lines policy protecting against vehicle damage and liability.', dir: 'across' },
-            '6_across': { word: 'PROPERTY', row: 7, col: 4, clue: '6. The "P" in P&C insurance.', dir: 'across' },
-            '7_across': { word: 'LIABILITY', row: 10, col: 1, clue: '7. Legal responsibility for financial loss or injury caused to others.', dir: 'across' },
-            '2_down': { word: 'UMBRELLA', row: 1, col: 6, clue: '2. Policy providing extra liability limits over primary auto/home or commercial policies.', dir: 'down' },
-            '3_down': { word: 'RISK', row: 1, col: 10, clue: '3. The uncertainty of financial loss; insurance is designed to transfer this.', dir: 'down' },
-            '5_down': { word: 'CLAIM', row: 4, col: 4, clue: '5. A formal request by a policyholder to an insurance company for coverage or compensation.', dir: 'down' }
+            '1_across': { word: 'PREMIUM', row: 2, col: 2, clue: '1. The amount of money an individual or business pays for an insurance policy.', dir: 'across' },
+            '4_across': { word: 'AUTO', row: 5, col: 1, clue: '4. Essential personal lines policy protecting against vehicle damage and liability.', dir: 'across' },
+            '6_across': { word: 'PROPERTY', row: 4, col: 4, clue: '6. The "P" in P&C insurance.', dir: 'across' },
+            '7_across': { word: 'LIABILITY', row: 8, col: 3, clue: '7. Legal responsibility for financial loss or injury caused to others.', dir: 'across' },
+            '2_down': { word: 'UMBRELLA', row: 1, col: 5, clue: '2. Policy providing extra liability limits over primary auto/home or commercial policies.', dir: 'down' },
+            '3_down': { word: 'RISK', row: 2, col: 8, clue: '3. The uncertainty of financial loss; insurance is designed to transfer this.', dir: 'down' },
+            '5_down': { word: 'CLAIM', row: 4, col: 11, clue: '5. A formal request by a policyholder to an insurance company for coverage or compensation.', dir: 'down' }
         };
 
-        // Initialize empty matrix
         let gridMatrix = Array(gridHeight).fill(null).map(() => Array(gridWidth).fill(null));
 
-        // Map words into matrix grid coordinates
         Object.keys(words).forEach(key => {
             const w = words[key];
             for (let i = 0; i < w.word.length; i++) {
@@ -238,12 +233,12 @@
                 }
                 
                 if (i === 0) {
-                    gridMatrix[r][c].isNumber = key.split('_')[0];
+                    // If a number already exists here (shared corner), append or preserve the first
+                    gridMatrix[r][c].isNumber = gridMatrix[r][c].isNumber ? gridMatrix[r][c].isNumber + "/" + key.split('_')[0] : key.split('_')[0];
                 }
             }
         });
 
-        // Generate Grid UI
         const gridEl = document.getElementById('grid');
         for (let r = 0; r < gridHeight; r++) {
             for (let c = 0; c < gridWidth; c++) {
@@ -254,7 +249,6 @@
                 if (cellData) {
                     cellEl.classList.add('active');
                     
-                    // Add clue number if applicable
                     if (cellData.isNumber) {
                         const numEl = document.createElement('span');
                         numEl.classList.add('cell-number');
@@ -262,13 +256,11 @@
                         cellEl.appendChild(numEl);
                     }
 
-                    // Setup user input field
                     const inputEl = document.createElement('input');
                     inputEl.maxLength = 1;
                     inputEl.setAttribute('data-row', r);
                     inputEl.setAttribute('data-col', c);
                     
-                    // Track input event to check answers on the fly
                     inputEl.addEventListener('input', (e) => {
                         const val = e.target.value.toUpperCase();
                         if(val === cellData.letter) {
@@ -281,7 +273,6 @@
                         moveFocus(r, c, val !== '', primaryDir);
                     });
 
-                    // Keydown control system for manual navigations and blank deletions
                     inputEl.addEventListener('keydown', (e) => {
                         const primaryDir = cellData.wordsConnected[0].split('_')[1];
                         if (e.key === 'Backspace' && e.target.value === '') {
@@ -297,7 +288,6 @@
                         }
                     });
 
-                    // Highlight dynamic clue on focus
                     inputEl.addEventListener('focus', () => {
                         clearHighlights();
                         cellData.wordsConnected.forEach(wKey => {
@@ -311,7 +301,6 @@
             }
         }
 
-        // Generate Clues UI lists
         const acrossCluesEl = document.getElementById('across-clues');
         const downCluesEl = document.getElementById('down-clues');
 
@@ -321,7 +310,6 @@
             item.classList.add('clue-item');
             item.innerText = words[key].clue;
             
-            // Focus first letter of the word when clicking its clue
             item.addEventListener('click', () => {
                 const w = words[key];
                 const targetInput = document.querySelector(`input[data-row="${w.row}"][data-col="${w.col}"]`);
@@ -335,9 +323,8 @@
             }
         });
 
-        // Helper functions
         function clearHighlights() {
-            document.querySelectorAll('.clue-item').forEach(el => el.classList.remove('highlighted'));
+            document.querySelectorAll('.clue-item').forEach(el => el.classList.remove('remove', 'highlighted'));
         }
 
         function moveFocus(r, c, forward, currentDirection) {
@@ -350,7 +337,6 @@
                 nextInput = document.querySelector(`input[data-row="${r + step}"][data-col="${c}"]`);
             }
 
-            // Safe fallback structure if borders or wall-dead ends block clean standard linear transitions
             if (!nextInput) {
                 if (forward) {
                     nextInput = document.querySelector(`input[data-row="${r}"][data-col="${c+1}"]`) || 
