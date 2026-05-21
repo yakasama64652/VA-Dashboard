@@ -207,15 +207,15 @@
     </div>
 
     <script>
-        // Puzzle configuration
+        // Puzzle configuration (re-mapped to prevent layout overlapping conflicts)
         const gridWidth = 12;
         const gridHeight = 12;
 
         const words = {
             '1_across': { word: 'PREMIUM', row: 1, col: 2, clue: '1. The amount of money an individual or business pays for an insurance policy.', dir: 'across' },
             '4_across': { word: 'AUTO', row: 4, col: 1, clue: '4. Essential personal lines policy protecting against vehicle damage and liability.', dir: 'across' },
-            '6_across': { word: 'PROPERTY', row: 6, col: 4, clue: '6. The "P" in P&C insurance.', dir: 'across' },
-            '7_across': { word: 'LIABILITY', row: 9, col: 1, clue: '7. Legal responsibility for financial loss or injury caused to others.', dir: 'across' },
+            '6_across': { word: 'PROPERTY', row: 7, col: 4, clue: '6. The "P" in P&C insurance.', dir: 'across' },
+            '7_across': { word: 'LIABILITY', row: 10, col: 1, clue: '7. Legal responsibility for financial loss or injury caused to others.', dir: 'across' },
             '2_down': { word: 'UMBRELLA', row: 1, col: 6, clue: '2. Policy providing extra liability limits over primary auto/home or commercial policies.', dir: 'down' },
             '3_down': { word: 'RISK', row: 1, col: 10, clue: '3. The uncertainty of financial loss; insurance is designed to transfer this.', dir: 'down' },
             '5_down': { word: 'CLAIM', row: 4, col: 4, clue: '5. A formal request by a policyholder to an insurance company for coverage or compensation.', dir: 'down' }
@@ -276,7 +276,25 @@
                         } else {
                             cellEl.classList.remove('correct');
                         }
-                        moveFocus(r, c, val !== '');
+                        
+                        const primaryDir = cellData.wordsConnected[0].split('_')[1];
+                        moveFocus(r, c, val !== '', primaryDir);
+                    });
+
+                    // Keydown control system for manual navigations and blank deletions
+                    inputEl.addEventListener('keydown', (e) => {
+                        const primaryDir = cellData.wordsConnected[0].split('_')[1];
+                        if (e.key === 'Backspace' && e.target.value === '') {
+                            moveFocus(r, c, false, primaryDir);
+                        } else if (e.key === 'ArrowRight') {
+                            moveFocus(r, c, true, 'across');
+                        } else if (e.key === 'ArrowLeft') {
+                            moveFocus(r, c, false, 'across');
+                        } else if (e.key === 'ArrowUp') {
+                            moveFocus(r, c, false, 'down');
+                        } else if (e.key === 'ArrowDown') {
+                            moveFocus(r, c, true, 'down');
+                        }
                     });
 
                     // Highlight dynamic clue on focus
@@ -322,16 +340,27 @@
             document.querySelectorAll('.clue-item').forEach(el => el.classList.remove('highlighted'));
         }
 
-        function moveFocus(r, c, forward) {
-            // Smart layout jumping to neighboring cells smoothly
-            let nextInput;
-            if (forward) {
-                nextInput = document.querySelector(`input[data-row="${r}"][data-col="${c+1}"]`) || 
-                            document.querySelector(`input[data-row="${r+1}"][data-col="${c}"]`);
-            } else {
-                nextInput = document.querySelector(`input[data-row="${r}"][data-col="${c-1}"]`) || 
-                            document.querySelector(`input[data-row="${r-1}"][data-col="${c}"]`);
+        function moveFocus(r, c, forward, currentDirection) {
+            let nextInput = null;
+            let step = forward ? 1 : -1;
+
+            if (currentDirection === 'across') {
+                nextInput = document.querySelector(`input[data-row="${r}"][data-col="${c + step}"]`);
+            } else if (currentDirection === 'down') {
+                nextInput = document.querySelector(`input[data-row="${r + step}"][data-col="${c}"]`);
             }
+
+            // Safe fallback structure if borders or wall-dead ends block clean standard linear transitions
+            if (!nextInput) {
+                if (forward) {
+                    nextInput = document.querySelector(`input[data-row="${r}"][data-col="${c+1}"]`) || 
+                                document.querySelector(`input[data-row="${r+1}"][data-col="${c}"]`);
+                } else {
+                    nextInput = document.querySelector(`input[data-row="${r}"][data-col="${c-1}"]`) || 
+                                document.querySelector(`input[data-row="${r-1}"][data-col="${c}"]`);
+                }
+            }
+
             if (nextInput) nextInput.focus();
         }
     </script>
