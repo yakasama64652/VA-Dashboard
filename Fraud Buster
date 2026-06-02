@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fraud Buster — P&C Insurance Detective Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bungee&family=Fredoka:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1c1632;
+    --red:#ff4d4d;       --red-d:#d62828;
+    --yellow:#ffd23f;    --yellow-d:#f4a900;
+    --teal:#2ec4b6;      --teal-d:#1a9c90;
+    --blue:#3a86ff;      --blue-d:#2667cc;
+    --pink:#ff70a6;
+    --cream:#fff7e6;
+    --paper:#fffdf6;
+    --shadow:#1c1632;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Fredoka',system-ui,sans-serif;
+    color:var(--ink);
+    background:
+      radial-gradient(circle at 18% 12%, #ffe7a8 0%, transparent 38%),
+      radial-gradient(circle at 85% 8%, #aef3ec 0%, transparent 40%),
+      radial-gradient(circle at 80% 92%, #ffc7dd 0%, transparent 42%),
+      linear-gradient(160deg,#fff2cf, #ffe6d0 55%, #e8f7ff);
+    min-height:100vh;overflow-x:hidden;position:relative;
+  }
+  /* halftone dots overlay */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.4;
+    background-image:radial-gradient(var(--ink) 1px, transparent 1.4px);
+    background-size:22px 22px;
+    -webkit-mask-image:radial-gradient(circle at 50% 40%, transparent 30%, #000 90%);
+    mask-image:radial-gradient(circle at 50% 40%, transparent 30%, #000 90%);
+    opacity:.06;
+  }
+  /* floating icons */
+  .floaties{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .floaty{position:absolute;font-size:2.2rem;opacity:.14;animation:rise linear infinite;filter:saturate(.6)}
+  @keyframes rise{0%{transform:translateY(110vh) rotate(0)}100%{transform:translateY(-20vh) rotate(360deg)}}
+
+  .wrap{position:relative;z-index:2;max-width:880px;margin:0 auto;padding:22px 16px 70px}
+  .shake{animation:shake .4s}
+  @keyframes shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-12px) rotate(-.6deg)}30%{transform:translateX(11px) rotate(.6deg)}45%{transform:translateX(-9px)}60%{transform:translateX(8px)}75%{transform:translateX(-5px)}}
+
+  /* ===== header ===== */
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+  .logo{display:flex;align-items:center;gap:12px}
+  .logo .mark{
+    width:52px;height:52px;background:var(--yellow);border:3px solid var(--ink);border-radius:14px;
+    display:grid;place-items:center;font-size:1.7rem;box-shadow:4px 4px 0 var(--ink);transform:rotate(-4deg);
+  }
+  .logo h1{font-family:'Bungee',cursive;font-size:clamp(1.5rem,5vw,2.2rem);line-height:.95;letter-spacing:.01em;color:var(--ink);text-shadow:3px 3px 0 var(--yellow)}
+  .logo h1 span{color:var(--red);text-shadow:3px 3px 0 var(--ink)}
+  .logo p{font-family:'Space Mono',monospace;font-size:.62rem;letter-spacing:.16em;text-transform:uppercase;opacity:.6;margin-top:3px}
+  .top-actions{display:flex;gap:8px}
+
+  .pill{
+    font-family:'Fredoka',sans-serif;font-weight:600;font-size:.9rem;cursor:pointer;
+    border:3px solid var(--ink);border-radius:12px;padding:9px 14px;background:var(--paper);color:var(--ink);
+    box-shadow:3px 3px 0 var(--ink);transition:transform .08s, box-shadow .08s;
+  }
+  .pill:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+  .pill:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+
+  /* ===== generic card ===== */
+  .card{
+    background:var(--paper);border:4px solid var(--ink);border-radius:22px;
+    box-shadow:8px 8px 0 var(--ink);position:relative;
+  }
+  .panel{display:none}
+  .panel.active{display:block;animation:pop .45s cubic-bezier(.2,.9,.3,1.2)}
+  @keyframes pop{from{opacity:0;transform:scale(.94) translateY(14px)}to{opacity:1;transform:none}}
+
+  /* ===== start ===== */
+  .hero{padding:30px 28px}
+  .hero .mascot-row{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+  .hero h2{font-family:'Bungee',cursive;font-size:clamp(1.3rem,4.5vw,1.9rem);line-height:1.05;margin-bottom:4px}
+  .hero h2 em{font-style:normal;color:var(--red)}
+  .speech{
+    position:relative;background:var(--yellow);border:3px solid var(--ink);border-radius:16px;
+    padding:12px 16px;font-weight:500;max-width:430px;box-shadow:4px 4px 0 var(--ink)
+  }
+  .speech::after{content:"";position:absolute;left:-14px;top:24px;width:0;height:0;border:10px solid transparent;border-right-color:var(--ink)}
+  .speech::before{content:"";position:absolute;left:-9px;top:25px;width:0;height:0;border:8px solid transparent;border-right-color:var(--yellow);z-index:1}
+  .hero p.lead{font-size:1.02rem;line-height:1.6;margin:14px 0;color:#3a3450}
+  .how{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin:20px 0}
+  .how-item{background:var(--cream);border:3px solid var(--ink);border-radius:14px;padding:13px 14px;box-shadow:3px 3px 0 var(--ink)}
+  .how-item .emoji{font-size:1.5rem}
+  .how-item h4{font-family:'Bungee',cursive;font-size:.78rem;margin:6px 0 4px;letter-spacing:.01em}
+  .how-item p{font-size:.84rem;line-height:1.4;color:#534c66}
+  .start-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:6px}
+  .play-btn{
+    font-family:'Bungee',cursive;font-size:1.15rem;letter-spacing:.02em;color:#fff;cursor:pointer;
+    background:var(--red);border:4px solid var(--ink);border-radius:16px;padding:15px 32px;
+    box-shadow:5px 5px 0 var(--ink);transition:transform .08s,box-shadow .08s;
+    animation:bob 1.6s ease-in-out infinite;
+  }
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+  .play-btn:hover{transform:translateY(-2px);box-shadow:6px 7px 0 var(--ink)}
+  .play-btn:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink);animation:none}
+  .toggle{display:flex;align-items:center;gap:8px;font-size:.82rem;font-weight:600;cursor:pointer;color:#534c66;user-select:none}
+  .toggle input{display:none}
+  .sw{width:46px;height:26px;border-radius:20px;background:#ddd6c4;border:3px solid var(--ink);position:relative;transition:background .15s}
+  .sw::after{content:"";position:absolute;width:16px;height:16px;border-radius:50%;background:var(--ink);top:2px;left:3px;transition:left .15s}
+  .toggle input:checked + .sw{background:var(--teal)}
+  .toggle input:checked + .sw::after{left:23px}
+
+  /* ===== HUD ===== */
+  .hud{display:flex;align-items:stretch;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+  .chip{background:var(--paper);border:3px solid var(--ink);border-radius:14px;padding:8px 14px;box-shadow:3px 3px 0 var(--ink);display:flex;flex-direction:column;align-items:center;min-width:74px}
+  .chip .l{font-family:'Space Mono',monospace;font-size:.56rem;letter-spacing:.12em;text-transform:uppercase;opacity:.6}
+  .chip .v{font-family:'Bungee',cursive;font-size:1.25rem;line-height:1.1}
+  .chip.score .v{color:var(--blue-d)}
+  .chip.combo .v{color:var(--red-d)}
+  .chip.lives .v{letter-spacing:1px;font-family:'Fredoka';font-size:1.2rem}
+  .hud .grow{flex:1;min-width:140px}
+  /* XP / level */
+  .xp{background:var(--paper);border:3px solid var(--ink);border-radius:14px;box-shadow:3px 3px 0 var(--ink);padding:8px 14px;display:flex;flex-direction:column;justify-content:center;height:100%}
+  .xp .row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+  .xp .lvl{font-family:'Bungee',cursive;font-size:.85rem}
+  .xp .pts{font-family:'Space Mono',monospace;font-size:.66rem;opacity:.6}
+  .xp-track{height:12px;background:#eee6d2;border:2px solid var(--ink);border-radius:8px;overflow:hidden}
+  .xp-fill{height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--blue));transition:width .5s cubic-bezier(.2,.9,.3,1)}
+
+  /* progress dots + timer */
+  .meta-row{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+  .dots{display:flex;gap:6px;flex-wrap:wrap}
+  .dot{width:13px;height:13px;border-radius:50%;background:var(--paper);border:2px solid var(--ink)}
+  .dot.done{background:var(--teal)}
+  .dot.cur{background:var(--yellow);animation:pulse 1s infinite}
+  .dot.miss{background:var(--red)}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.35)}}
+  .timer{flex:1;min-width:120px;height:14px;background:#eee6d2;border:3px solid var(--ink);border-radius:10px;overflow:hidden}
+  .timer-fill{height:100%;width:100%;background:var(--teal);transition:width .1s linear, background .3s}
+  .timer-fill.warn{background:var(--red)}
+
+  /* ===== mascot ===== */
+  .mascot{width:84px;height:84px;flex:none}
+  .mascot svg{width:100%;height:100%;overflow:visible}
+  #arm{transform-origin:62px 60px;transition:transform .25s}
+  .mascot.cheer #arm{animation:wave .5s ease-in-out 2}
+  @keyframes wave{0%,100%{transform:rotate(0)}50%{transform:rotate(-22deg)}}
+  .mascot.cheer{animation:hop .4s ease 1}
+  @keyframes hop{0%,100%{transform:translateY(0)}40%{transform:translateY(-12px)}}
+
+  /* ===== case file ===== */
+  .file-wrap{perspective:1200px}
+  .file{padding:0;overflow:hidden;animation:deal .45s cubic-bezier(.2,.9,.3,1.1)}
+  @keyframes deal{from{opacity:0;transform:rotateX(-10deg) translateY(28px)}to{opacity:1;transform:none}}
+  .file-top{padding:16px 20px;border-bottom:4px dashed var(--ink);background:repeating-linear-gradient(135deg,#fffdf6,#fffdf6 14px,#fdf3d6 14px,#fdf3d6 28px);position:relative}
+  .badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+  .tag{font-family:'Space Mono',monospace;font-size:.62rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:5px 10px;border:2px solid var(--ink);border-radius:20px}
+  .tag.personal{background:var(--yellow)}
+  .tag.comm{background:var(--teal);color:#fff}
+  .tag.policy{background:var(--ink);color:#fff}
+  .file-no{font-family:'Space Mono',monospace;font-size:.64rem;opacity:.55;letter-spacing:.04em}
+  .file-title{font-family:'Bungee',cursive;font-size:clamp(1.05rem,3.6vw,1.5rem);line-height:1.08;margin-top:5px}
+
+  .file-body{padding:18px 20px 20px}
+  .narrative{font-size:1.03rem;line-height:1.55;color:#3a3450;margin-bottom:8px}
+  .examine-hint{font-family:'Space Mono',monospace;font-size:.68rem;letter-spacing:.03em;opacity:.6;margin:14px 0 9px;display:flex;align-items:center;gap:6px}
+  .clues{display:grid;gap:9px}
+  .clue{
+    background:var(--cream);border:3px solid var(--ink);border-radius:13px;padding:11px 13px;cursor:pointer;
+    box-shadow:3px 3px 0 var(--ink);transition:transform .08s,box-shadow .08s;position:relative;overflow:hidden;
+  }
+  .clue:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+  .clue:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+  .clue .ctext{font-size:.92rem;line-height:1.4;display:flex;gap:9px;align-items:flex-start}
+  .clue .lens{flex:none;font-size:1rem;transition:transform .3s}
+  .clue.examined{cursor:default}
+  .clue.examined:hover{transform:none;box-shadow:3px 3px 0 var(--ink)}
+  .clue .reveal{max-height:0;opacity:0;overflow:hidden;transition:max-height .35s ease,opacity .3s,margin .3s;font-size:.86rem;line-height:1.4;font-weight:500;margin-top:0}
+  .clue.examined .reveal{max-height:130px;opacity:1;margin-top:9px;padding-top:9px;border-top:2px dotted #cdbf9c}
+  .clue.flag.examined{background:#ffe3e0;border-color:var(--red-d)}
+  .clue.ok.examined{background:#dff6ee;border-color:var(--teal-d)}
+  .clue .reveal .who{font-family:'Bungee',cursive;font-size:.62rem;letter-spacing:.03em;display:block;margin-bottom:3px}
+  .clue.flag .reveal .who{color:var(--red-d)}
+  .clue.ok .reveal .who{color:var(--teal-d)}
+
+  /* decision */
+  .decide{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:20px}
+  .big{
+    font-family:'Bungee',cursive;font-size:1.05rem;color:#fff;cursor:pointer;border:4px solid var(--ink);
+    border-radius:16px;padding:18px 10px;display:flex;flex-direction:column;align-items:center;gap:4px;
+    box-shadow:5px 5px 0 var(--ink);transition:transform .08s,box-shadow .08s;line-height:1.05;text-align:center;
+  }
+  .big small{font-family:'Fredoka';font-weight:500;font-size:.72rem;opacity:.92}
+  .big.pay{background:var(--teal)}
+  .big.flag{background:var(--red)}
+  .big:hover{transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--ink)}
+  .big:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--ink)}
+  .big:disabled{opacity:.4;cursor:default;filter:grayscale(.5);transform:none;box-shadow:3px 3px 0 var(--ink)}
+
+  /* stamp */
+  .stamp{position:absolute;top:14px;right:16px;font-family:'Bungee',cursive;font-size:1.1rem;padding:8px 14px;border:5px solid;border-radius:10px;text-transform:uppercase;transform:rotate(-14deg) scale(0);opacity:0;transition:transform .25s cubic-bezier(.34,1.7,.5,1),opacity .15s;text-align:center;line-height:1;z-index:5}
+  .stamp.show{transform:rotate(-14deg) scale(1);opacity:.9}
+  .stamp.fraud{color:var(--red-d);border-color:var(--red-d)}
+  .stamp.legit{color:var(--teal-d);border-color:var(--teal-d)}
+
+  /* feedback */
+  .fb{margin-top:18px;border:4px solid var(--ink);border-radius:18px;overflow:hidden;animation:pop .35s cubic-bezier(.2,.9,.3,1.2);box-shadow:5px 5px 0 var(--ink)}
+  .fb-head{padding:14px 18px;display:flex;align-items:center;gap:14px;color:#fff}
+  .fb.correct .fb-head{background:var(--teal)}
+  .fb.wrong .fb-head{background:var(--red)}
+  .fb-head .react{font-family:'Bungee',cursive;font-size:1.2rem;line-height:1}
+  .fb-head .gain{margin-left:auto;font-family:'Bungee',cursive;font-size:1rem;background:rgba(0,0,0,.18);padding:5px 11px;border-radius:10px}
+  .fb-body{background:var(--paper);padding:16px 18px}
+  .verdict{font-family:'Space Mono',monospace;font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;opacity:.7;margin-bottom:12px}
+  .verdict b{opacity:1}
+  .flag-box{background:var(--cream);border:3px solid var(--ink);border-radius:13px;padding:13px 15px;margin-bottom:13px}
+  .flag-box h5{font-family:'Bungee',cursive;font-size:.74rem;margin-bottom:9px}
+  .flag-box ul{list-style:none;display:grid;gap:7px}
+  .flag-box li{font-size:.9rem;line-height:1.42;padding-left:22px;position:relative;color:#3a3450}
+  .flag-box li::before{content:"▸";position:absolute;left:4px;color:var(--red-d);font-weight:700}
+  .fb.correct .flag-box li::before{color:var(--teal-d)}
+  .concept{display:flex;gap:12px;align-items:flex-start;background:#eaf2ff;border:3px solid var(--blue);border-radius:13px;padding:13px 15px;margin-bottom:14px}
+  .concept .bi{font-size:1.4rem}
+  .concept .term{font-family:'Bungee',cursive;font-size:.72rem;color:var(--blue-d);margin-bottom:4px}
+  .concept .def{font-size:.9rem;line-height:1.46;color:#3a3450}
+  .next{width:100%;font-family:'Bungee',cursive;font-size:1rem;color:#fff;background:var(--ink);border:4px solid var(--ink);border-radius:14px;padding:14px;cursor:pointer;box-shadow:4px 4px 0 var(--yellow-d);transition:transform .08s,box-shadow .08s}
+  .next:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--yellow-d)}
+  .next:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--yellow-d)}
+
+  /* ===== end ===== */
+  .end{padding:30px 26px;text-align:center}
+  .end .stamp-big{font-family:'Bungee',cursive;font-size:clamp(1.6rem,6vw,2.6rem);color:var(--red);text-shadow:3px 3px 0 var(--ink);margin:6px 0}
+  .end .sub{font-size:1rem;color:#534c66;max-width:48ch;margin:0 auto 22px}
+  .end-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin-bottom:22px}
+  .end-grid .chip{align-items:center}
+  .end-grid .chip .v{font-size:1.7rem}
+  .review{text-align:left;margin-top:18px;border-top:3px dashed var(--ink);padding-top:18px}
+  .review h3{font-family:'Bungee',cursive;font-size:.9rem;margin-bottom:12px}
+  .ri{display:flex;gap:11px;align-items:flex-start;padding:9px 0;border-bottom:2px dotted #ddd3b8;font-size:.9rem}
+  .ri .ic{flex:none;width:24px;height:24px;border-radius:8px;border:2px solid var(--ink);display:grid;place-items:center;font-weight:700;font-size:.8rem}
+  .ri .ic.ok{background:var(--teal);color:#fff}
+  .ri .ic.no{background:var(--red);color:#fff}
+  .ri b{font-weight:600}
+  .ri span{display:block;font-family:'Space Mono',monospace;font-size:.7rem;opacity:.6;margin-top:2px}
+
+  /* ===== modal ===== */
+  .modal-bg{position:fixed;inset:0;background:rgba(28,22,50,.74);z-index:60;display:none;align-items:flex-start;justify-content:center;padding:24px 14px;overflow-y:auto}
+  .modal-bg.open{display:flex;animation:pop .25s ease}
+  .modal{background:var(--paper);border:4px solid var(--ink);border-radius:22px;max-width:720px;width:100%;box-shadow:10px 10px 0 var(--ink)}
+  .modal-head{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:4px dashed var(--ink);position:sticky;top:0;background:var(--paper);border-radius:18px 18px 0 0;z-index:2}
+  .modal-head h2{font-family:'Bungee',cursive;font-size:1.1rem}
+  .modal-body{padding:6px 22px 26px}
+  .gsec{margin-top:20px}
+  .gsec>h3{font-family:'Bungee',cursive;font-size:.82rem;background:var(--yellow);border:3px solid var(--ink);border-radius:10px;padding:7px 12px;display:inline-block;box-shadow:3px 3px 0 var(--ink);margin-bottom:13px}
+  .gloss{display:grid;gap:9px}
+  .term-c{background:var(--cream);border:3px solid var(--ink);border-radius:12px;padding:11px 14px}
+  .term-c dt{font-family:'Bungee',cursive;font-size:.74rem;color:var(--blue-d);margin-bottom:4px}
+  .term-c dd{font-size:.88rem;line-height:1.5;color:#3a3450}
+
+  footer{text-align:center;margin-top:30px;font-family:'Space Mono',monospace;font-size:.64rem;letter-spacing:.08em;opacity:.5;text-transform:uppercase}
+
+  #fx{position:fixed;inset:0;z-index:50;pointer-events:none}
+
+  @media (max-width:540px){
+    .decide{grid-template-columns:1fr}
+    .card{box-shadow:6px 6px 0 var(--ink)}
+    .mascot{width:68px;height:68px}
+  }
+</style>
+</head>
+<body>
+<canvas id="fx"></canvas>
+<div class="floaties" id="floaties" aria-hidden="true"></div>
+
+<div class="wrap" id="wrap">
+
+  <header>
+    <div class="logo">
+      <div class="mark">🕵️</div>
+      <div>
+        <h1>FRAUD <span>BUSTER</span></h1>
+        <p>Insurance Detective · P&amp;C</p>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="pill" id="soundBtn">🔊 Sound</button>
+      <button class="pill" id="guideBtn">📖 Guide</button>
+    </div>
+  </header>
+
+  <!-- ============ START ============ -->
+  <section class="panel active" id="startPanel">
+    <div class="card hero">
+      <div class="mascot-row">
+        <div class="mascot cheer" id="heroMascot">__MASCOT__</div>
+        <div class="speech">Hey rookie! I'm <b>Sleuth</b>. Insurers lose <b>billions</b> to fake claims every year. Help me sniff out the frauds — and you'll learn how insurance really works!</div>
+      </div>
+      <h2>Read the file. Trust your gut. <em>Bust the fraud!</em></h2>
+      <p class="lead">Each case is a real-world property &amp; casualty scenario — home, auto, workers' comp, cyber, and more. Decide if the claim is honest or a scam. Every call teaches you something.</p>
+
+      <div class="how">
+        <div class="how-item"><div class="emoji">🔍</div><h4>Examine clues</h4><p>Tap any clue to get the investigator's read — but it trims your bonus, so peek wisely.</p></div>
+        <div class="how-item"><div class="emoji">🟢</div><h4>Pay or 🚩 Flag</h4><p>Approve honest claims, flag the schemes. A wrong call costs you a life!</p></div>
+        <div class="how-item"><div class="emoji">🔥</div><h4>Combo &amp; XP</h4><p>Chain correct calls for combo multipliers and level up your detective rank.</p></div>
+        <div class="how-item"><div class="emoji">💡</div><h4>Learn as you go</h4><p>Each verdict explains the red flags and a key insurance concept.</p></div>
+      </div>
+
+      <div class="start-row">
+        <button class="play-btn" id="startBtn">▶ START SHIFT</button>
+        <label class="toggle"><input type="checkbox" id="timerToggle" checked><span class="sw"></span>Case timer</label>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ GAME ============ -->
+  <section class="panel" id="gamePanel">
+    <div class="hud">
+      <div class="mascot" id="gameMascot">__MASCOT__</div>
+      <div class="chip score"><span class="l">Score</span><span class="v" id="scoreVal">0</span></div>
+      <div class="chip combo"><span class="l">Combo</span><span class="v" id="comboVal">0🔥</span></div>
+      <div class="chip lives"><span class="l">Lives</span><span class="v" id="livesVal">❤️❤️❤️</span></div>
+      <div class="grow">
+        <div class="xp">
+          <div class="row"><span class="lvl" id="lvlVal">Lv.1 Rookie</span><span class="pts" id="xpTxt">0 / 500 XP</span></div>
+          <div class="xp-track"><div class="xp-fill" id="xpFill"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="meta-row">
+      <div class="dots" id="dots"></div>
+      <div class="timer" id="timerWrap"><div class="timer-fill" id="timerFill"></div></div>
+    </div>
+
+    <div class="file-wrap">
+      <article class="card file" id="caseFile"></article>
+    </div>
+  </section>
+
+  <!-- ============ END ============ -->
+  <section class="panel" id="endPanel">
+    <div class="card end">
+      <div style="font-family:'Space Mono',monospace;font-size:.68rem;letter-spacing:.18em;text-transform:uppercase;opacity:.55">Shift Report</div>
+      <div class="mascot" id="endMascot" style="margin:6px auto">__MASCOT__</div>
+      <div class="stamp-big" id="rankBadge">Rookie</div>
+      <p class="sub" id="rankSub"></p>
+      <div class="end-grid">
+        <div class="chip score"><span class="l">Score</span><span class="v" id="endScore">0</span></div>
+        <div class="chip"><span class="l">Accuracy</span><span class="v" id="endAcc">0%</span></div>
+        <div class="chip combo"><span class="l">Best Combo</span><span class="v" id="endCombo">0</span></div>
+        <div class="chip"><span class="l">Frauds Caught</span><span class="v" id="endFraud">0</span></div>
+      </div>
+      <button class="play-btn" id="replayBtn" style="animation:none">↻ PLAY AGAIN</button>
+      <div class="review">
+        <h3>📋 Case Review</h3>
+        <div id="reviewList"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>Fraud Buster · Educational P&amp;C insurance training · Not legal or underwriting advice</footer>
+</div>
+
+<!-- ============ GUIDE MODAL ============ -->
+<div class="modal-bg" id="guideModal">
+  <div class="modal">
+    <div class="modal-head"><h2>📖 Detective's Field Guide</h2><button class="pill" id="closeGuide">✕</button></div>
+    <div class="modal-body" id="guideBody"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   MASCOT (shared SVG) — injected into placeholders
+============================================================ */
+const MASCOT_SVG = `
+<svg viewBox="0 0 90 90" xmlns="http://www.w3.org/2000/svg">
+  <ellipse cx="45" cy="82" rx="22" ry="5" fill="#1c1632" opacity="0.15"/>
+  <!-- body -->
+  <path d="M28 58 Q45 50 62 58 L62 78 Q45 84 28 78 Z" fill="#3a86ff" stroke="#1c1632" stroke-width="3"/>
+  <!-- arm with magnifier -->
+  <g id="arm">
+    <line x1="60" y1="62" x2="74" y2="52" stroke="#1c1632" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="79" cy="47" r="8" fill="#aef3ec" stroke="#1c1632" stroke-width="3"/>
+    <line x1="73" y1="53" x2="76" y2="50" stroke="#1c1632" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <!-- head -->
+  <circle cx="45" cy="40" r="20" fill="#ffe0b8" stroke="#1c1632" stroke-width="3"/>
+  <!-- hat -->
+  <path d="M24 33 Q45 14 66 33 Z" fill="#ff4d4d" stroke="#1c1632" stroke-width="3"/>
+  <rect x="22" y="32" width="46" height="6" rx="3" fill="#d62828" stroke="#1c1632" stroke-width="3"/>
+  <!-- eyes -->
+  <g id="eyes">
+    <circle cx="38" cy="40" r="3.4" fill="#1c1632"/>
+    <circle cx="52" cy="40" r="3.4" fill="#1c1632"/>
+  </g>
+  <!-- mouths -->
+  <path id="mNeutral" d="M40 50 L50 50" stroke="#1c1632" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path id="mSmile" d="M38 49 Q45 56 52 49" stroke="#1c1632" stroke-width="3" stroke-linecap="round" fill="none" style="display:none"/>
+  <ellipse id="mShock" cx="45" cy="51" rx="4" ry="5" fill="#1c1632" style="display:none"/>
+  <circle id="sweat" cx="62" cy="38" r="3.5" fill="#3a86ff" stroke="#1c1632" stroke-width="1.5" style="display:none"/>
+</svg>`;
+
+/* ============================================================
+   CASE DATA — each teaches a P&C concept + fraud indicators
+============================================================ */
+const CASES = [
+  {no:"PA-1042",line:"Personal",lineKey:"personal",policy:"Personal Auto",title:"The Sudden Rear-End Crowd",
+   narrative:"A claimant reports a low-speed rear-end collision in a parking lot. Minor bumper damage to both cars — but four occupants now claim painful neck and back injuries and have already retained the same attorney and chiropractor.",
+   dossier:["Reported impact: <b>under 8 mph</b>, cosmetic bumper damage only","Occupants claiming injury: <b>4</b> (driver listed only 1 at scene)","All four treated at the <b>same clinic</b> + attorney within 24 hrs","Claimant has <b>2 prior</b> soft-tissue claims in 3 years"],
+   isFraud:true,
+   flags:["Severe injuries from a minor low-speed impact — the physics don't support it.","Extra passengers appearing afterward is a classic 'jump-in' staged-accident tactic.","Same attorney + same clinic for everyone signals an organized ring.","A pattern of prior soft-tissue claims marks a serial filer."],
+   concept:{term:"Bodily Injury (BI) Liability",def:"The auto coverage that pays for injuries the insured causes to <b>other</b> people. Staged rings target BI because soft-tissue 'injuries' are hard to disprove."}},
+
+  {no:"PA-2210",line:"Personal",lineKey:"personal",policy:"Personal Auto",title:"Hailstorm on the Sedan",
+   narrative:"After a severe spring storm, a policyholder files a comprehensive claim for a dented hood, roof, and trunk. The National Weather Service logged a hailstorm in that ZIP code on the date of loss.",
+   dossier:["Damage: <b>dents consistent with hail</b> on horizontal surfaces","NWS confirms a <b>hail event</b> same date, same area","Body-shop estimate matches the visible damage","No prior claims; policy active <b>3 years</b>"],
+   isFraud:false,
+   flags:["Weather data independently confirms the cause of loss.","Damage pattern (horizontal surfaces) is consistent with falling hail.","The estimate matches documented damage — no inflation.","Clean history and a long-standing policy lower the risk."],
+   concept:{term:"Comprehensive Coverage",def:"Sometimes called 'other than collision,' it pays for hail, theft, fire, vandalism, flood, and animal strikes. <b>Collision</b> is the separate part that pays for crashes."}},
+
+  {no:"PA-3387",line:"Personal",lineKey:"personal",policy:"Personal Auto",title:"The Phantom Vehicle",
+   narrative:"A driver claims an unidentified car forced them off the road and fled. The damage, however, is heavy front-end crush — inconsistent with the side-swipe they describe.",
+   dossier:["Described event: <b>side-swipe</b> by a fleeing car","Actual damage: <b>front-end frontal crush</b>","No police report filed; no witnesses","Prior inspection photo shows <b>pre-existing</b> front damage"],
+   isFraud:true,
+   flags:["The damage doesn't match the described mechanism of loss.","'Phantom vehicle' claims with no witness or police report are high-risk.","Prior photos suggest the damage pre-dates the 'accident.'","Filing an uninsured-motorist claim for old damage is a common scheme."],
+   concept:{term:"Uninsured/Underinsured Motorist (UM/UIM)",def:"Pays the insured when an at-fault driver has no (or too little) insurance — including hit-and-run 'phantom' cars. With no other carrier to verify, it's a frequent fraud target."}},
+
+  {no:"PA-4501",line:"Personal",lineKey:"personal",policy:"Personal Auto",title:"Owner Give-Up",
+   narrative:"A vehicle is reported stolen, then found burned out on a rural road. The owner is three months behind on a loan that's badly upside-down, and the only key was recovered with the car.",
+   dossier:["Loan status: <b>upside-down</b>, 3 payments behind","Both keys accounted for — <b>no forced entry</b>","Car found <b>fully burned</b> within hours of the report","Owner recently asked the agent about total-loss payouts"],
+   isFraud:true,
+   flags:["An upside-down loan creates a motive to 'lose' the car.","No forced entry with all keys present makes theft physically unlikely.","A car conveniently burned to destroy evidence is an arson red flag.","Recent payout inquiries suggest pre-planning."],
+   concept:{term:"Owner Give-Up / Total-Loss Fraud",def:"Staging a theft or fire to escape a bad loan and collect the <b>Actual Cash Value</b> payout. ACV is the car's worth at the time of loss minus depreciation — not what's owed."}},
+
+  {no:"HO-1190",line:"Personal",lineKey:"personal",policy:"Homeowners (HO-3)",title:"Kitchen Grease Fire",
+   narrative:"A homeowner reports a stovetop fire that damaged cabinets and the ceiling. The fire department responded and filed an official report citing unattended cooking.",
+   dossier:["Fire dept report: <b>accidental, unattended cooking</b>","Damage limited to the kitchen — consistent with origin","Receipts and photos provided for damaged property","Policy in force <b>6 years</b>; no recent changes"],
+   isFraud:false,
+   flags:["An independent fire department report confirms an accidental cause.","Damage is localized and consistent with the point of origin.","Proof of ownership supports the contents claim.","No suspicious last-minute coverage increases."],
+   concept:{term:"HO-3 (Special Form)",def:"The most common homeowners policy. It covers the <b>dwelling on an open-perils basis</b> (covered unless excluded) and <b>personal property on a named-perils basis</b> (only listed causes)."}},
+
+  {no:"HO-2255",line:"Personal",lineKey:"personal",policy:"Homeowners (HO-3)",title:"The Last-Minute Jewelry Haul",
+   narrative:"Two weeks after raising personal-property limits and adding a jewelry rider, a homeowner reports a burglary of expensive watches and jewelry — but can't produce receipts, photos, or appraisals.",
+   dossier:["Coverage increased <b>14 days</b> before the loss","No receipts, appraisals, or photos of the items","No forced entry; alarm <b>was not armed</b>","Police report filed <b>5 days after</b> the alleged break-in"],
+   isFraud:true,
+   flags:["A coverage increase right before a loss is a textbook red flag.","High-value items with zero proof of ownership suggests invention.","No forced entry plus a disarmed alarm undercuts the story.","A delayed police report weakens the timeline."],
+   concept:{term:"Scheduled Personal Property (Floater)",def:"An <b>endorsement</b> that itemizes high-value goods above the policy's sub-limits. Legitimate scheduling needs <b>appraisals</b> — so 'no proof' claims are a glaring inconsistency."}},
+
+  {no:"FL-0078",line:"Personal",lineKey:"personal",policy:"Flood (NFIP)",title:"Rising Water in Zone AE",
+   narrative:"After a river overflowed, a homeowner in a designated flood zone files under their separate NFIP flood policy. FEMA disaster records and neighborhood photos confirm widespread flooding.",
+   dossier:["Property in <b>FEMA Zone AE</b> (high-risk)","Regional <b>flood disaster declared</b> on the date of loss","Water lines and mud damage consistent across the home","Separate <b>NFIP flood policy</b> in force; waiting period met"],
+   isFraud:false,
+   flags:["Government disaster records corroborate the flooding.","Physical damage is consistent throughout the home.","The loss falls squarely within the flood policy's purpose.","The policy's waiting period had already elapsed."],
+   concept:{term:"Flood Insurance (NFIP)",def:"Standard homeowners policies <b>exclude flood</b>. It's covered separately, usually via the National Flood Insurance Program, and typically has a <b>30-day waiting period</b> to stop people buying as a storm nears."}},
+
+  {no:"RN-1133",line:"Personal",lineKey:"personal",policy:"Renters (HO-4)",title:"Stolen Laptop, Small Claim",
+   narrative:"A renter's apartment is burglarized while they're at work. They file for a laptop and TV, with a police report, serial numbers, and original purchase receipts.",
+   dossier:["Police report filed <b>same day</b> with a case number","Original receipts and serial numbers provided","Building manager confirms a forced-entry break-in","Claim total is <b>modest and reasonable</b>"],
+   isFraud:false,
+   flags:["A prompt police report with a case number supports the loss.","Receipts and serials prove ownership and value.","Independent confirmation of forced entry corroborates it.","A reasonable, documented amount shows no inflation."],
+   concept:{term:"Renters Insurance (HO-4)",def:"Covers a tenant's <b>personal property</b> and <b>liability</b> — but <b>not</b> the building, which is the landlord's job. Often includes 'loss of use' for temporary living costs."}},
+
+  {no:"UM-0512",line:"Personal",lineKey:"personal",policy:"Personal Umbrella",title:"The Backyard Dog Bite",
+   narrative:"A guest is seriously injured by the policyholder's dog and incurs medical bills exceeding the homeowners liability limit. The umbrella carrier is asked to cover the excess.",
+   dossier:["Injury verified by <b>hospital records</b>","Homeowners liability limit <b>exhausted</b>; excess remains","Incident report and witness statements align","Umbrella policy active <b>before</b> the incident"],
+   isFraud:false,
+   flags:["Medical documentation substantiates the injury and cost.","The loss legitimately exceeds the underlying policy's limit.","Independent witnesses corroborate the event.","Coverage was in force well before the loss."],
+   concept:{term:"Personal Umbrella Policy",def:"Liability coverage <b>above and beyond</b> your auto and homeowners limits (e.g., +$1M). It only pays after the underlying policy is exhausted — which is why this 'excess' amount is valid."}},
+
+  {no:"WC-7781",line:"Commercial",lineKey:"comm",policy:"Workers' Compensation",title:"The Monday-Morning Back Injury",
+   narrative:"An employee reports a severe back injury 'while lifting' first thing Monday — but tells no one until lunch, with no witnesses. They'd just learned of a coming layoff and have two prior comp claims.",
+   dossier:["Injury reported <b>Monday AM</b>, no witnesses","Employee learned of a <b>pending layoff</b> last week","Two <b>prior</b> comp claims at other employers","Reported the injury <b>hours after</b> it allegedly happened"],
+   isFraud:true,
+   flags:["The 'Monday morning' claim — a weekend injury blamed on work — is a classic indicator.","No witnesses to an alleged serious lifting injury raises doubt.","Impending job loss creates a powerful motive.","A history of comp claims warrants scrutiny."],
+   concept:{term:"Workers' Compensation",def:"A <b>no-fault, mandatory</b> coverage paying an employee's medical bills and lost wages for job injuries — regardless of blame. Because benefits flow without proving fault, fakers exploit hard-to-verify strains."}},
+
+  {no:"WC-8820",line:"Commercial",lineKey:"comm",policy:"Workers' Compensation",title:"Forklift Foot Injury",
+   narrative:"A warehouse worker's foot is crushed by a forklift. Three coworkers witnessed it, a supervisor filed an incident report immediately, and the injury appears on the OSHA log.",
+   dossier:["Three <b>coworker witnesses</b> to the accident","Incident report filed <b>same hour</b>","Recorded on the <b>OSHA 300 log</b>","Treatment consistent with a crush injury"],
+   isFraud:false,
+   flags:["Multiple witnesses corroborate the accident.","Immediate reporting matches a genuine workplace injury.","OSHA recordkeeping adds an independent paper trail.","Treatment is consistent with the described mechanism."],
+   concept:{term:"OSHA 300 Log",def:"A federally required record of serious workplace injuries. A claim that lines up with the OSHA log, an immediate report, and witnesses is far more credible — documentation is the adjuster's best friend."}},
+
+  {no:"WC-9034",line:"Commercial",lineKey:"comm",policy:"Workers' Compensation",title:"The 'Totally Disabled' Marathoner",
+   narrative:"An employee on total-disability benefits claims they cannot work, sit, or lift. Surveillance and their own public social media show them finishing a 10K race and lifting weights at a gym.",
+   dossier:["Benefit status: <b>total temporary disability</b>","Social media: photos finishing a <b>10K run</b>","Surveillance video: claimant <b>lifting weights</b>","Treating doctor unaware of the activity"],
+   isFraud:true,
+   flags:["Activity level wildly exceeds the claimed disability.","Public social media frequently exposes malingering.","Surveillance is a standard, lawful SIU tool.","Hiding activity from the treating physician is deceptive."],
+   concept:{term:"Malingering / Disability Fraud",def:"Exaggerating or faking the <b>extent</b> of an injury to keep collecting wage benefits. SIUs use surveillance and social media to compare claimed limits against actual ability."}},
+
+  {no:"WC-6655",line:"Commercial",lineKey:"comm",policy:"Workers' Comp (Premium)",title:"The 'Clerical' Roofers",
+   narrative:"During a premium audit, an investigator finds a roofing contractor classified its roofing crews as low-rate 'clerical office' staff on its comp policy — drastically underpaying premium for a high-risk trade.",
+   dossier:["Payroll shows crews doing <b>roofing work</b>","Comp class code listed as <b>clerical (low rate)</b>","Underreported payroll vs. invoiced jobs","Pattern repeated across <b>multiple policy years</b>"],
+   isFraud:true,
+   flags:["Misclassifying high-risk workers as clerical is premium fraud — by the business, not a claimant.","Underreported payroll cheats the carrier out of correct premium.","A multi-year pattern shows intent, not error.","Premium audits exist to catch exactly this."],
+   concept:{term:"Premium Fraud & Class Codes",def:"Comp premium = <b>payroll × class-code rate</b> (riskier jobs cost more). Lying about duties or hiding payroll to cut premium is fraud committed <b>by the employer</b> — a whole category beyond claim fraud."}},
+
+  {no:"CP-3301",line:"Commercial",lineKey:"comm",policy:"Commercial Property",title:"Fire at a Failing Business",
+   narrative:"A retail store burns down after months of falling sales. The owner had recently doubled the property and inventory limits, financial records are 'missing,' and the marshal notes multiple origins and an accelerant smell.",
+   dossier:["Sales <b>declining</b> for months; heavy debt","Limits <b>doubled</b> shortly before the fire","Marshal notes <b>multiple origins</b> + accelerant","Inventory and financial records <b>unavailable</b>"],
+   isFraud:true,
+   flags:["Financial distress is the leading motive for arson-for-profit.","Raising limits right before a 'total loss' is highly suspicious.","Multiple origins and accelerant indicate an intentional fire.","Conveniently missing records block verification."],
+   concept:{term:"Commercial Property & Arson-for-Profit",def:"Covers a business's building, equipment, and <b>inventory (business personal property)</b>. When a struggling owner over-insures and torches the place, the marshal's origin-and-cause findings are central evidence."}},
+
+  {no:"BI-4400",line:"Commercial",lineKey:"comm",policy:"Business Interruption",title:"The Inflated Lost Income",
+   narrative:"After a covered water leak shuts a café for a week, the owner files for lost profits — but the claimed weekly income is triple what tax returns and bank deposits show, with no supporting books.",
+   dossier:["Claimed weekly income: <b>3× documented average</b>","Tax returns and deposits <b>contradict</b> the figure","No bookkeeping records produced","The underlying water damage itself is <b>genuine</b>"],
+   isFraud:true,
+   flags:["Claimed income wildly exceeds verifiable records.","Refusing to produce books to support lost profits is a red flag.","Even a real physical loss can carry an <b>inflated</b> (padded) claim.","BI claims must be proven with financial documentation."],
+   concept:{term:"Business Interruption (BI)",def:"Pays a business's <b>lost net income and ongoing expenses</b> while it can't operate after a covered loss. Because income comes from records, padding the numbers is common 'soft fraud.'"}},
+
+  {no:"BP-2090",line:"Commercial",lineKey:"comm",policy:"Business Owners Policy (BOP)",title:"After-Hours Break-In",
+   narrative:"A small bakery is burglarized overnight. Police confirm forced entry through a rear door, the alarm logs show an activation, and the owner provides invoices for the stolen commercial mixer and POS tablets.",
+   dossier:["Police confirm <b>forced rear-door entry</b>","Monitored alarm <b>activated</b> at 2:14 AM (logged)","Invoices provided for stolen equipment","No coverage changes; clean claims history"],
+   isFraud:false,
+   flags:["Police and alarm logs independently confirm the break-in.","Time-stamped alarm data supports the timeline.","Invoices establish ownership and value.","A clean history and stable coverage reduce suspicion."],
+   concept:{term:"Business Owners Policy (BOP)",def:"A bundled small-business package combining <b>commercial property + general liability</b> (often plus business interruption) at a discount. Great for shops and offices — but excludes pro liability, auto, and workers' comp."}},
+
+  {no:"GL-5512",line:"Commercial",lineKey:"comm",policy:"General Liability (CGL)",title:"The Serial Slip-and-Fall",
+   narrative:"A customer claims they slipped on a 'wet floor' and hurt a shoulder. Store cameras show no spill and no fall, the customer waited days to report, and a database check reveals four near-identical lawsuits elsewhere.",
+   dossier:["Store cameras show <b>no spill and no fall</b>","Reported the incident <b>3 days later</b>","Four <b>near-identical</b> prior suits elsewhere","Demand letter arrived before any medical proof"],
+   isFraud:true,
+   flags:["Video evidence contradicts the alleged fall.","A delayed report with no incident record is suspect.","A pattern of identical lawsuits points to a professional 'faller.'","Rushing a demand before medical proof is a tell."],
+   concept:{term:"Commercial General Liability (CGL)",def:"Protects a business against <b>third-party</b> bodily injury and property damage — like a customer slipping in a store. Staged slip-and-falls are classic CGL fraud, which is why video and logs matter."}},
+
+  {no:"GL-6710",line:"Commercial",lineKey:"comm",policy:"Products Liability",title:"Defective Component Recall",
+   narrative:"A manufacturer's customer is injured by a genuinely defective part. There's an engineering failure analysis, a documented recall already underway, hospital records, and consistent witness accounts.",
+   dossier:["Independent <b>failure analysis</b> confirms the defect","Manufacturer already issued a <b>recall</b>","Hospital records document the injury","Witness statements are consistent"],
+   isFraud:false,
+   flags:["Engineering analysis objectively confirms a real defect.","An existing recall corroborates the product problem.","Medical documentation substantiates the injury.","Consistent witnesses strengthen credibility."],
+   concept:{term:"Products Liability",def:"Part of general liability covering injuries caused by a company's <b>products</b> after they leave the business. Strong technical evidence (failure analysis, recalls) separates a valid claim from an opportunistic one."}},
+
+  {no:"CA-3344",line:"Commercial",lineKey:"comm",policy:"Commercial Auto",title:"Delivery Van T-Bone",
+   narrative:"A company delivery van is struck at an intersection by a driver who ran a red light. The van's dashcam captured the crash, police cited the other driver, and the repair estimate matches the damage.",
+   dossier:["<b>Dashcam</b> footage of the other driver running the light","Police citation issued to the <b>other driver</b>","Repair estimate matches visible damage","Driver was on a <b>logged delivery route</b>"],
+   isFraud:false,
+   flags:["Dashcam video objectively establishes fault.","An official citation supports the account.","The estimate aligns with documented damage.","Route logs confirm legitimate business use."],
+   concept:{term:"Commercial Auto",def:"Covers vehicles used for <b>business</b> — vans, trucks, fleets. A key idea is 'hired & non-owned auto' for rented or employee-owned vehicles used for work, plus higher limits than personal auto."}},
+
+  {no:"IM-2871",line:"Commercial",lineKey:"comm",policy:"Inland Marine",title:"The Tools That Keep Vanishing",
+   narrative:"A contractor files yet another claim for 'stolen' tools from a job-site trailer — the fourth nearly identical theft in 18 months. No police reports, no forced entry, and replacement receipts that look reused.",
+   dossier:["<b>Fourth</b> tool-theft claim in 18 months","No police reports for any of them","No signs of forced entry to the trailer","Submitted receipts appear <b>reused/altered</b>"],
+   isFraud:true,
+   flags:["A repeating pattern of identical losses is a major indicator.","Missing police reports undercut every 'theft.'","No forced entry contradicts the burglary story.","Altered or recycled receipts point to manufactured docs."],
+   concept:{term:"Inland Marine (Contractor's Equipment)",def:"Despite the name, it covers <b>movable property</b> on land — tools, equipment, goods in transit. Contractors insure gear that travels between sites; repeat 'theft' claims with no proof are a frequent abuse."}},
+
+  {no:"CY-0091",line:"Commercial",lineKey:"comm",policy:"Cyber Liability",title:"Ransomware Lockout",
+   narrative:"A medical billing firm is hit by ransomware that encrypts its systems. A third-party forensics firm documents the intrusion, the company follows breach-notification law, and the timeline is fully logged.",
+   dossier:["Independent <b>forensics report</b> of the intrusion","Breach notifications sent per <b>state law</b>","System and event logs preserved","Cyber policy active before the attack"],
+   isFraud:false,
+   flags:["Third-party forensics objectively document the attack.","Legally required notifications show good-faith compliance.","Preserved logs create a verifiable timeline.","Coverage was clearly in force before the event."],
+   concept:{term:"Cyber Liability Insurance",def:"Covers costs from breaches and cyberattacks — <b>forensics, notification, ransomware, business interruption, and liability</b> to affected customers. A fast-growing line as nearly every business holds sensitive data."}},
+
+  {no:"EB-1180",line:"Commercial",lineKey:"comm",policy:"Equipment Breakdown",title:"Boiler Goes Bang",
+   narrative:"A hotel's boiler suffers an internal electrical arc and mechanical failure, with scorching and a sudden shutdown. An engineer's inspection confirms an internal breakdown — not external damage or neglect.",
+   dossier:["Engineer confirms <b>internal electrical arc</b>","Sudden, accidental mechanical failure","Maintenance logs show <b>regular servicing</b>","Not caused by an excluded peril (fire/flood)"],
+   isFraud:false,
+   flags:["An engineering inspection confirms a covered internal breakdown.","The failure was sudden and accidental, not gradual neglect.","Maintenance records show the equipment was cared for.","The cause falls within equipment-breakdown coverage."],
+   concept:{term:"Equipment Breakdown (Boiler & Machinery)",def:"Covers <b>sudden, accidental mechanical or electrical failure</b> of equipment — boilers, HVAC, electrical panels. It fills a gap, since standard commercial property often <b>excludes</b> internal breakdown."}},
+
+  {no:"EO-2240",line:"Commercial",lineKey:"comm",policy:"Professional Liability (E&O)",title:"The Costly Accounting Error",
+   narrative:"A small business sues its accounting firm after a genuine filing error triggered IRS penalties. There's a clear paper trail of the mistake, the penalty notice, and the client's documented financial harm.",
+   dossier:["Documented <b>filing error</b> by the accountant","IRS <b>penalty notice</b> tied to the mistake","Client's financial harm is quantified","Engagement letter confirms the scope of services"],
+   isFraud:false,
+   flags:["A clear record links the professional error to the harm.","The IRS notice provides independent proof of damages.","Damages are documented and quantified, not speculative.","The engagement letter establishes the duty owed."],
+   concept:{term:"Professional Liability (Errors & Omissions)",def:"Covers claims that a professional's <b>mistake, negligence, or bad advice</b> caused financial harm — for accountants, lawyers, consultants, agents. Unlike CGL, it addresses pure <b>economic</b> loss, not bodily injury."}},
+
+  {no:"DO-3360",line:"Commercial",lineKey:"comm",policy:"Directors & Officers (D&O)",title:"Shareholder Suit Over Disclosure",
+   narrative:"Shareholders sue a company's board, alleging the directors made misleading statements that hurt the stock. Board minutes, public filings, and analyst records show a real dispute for the directors to defend.",
+   dossier:["Shareholders allege <b>breach of duty</b> by directors","Board minutes and SEC filings are on record","A genuine, contested legal dispute exists","D&O policy in force covering the period"],
+   isFraud:false,
+   flags:["A bona fide lawsuit triggers the directors' right to a defense.","Corporate records establish a real, documented dispute.","The allegation falls within D&O's purpose.","Coverage was in force during the relevant period."],
+   concept:{term:"Directors & Officers (D&O) Liability",def:"Protects company leadership from claims over their <b>management decisions</b> — shareholder suits, regulatory actions, breach-of-duty allegations. It funds legal defense and settlements for the people running the organization."}}
+];
+
+/* ---------- FIELD GUIDE ---------- */
+const GUIDE=[
+ {section:"Core Coverage Concepts",terms:[
+   ["Premium","The price the policyholder pays for coverage. It's calculated from the insured's risk profile."],
+   ["Deductible","The amount the insured pays out of pocket before insurance kicks in. Higher deductible = lower premium."],
+   ["Limit","The maximum the insurer will pay for a covered loss. Above it, the insured is on the hook — hence umbrella policies."],
+   ["Declarations Page","The summary front page listing who/what is insured, the limits, deductibles, and premium."],
+   ["Endorsement / Rider","An add-on that modifies the base policy — adding, removing, or changing coverage."],
+   ["Exclusion","Something the policy specifically does <b>not</b> cover (e.g., flood and earthquake on a standard home policy)."],
+   ["ACV vs. RCV","<b>Actual Cash Value</b> = replacement cost minus depreciation. <b>Replacement Cost</b> = full cost to replace new."],
+   ["Named vs. Open Perils","<b>Named perils</b> covers only listed causes. <b>Open perils</b> ('all-risk') covers everything except stated exclusions."],
+   ["Subrogation","After paying, the insurer's right to pursue the at-fault party to recover its money."],
+   ["Coinsurance","A commercial-property clause requiring coverage equal to a set % of value, or face a penalty at claim time."]
+ ]},
+ {section:"Personal Lines",terms:[
+   ["Personal Auto","Liability, collision, comprehensive, medical payments, and uninsured-motorist for personal vehicles."],
+   ["Homeowners (HO-3)","Dwelling (open perils), personal property (named perils), liability, and loss of use."],
+   ["Renters (HO-4)","A tenant's belongings and liability — not the building itself."],
+   ["Condo (HO-6)","A condo owner's interior, belongings, and liability; the association's master policy covers the structure."],
+   ["Flood (NFIP)","Separate from homeowners because standard policies exclude flood; usually a 30-day waiting period."],
+   ["Personal Umbrella","Extra liability limits sitting above auto and homeowners coverage."]
+ ]},
+ {section:"Commercial Lines",terms:[
+   ["General Liability (CGL)","Third-party bodily injury and property damage claims against a business."],
+   ["Commercial Property","The business's building, equipment, and inventory (business personal property)."],
+   ["Business Owners Policy (BOP)","A bundled small-business package: property + liability, often with business interruption."],
+   ["Workers' Compensation","No-fault coverage for employees' work-related injuries — medical care and lost wages."],
+   ["Commercial Auto","Vehicles used for business; includes hired & non-owned auto."],
+   ["Business Interruption","Lost income and expenses while a business can't operate after a covered loss."],
+   ["Professional Liability (E&O)","Financial harm from professional mistakes or negligence."],
+   ["Directors & Officers (D&O)","Protects company leadership from claims over their management decisions."],
+   ["Cyber Liability","Breach response, ransomware, and liability from data incidents."],
+   ["Equipment Breakdown","Sudden mechanical/electrical failure of equipment like boilers and HVAC."],
+   ["Inland Marine","Movable property and goods in transit — e.g., a contractor's tools."]
+ ]},
+ {section:"Top Fraud Red Flags 🚩",terms:[
+   ["Recent Coverage Change","Buying or boosting coverage just before a loss — one of the strongest indicators."],
+   ["No Proof of Ownership","High-value items claimed with no receipts, photos, or appraisals."],
+   ["Inconsistent Damage","Damage that doesn't match the described cause or mechanism of loss."],
+   ["Delayed / No Report","Late police reports, no witnesses, or gaps in the timeline."],
+   ["Financial Motive","Money troubles, upside-down loans, or a failing business create incentive."],
+   ["Pattern of Claims","Repeated similar losses or a claimant with many prior claims."],
+   ["Monday-Morning Claim","A weekend injury reported as happening at work first thing Monday."],
+   ["Premature Demand","Rushing a settlement or demand before any documentation exists."],
+   ["Soft vs. Hard Fraud","<b>Soft</b> = padding a real claim. <b>Hard</b> = an entirely staged or fabricated loss."],
+   ["Premium Fraud","By a business — understating payroll or misclassifying workers to cut premium."]
+ ]}
+];
+
+/* ============================================================
+   AUDIO (Web Audio synth — no files needed)
+============================================================ */
+let audioCtx=null, muted=false;
+function ac(){ if(!audioCtx){ try{audioCtx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} } return audioCtx; }
+function tone(freq,dur,type='sine',vol=0.18,delay=0){
+  if(muted) return; const c=ac(); if(!c) return;
+  const t=c.currentTime+delay, o=c.createOscillator(), g=c.createGain();
+  o.type=type; o.frequency.setValueAtTime(freq,t);
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+0.012);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g); g.connect(c.destination); o.start(t); o.stop(t+dur+0.03);
+}
+const SFX={
+  click:()=>tone(430,0.06,'square',0.1),
+  examine:()=>{tone(620,0.07,'triangle',0.14);tone(940,0.09,'triangle',0.1,0.05);},
+  correct:()=>[523,659,784,1046].forEach((f,i)=>tone(f,0.17,'sine',0.16,i*0.07)),
+  wrong:()=>{tone(220,0.22,'sawtooth',0.16);tone(150,0.3,'sawtooth',0.14,0.09);},
+  stamp:()=>{tone(95,0.16,'square',0.22);tone(70,0.2,'square',0.18,0.02);},
+  combo:()=>[440,587,740,932].forEach((f,i)=>tone(f,0.1,'triangle',0.13,i*0.04)),
+  win:()=>[523,659,784,1046,1318,1568].forEach((f,i)=>tone(f,0.28,'sine',0.18,i*0.12)),
+  lose:()=>[392,330,262,196].forEach((f,i)=>tone(f,0.3,'sawtooth',0.15,i*0.13))
+};
+
+/* ============================================================
+   CONFETTI
+============================================================ */
+const fx=document.getElementById('fx'); const fxc=fx.getContext('2d');
+function sizeFx(){ fx.width=innerWidth; fx.height=innerHeight; }
+addEventListener('resize',sizeFx); sizeFx();
+let confetti=[];
+function burst(x,y,n=110){
+  const cols=['#ff4d4d','#ffd23f','#2ec4b6','#3a86ff','#ff70a6','#f4a900'];
+  for(let i=0;i<n;i++){confetti.push({x,y,vx:(Math.random()-0.5)*15,vy:Math.random()*-13-3,g:0.42,r:Math.random()*7+4,c:cols[i%cols.length],rot:Math.random()*6,vr:(Math.random()-0.5)*0.5,life:1});}
+  if(!confetti._raf){ confetti._raf=true; requestAnimationFrame(stepConfetti); }
+}
+function stepConfetti(){
+  fxc.clearRect(0,0,fx.width,fx.height);
+  confetti=confetti.filter(p=>p.life>0);
+  confetti.forEach(p=>{
+    p.vy+=p.g; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr; p.life-=0.012;
+    fxc.save(); fxc.translate(p.x,p.y); fxc.rotate(p.rot); fxc.globalAlpha=Math.max(p.life,0);
+    fxc.fillStyle=p.c; fxc.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.6); fxc.restore();
+  });
+  if(confetti.length){ requestAnimationFrame(stepConfetti); } else { fxc.clearRect(0,0,fx.width,fx.height); confetti._raf=false; }
+}
+
+/* ============================================================
+   MASCOT control
+============================================================ */
+function setMascot(mood){
+  document.querySelectorAll('.mascot').forEach(m=>{
+    const q=s=>m.querySelector(s); if(!q('#mNeutral'))return;
+    q('#mNeutral').style.display='none'; q('#mSmile').style.display='none'; q('#mShock').style.display='none'; q('#sweat').style.display='none';
+    m.classList.remove('cheer');
+    if(mood==='happy'){ q('#mSmile').style.display='block'; m.classList.add('cheer'); }
+    else if(mood==='wrong'){ q('#mShock').style.display='block'; q('#sweat').style.display='block'; }
+    else { q('#mNeutral').style.display='block'; }
+  });
+}
+
+/* ============================================================
+   GAME ENGINE
+============================================================ */
+const $=id=>document.getElementById(id);
+const ROUND_LEN=12, CASE_TIME=25, XP_PER_LVL=500;
+const LEVELS=["Rookie","Trainee","Adjuster","Investigator","Senior Sleuth","SIU Ace","Fraud Buster","Legend"];
+let S={};
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+
+function start(){
+  ac() && ac().resume && ac().resume();
+  const pool=shuffle(CASES).slice(0,Math.min(ROUND_LEN,CASES.length));
+  S={deck:pool,idx:0,score:0,combo:0,bestCombo:0,lives:3,correct:0,fraudCaught:0,
+     fraudTotal:pool.filter(c=>c.isFraud).length,answered:false,timerOn:$('timerToggle').checked,
+     history:[],t:null,timeLeft:CASE_TIME,examinedThisCase:0};
+  setMascot('idle');
+  switchPanel('gamePanel');
+  $('timerWrap').style.display=S.timerOn?'block':'none';
+  renderDots(); updateHUD(); renderCase();
+}
+function switchPanel(id){['startPanel','gamePanel','endPanel'].forEach(p=>$(p).classList.toggle('active',p===id));window.scrollTo({top:0,behavior:'smooth'});}
+
+function renderDots(){
+  $('dots').innerHTML=S.deck.map((_,i)=>`<span class="dot" data-i="${i}"></span>`).join('');
+}
+function paintDots(){
+  [...$('dots').children].forEach((d,i)=>{
+    d.className='dot';
+    const h=S.history[i];
+    if(h){ d.classList.add(h.correct?'done':'miss'); }
+    else if(i===S.idx){ d.classList.add('cur'); }
+  });
+}
+function levelInfo(){ const lvl=Math.floor(S.score/XP_PER_LVL); const name=LEVELS[Math.min(lvl,LEVELS.length-1)]; return {lvl:lvl+1,name,into:S.score%XP_PER_LVL}; }
+function updateHUD(){
+  $('scoreVal').textContent=S.score;
+  $('comboVal').textContent=S.combo+'🔥';
+  $('livesVal').textContent='❤️'.repeat(S.lives)+'🖤'.repeat(3-S.lives);
+  const li=levelInfo();
+  $('lvlVal').textContent='Lv.'+li.lvl+' '+li.name;
+  $('xpTxt').textContent=li.into+' / '+XP_PER_LVL+' XP';
+  $('xpFill').style.width=(li.into/XP_PER_LVL*100)+'%';
+  paintDots();
+}
+
+function renderCase(){
+  clearInterval(S.t); S.answered=false; S.timeLeft=CASE_TIME; S.examinedThisCase=0;
+  const c=S.deck[S.idx];
+  setMascot('idle');
+  const tagCls=c.lineKey==='comm'?'comm':'personal';
+  $('caseFile').innerHTML=`
+    <div class="stamp" id="stamp"></div>
+    <div class="file-top">
+      <div class="badge-row">
+        <span class="tag ${tagCls}">${c.line} Lines</span>
+        <span class="tag policy">${c.policy}</span>
+      </div>
+      <div class="file-no">Case No. ${c.no}</div>
+      <div class="file-title">${c.title}</div>
+    </div>
+    <div class="file-body">
+      <p class="narrative">${c.narrative}</p>
+      <div class="examine-hint">🔍 Tap a clue to examine it (uses up some bonus)</div>
+      <div class="clues" id="clues">
+        ${c.dossier.map((d,i)=>`
+          <div class="clue ${c.isFraud?'flag':'ok'}" data-i="${i}">
+            <div class="ctext"><span class="lens">🔍</span><span>${d}</span></div>
+            <div class="reveal"><span class="who">${c.isFraud?'🚩 Investigator flags this':'✓ Investigator is reassured'}</span>${c.flags[i]||c.flags[c.flags.length-1]}</div>
+          </div>`).join('')}
+      </div>
+      <div class="decide" id="decide">
+        <button class="big pay" data-call="pay">🟢 PAY CLAIM<small>Looks legit</small></button>
+        <button class="big flag" data-call="flag">🚩 FLAG SIU<small>Looks like fraud</small></button>
+      </div>
+      <div id="fbSlot"></div>
+    </div>`;
+
+  $('clues').querySelectorAll('.clue').forEach(el=>{
+    el.addEventListener('click',()=>{
+      if(S.answered||el.classList.contains('examined'))return;
+      el.classList.add('examined'); el.querySelector('.lens').textContent='🔎';
+      S.examinedThisCase++; SFX.examine();
+    });
+  });
+  $('decide').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{SFX.click();decide(b.dataset.call==='flag');}));
+  if(S.timerOn) startTimer();
+}
+
+function startTimer(){
+  const f=$('timerFill'); f.style.width='100%'; f.classList.remove('warn');
+  S.t=setInterval(()=>{
+    S.timeLeft-=0.1;
+    const pct=Math.max(0,S.timeLeft/CASE_TIME*100); f.style.width=pct+'%';
+    if(S.timeLeft<=8) f.classList.add('warn');
+    if(S.timeLeft<=0){ clearInterval(S.t); decide(null,true); }
+  },100);
+}
+
+function decide(saysFraud,timeout=false){
+  if(S.answered)return; S.answered=true; clearInterval(S.t);
+  const c=S.deck[S.idx];
+  $('decide').querySelectorAll('button').forEach(b=>b.disabled=true);
+
+  const correct = timeout ? false : (saysFraud===c.isFraud);
+
+  // stamp
+  const st=$('stamp'); st.classList.add(c.isFraud?'fraud':'legit','show'); st.innerHTML=c.isFraud?'FLAG':'PAID';
+  SFX.stamp();
+
+  let gained=0;
+  if(correct){
+    S.combo++; S.bestCombo=Math.max(S.bestCombo,S.combo); S.correct++; if(c.isFraud)S.fraudCaught++;
+    const speed=S.timerOn?Math.round(S.timeLeft*3):0;
+    const mult=1+Math.min(S.combo-1,5)*0.25;
+    const peek=S.examinedThisCase*15;
+    gained=Math.max(20,Math.round((100+speed)*mult)-peek);
+    S.score+=gained;
+    setMascot('happy');
+    if(S.combo>=2)SFX.combo(); else SFX.correct();
+    const r=$('caseFile').getBoundingClientRect();
+    burst(r.left+r.width/2, r.top+r.height*0.4, S.combo>=3?150:100);
+    setTimeout(SFX.correct, S.combo>=2?180:0);
+  } else {
+    S.combo=0; S.lives--;
+    setMascot('wrong'); SFX.wrong();
+    const w=$('wrap'); w.classList.add('shake'); setTimeout(()=>w.classList.remove('shake'),420);
+  }
+  S.history[S.idx]={title:c.title,policy:c.policy,correct,isFraud:c.isFraud};
+  updateHUD();
+  renderFeedback(c,correct,timeout,gained);
+  if(S.lives<=0){ setTimeout(end,60); }
+}
+
+function renderFeedback(c,correct,timeout,gained){
+  const verdict=c.isFraud?'FRAUDULENT — flag it 🚩':'LEGITIMATE — pay it 🟢';
+  const head=timeout?'⏰ Too slow!':(correct?(['Nailed it!','Sharp eye!','Boom! 💥','Case cracked!'][Math.floor(Math.random()*4)]):'Whoops!');
+  const ftitle=c.isFraud?'🚩 The red flags':'✅ Why it checks out';
+  $('fbSlot').innerHTML=`
+    <div class="fb ${correct?'correct':'wrong'}">
+      <div class="fb-head">
+        <span class="react">${correct?'😎':'😱'} ${head}</span>
+        ${correct?`<span class="gain">+${gained}</span>`:`<span class="gain">−1 ❤️</span>`}
+      </div>
+      <div class="fb-body">
+        <div class="verdict">Verdict: <b>${verdict}</b></div>
+        <div class="flag-box"><h5>${ftitle}</h5><ul>${c.flags.map(f=>`<li>${f}</li>`).join('')}</ul></div>
+        <div class="concept"><span class="bi">💡</span><div><div class="term">Insurance 101 · ${c.concept.term}</div><div class="def">${c.concept.def}</div></div></div>
+        <button class="next" id="nextBtn">${(S.idx>=S.deck.length-1||S.lives<=0)?'📋 See Shift Report':'Next Case →'}</button>
+      </div>
+    </div>`;
+  $('nextBtn').addEventListener('click',()=>{SFX.click();
+    if(S.lives<=0||S.idx>=S.deck.length-1){ end(); }
+    else { S.idx++; renderCase(); window.scrollTo({top:0,behavior:'smooth'}); }
+  });
+  $('fbSlot').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function end(){
+  clearInterval(S.t);
+  const total=S.history.filter(Boolean).length||1;
+  const acc=Math.round(S.correct/total*100);
+  $('endScore').textContent=S.score; $('endAcc').textContent=acc+'%';
+  $('endCombo').textContent=S.bestCombo; $('endFraud').textContent=S.fraudCaught+'/'+S.fraudTotal;
+  let rank,sub,win=false;
+  if(S.lives<=0){ rank='Case Closed'; sub="You ran out of lives — every misjudged claim costs the company. Review the cases and run it back!"; }
+  else if(acc>=90&&S.score>=1400){ rank='SIU Director'; sub='Legendary. You read red flags like a 20-year veteran. The fraudsters fear you.'; win=true; }
+  else if(acc>=75){ rank='Senior Sleuth'; sub='Sharp instincts! You caught the schemes and paid the honest claims.'; win=true; }
+  else if(acc>=55){ rank='Field Adjuster'; sub='Solid work. Brush up on the trickier red flags in the Field Guide.'; }
+  else { rank='Rookie'; sub='A learning shift! Open the Field Guide and run it back — you will improve fast.'; }
+  $('rankBadge').textContent=rank; $('rankSub').textContent=sub;
+  $('reviewList').innerHTML=S.history.filter(Boolean).map(h=>`
+    <div class="ri"><span class="ic ${h.correct?'ok':'no'}">${h.correct?'✓':'✗'}</span>
+    <div><b>${h.title}</b><span>${h.policy} · actually ${h.isFraud?'FRAUD':'LEGIT'}</span></div></div>`).join('');
+  switchPanel('endPanel');
+  if(win){ setMascot('happy'); SFX.win(); setTimeout(()=>burst(innerWidth/2,innerHeight*0.3,180),200); setTimeout(()=>burst(innerWidth*0.3,innerHeight*0.35,120),600); setTimeout(()=>burst(innerWidth*0.7,innerHeight*0.35,120),900); }
+  else { setMascot('wrong'); SFX.lose(); }
+}
+
+/* ---------- guide ---------- */
+function buildGuide(){
+  $('guideBody').innerHTML=GUIDE.map(s=>`<div class="gsec"><h3>${s.section}</h3><dl class="gloss">${s.terms.map(t=>`<div class="term-c"><dt>${t[0]}</dt><dd>${t[1]}</dd></div>`).join('')}</dl></div>`).join('');
+}
+function openGuide(){SFX.click();$('guideModal').classList.add('open');document.body.style.overflow='hidden';}
+function closeGuide(){$('guideModal').classList.remove('open');document.body.style.overflow='';}
+
+/* ---------- floaties ---------- */
+function buildFloaties(){
+  const icons=['🏠','🚗','🔥','💧','🏢','⚙️','🛡️','📄','💼','🚚','🔧','💻'];
+  let html='';
+  for(let i=0;i<14;i++){
+    const dur=14+Math.random()*16, delay=-Math.random()*30, left=Math.random()*100;
+    html+=`<span class="floaty" style="left:${left}%;animation-duration:${dur}s;animation-delay:${delay}s">${icons[i%icons.length]}</span>`;
+  }
+  $('floaties').innerHTML=html;
+}
+
+/* ---------- inject mascots + wire up ---------- */
+document.querySelectorAll('.mascot').forEach(m=>{ if(m.innerHTML.includes('__MASCOT__')) m.innerHTML=MASCOT_SVG; });
+// fallback: some browsers render placeholder text — replace any leftover
+document.querySelectorAll('.mascot').forEach(m=>{ if(m.textContent.trim()==='__MASCOT__'||!m.querySelector('svg')) m.innerHTML=MASCOT_SVG; });
+
+$('startBtn').addEventListener('click',start);
+$('replayBtn').addEventListener('click',start);
+$('guideBtn').addEventListener('click',openGuide);
+$('closeGuide').addEventListener('click',closeGuide);
+$('guideModal').addEventListener('click',e=>{if(e.target===$('guideModal'))closeGuide();});
+$('soundBtn').addEventListener('click',()=>{muted=!muted;$('soundBtn').textContent=muted?'🔇 Muted':'🔊 Sound';if(!muted){ac()&&ac().resume&&ac().resume();SFX.click();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeGuide();});
+buildGuide(); buildFloaties(); setMascot('happy');
+</script>
+</body>
+</html>
