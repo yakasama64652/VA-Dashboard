@@ -4,90 +4,144 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>P&C Insurance Crossword</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --accent: #38bdf8;
-            --accent-hover: #0ea5e9;
-            --cell-bg: #334155;
-            --cell-active: #0284c7;
+            --cream: #fff7ec;
+            --paper: #ffffff;
+            --ink: #2a2350;
+            --ink-soft: #6b6394;
+            --coral: #ff5a6e;
+            --coral-deep: #e8384f;
+            --sun: #ffce3a;
+            --teal: #14c8a6;
+            --grape: #7b5cff;
+            --tray: #efe6ff;
+            --cell-bg: #ffffff;
+            --cell-active: #ffe27a;
             --cell-correct: #22c55e;
-            --cell-wrong: #ef4444;
-            --wall-bg: #0f172a;
+            --cell-wrong: #ff4d5e;
+            --line: #2a2350;
+            --cell-size: 46px;
+            --font-head: 'Fredoka', sans-serif;
+            --font-body: 'Nunito', sans-serif;
         }
 
+        * { box-sizing: border-box; }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            font-family: var(--font-body);
+            background:
+                radial-gradient(55% 45% at 12% 8%, rgba(123, 92, 255, 0.18), transparent 60%),
+                radial-gradient(50% 45% at 90% 12%, rgba(255, 206, 58, 0.25), transparent 60%),
+                radial-gradient(60% 55% at 80% 95%, rgba(20, 200, 166, 0.18), transparent 60%),
+                linear-gradient(160deg, var(--cream), #ffeede);
+            color: var(--ink);
             margin: 0;
-            padding: 20px;
+            padding: 28px 20px 60px;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Floating decorative shapes */
+        .bg-decor { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+        .blob { position: absolute; opacity: 0.5; animation: float 9s ease-in-out infinite; }
+        .blob.b1 { top: 14%; left: 6%; font-size: 2.4rem; animation-delay: 0s; }
+        .blob.b2 { top: 22%; right: 8%; font-size: 2rem; animation-delay: 1.2s; }
+        .blob.b3 { bottom: 16%; left: 10%; font-size: 2.2rem; animation-delay: 2.1s; }
+        .blob.b4 { bottom: 22%; right: 12%; font-size: 1.8rem; animation-delay: 0.7s; }
+        .blob.b5 { top: 48%; left: 3%; font-size: 1.6rem; animation-delay: 1.8s; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(-6deg); }
+            50% { transform: translateY(-16px) rotate(8deg); }
         }
 
         header {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 26px;
+            position: relative;
+            z-index: 1;
         }
 
         h1 {
             margin: 0;
-            font-size: 2.5rem;
-            color: var(--accent);
-            text-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+            font-family: var(--font-head);
+            font-weight: 700;
+            font-size: clamp(2.2rem, 6vw, 3.2rem);
+            line-height: 1;
+            color: var(--ink);
+            letter-spacing: -0.5px;
+            text-shadow: 3px 3px 0 var(--sun), 6px 6px 0 rgba(123, 92, 255, 0.25);
         }
+        h1 .accent { color: var(--coral); }
 
         p.subtitle {
-            color: var(--text-muted);
-            margin-top: 5px;
+            color: var(--ink-soft);
+            margin-top: 12px;
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+        p.subtitle .pill {
+            display: inline-block;
+            background: var(--paper);
+            border: 2px solid var(--ink);
+            border-radius: 999px;
+            padding: 3px 14px;
+            box-shadow: 2px 2px 0 var(--ink);
         }
 
         .game-container {
             display: flex;
-            gap: 40px;
+            gap: 36px;
             max-width: 1100px;
             width: 100%;
-            background: var(--card-bg);
-            padding: 30px;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            background: var(--paper);
+            padding: 32px;
+            border-radius: 28px;
+            border: 3px solid var(--ink);
+            box-shadow: 10px 10px 0 rgba(42, 35, 80, 0.85);
             flex-wrap: wrap;
             justify-content: center;
+            position: relative;
+            z-index: 1;
         }
 
         /* Crossword Grid */
-        .grid-container {
-            position: relative;
-        }
+        .grid-container { position: relative; }
 
         .crossword-grid {
             display: grid;
-            grid-template-columns: repeat(11, 45px);
-            grid-template-rows: repeat(11, 45px);
-            gap: 4px;
-            background-color: var(--wall-bg);
-            padding: 8px;
-            border-radius: 12px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            grid-template-columns: repeat(11, var(--cell-size));
+            grid-template-rows: repeat(11, var(--cell-size));
+            gap: 5px;
+            background: linear-gradient(160deg, var(--tray), #e4d8ff);
+            padding: 12px;
+            border-radius: 18px;
+            border: 3px solid var(--ink);
+            box-shadow: inset 0 3px 10px rgba(123, 92, 255, 0.25), 5px 5px 0 rgba(42, 35, 80, 0.18);
         }
 
         .cell {
             position: relative;
-            width: 45px;
-            height: 45px;
+            width: var(--cell-size);
+            height: var(--cell-size);
             background-color: var(--cell-bg);
-            border-radius: 6px;
-            transition: all 0.2s ease;
+            border: 2px solid rgba(42, 35, 80, 0.18);
+            border-radius: 9px;
+            transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+            box-shadow: 0 2px 0 rgba(42, 35, 80, 0.12);
         }
 
         .cell.wall {
             background-color: transparent;
+            border-color: transparent;
+            box-shadow: none;
         }
 
         .cell input {
@@ -96,36 +150,70 @@
             border: none;
             background: transparent;
             text-align: center;
-            font-size: 1.3rem;
-            font-weight: bold;
-            color: #fff;
+            font-family: var(--font-head);
+            font-size: 1.35rem;
+            font-weight: 600;
+            color: var(--ink);
             text-transform: uppercase;
-            caret-color: var(--accent);
+            caret-color: var(--coral);
+            border-radius: 7px;
+            padding: 0;
+        }
+
+        .cell:not(.wall):hover {
+            transform: translateY(-2px);
+            border-color: var(--grape);
         }
 
         .cell input:focus {
             outline: none;
             background-color: var(--cell-active);
-            border-radius: 6px;
-            box-shadow: 0 0 12px var(--accent);
+            box-shadow: 0 0 0 3px var(--sun);
+        }
+        .cell:has(input:focus) {
+            transform: translateY(-2px) scale(1.04);
+            border-color: var(--sun);
+            z-index: 5;
         }
 
         .cell .number {
             position: absolute;
             top: 2px;
-            left: 4px;
-            font-size: 0.65rem;
-            font-weight: bold;
-            color: var(--accent);
+            left: 5px;
+            font-family: var(--font-head);
+            font-size: 0.62rem;
+            font-weight: 600;
+            color: var(--coral);
             pointer-events: none;
+            z-index: 2;
         }
 
         /* Dynamic Feedback Classes */
+        .cell.correct-flash {
+            border-color: var(--cell-correct);
+            animation: pop 0.3s ease;
+        }
         .cell.correct-flash input {
             background-color: var(--cell-correct) !important;
+            color: #fff;
+        }
+        .cell.wrong-flash {
+            border-color: var(--cell-wrong);
+            animation: shake 0.35s ease;
         }
         .cell.wrong-flash input {
             background-color: var(--cell-wrong) !important;
+            color: #fff;
+        }
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.18); }
+            100% { transform: scale(1); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
         }
 
         /* Clues Panel */
@@ -138,107 +226,145 @@
         }
 
         .clue-section {
-            background: rgba(15, 23, 42, 0.4);
-            padding: 15px 20px;
-            border-radius: 12px;
-            border-left: 4px solid var(--accent);
+            background: var(--cream);
+            padding: 18px 22px;
+            border-radius: 18px;
+            border: 3px solid var(--ink);
+            box-shadow: 5px 5px 0 rgba(42, 35, 80, 0.16);
         }
+        .clue-section:nth-of-type(1) { border-left: 10px solid var(--coral); }
+        .clue-section:nth-of-type(2) { border-left: 10px solid var(--teal); }
 
         .clue-section h2 {
-            margin-top: 0;
-            font-size: 1.3rem;
-            color: var(--accent);
+            margin: 0 0 12px;
+            font-family: var(--font-head);
+            font-weight: 600;
+            font-size: 1.4rem;
+            color: var(--ink);
             text-transform: uppercase;
             letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .clue-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
+        .clue-list { list-style: none; padding: 0; margin: 0; }
 
         .clue-item {
-            margin-bottom: 10px;
-            padding: 6px 8px;
-            border-radius: 4px;
+            margin-bottom: 8px;
+            padding: 9px 12px;
+            border-radius: 12px;
             cursor: pointer;
-            transition: background 0.2s;
-            font-size: 0.95rem;
-            line-height: 1.4;
+            transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+            font-size: 0.96rem;
+            font-weight: 600;
+            line-height: 1.45;
+            border: 2px solid transparent;
         }
-
         .clue-item:hover {
-            background: rgba(56, 189, 248, 0.1);
+            background: var(--paper);
+            border-color: var(--ink);
+            transform: translateX(6px);
+            box-shadow: 3px 3px 0 var(--grape);
         }
-
         .clue-item strong {
-            color: var(--accent);
+            color: var(--coral);
             margin-right: 5px;
+            font-family: var(--font-head);
+            font-weight: 600;
         }
+        .clue-item em { color: var(--ink-soft); font-weight: 700; font-style: normal; font-size: 0.82rem; }
 
         /* Toolbar Actions */
         .toolbar {
             display: flex;
             gap: 15px;
-            margin-top: 20px;
+            margin-top: 14px;
             width: 100%;
             justify-content: center;
+            flex-wrap: wrap;
         }
 
         button {
-            background-color: var(--accent);
-            color: var(--bg-color);
-            border: none;
-            padding: 12px 24px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 8px;
+            font-family: var(--font-head);
+            background-color: var(--coral);
+            color: #fff;
+            border: 3px solid var(--ink);
+            padding: 13px 26px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            border-radius: 14px;
             cursor: pointer;
-            transition: all 0.2s;
-            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.3);
+            transition: transform 0.1s ease, box-shadow 0.1s ease;
+            box-shadow: 0 5px 0 var(--ink);
         }
-
-        button:hover {
-            background-color: var(--accent-hover);
-            transform: translateY(-2px);
-        }
+        button:hover { transform: translateY(-2px); box-shadow: 0 7px 0 var(--ink); }
+        button:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--ink); }
 
         button.secondary {
-            background-color: transparent;
-            color: var(--accent);
-            border: 2px solid var(--accent);
-            box-shadow: none;
+            background-color: var(--paper);
+            color: var(--ink);
         }
-
-        button.secondary:hover {
-            background-color: rgba(56, 189, 248, 0.1);
-        }
+        #btn-reveal { background-color: var(--sun); color: var(--ink); }
+        #btn-reset { background-color: var(--teal); color: #fff; }
 
         #win-message {
             display: none;
-            margin-top: 20px;
-            padding: 15px;
-            background: var(--cell-correct);
-            color: white;
-            font-weight: bold;
-            border-radius: 8px;
+            margin-top: 22px;
+            padding: 20px 26px;
+            width: 100%;
+            background: linear-gradient(120deg, var(--teal), var(--grape));
+            color: #fff;
+            font-family: var(--font-head);
+            font-weight: 700;
+            border: 3px solid var(--ink);
+            border-radius: 18px;
             text-align: center;
-            font-size: 1.2rem;
-            animation: bounce 0.5s ease infinite alternate;
+            font-size: 1.4rem;
+            box-shadow: 6px 6px 0 var(--ink);
+            position: relative;
+            animation: bounce 0.6s ease infinite alternate;
         }
+        #win-message::before, #win-message::after {
+            content: "🎊";
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.6rem;
+            animation: spark 1s ease infinite alternate;
+        }
+        #win-message::before { left: 18px; }
+        #win-message::after { right: 18px; }
 
         @keyframes bounce {
             from { transform: translateY(0); }
-            to { transform: translateY(-5px); }
+            to { transform: translateY(-7px); }
+        }
+        @keyframes spark {
+            from { transform: translateY(-50%) scale(1) rotate(-8deg); }
+            to { transform: translateY(-50%) scale(1.25) rotate(8deg); }
+        }
+
+        @media (max-width: 600px) {
+            :root { --cell-size: 30px; }
+            .game-container { padding: 20px; gap: 24px; }
+            .cell input { font-size: 0.95rem; }
         }
     </style>
 </head>
 <body>
 
+    <div class="bg-decor" aria-hidden="true">
+        <span class="blob b1">✏️</span>
+        <span class="blob b2">🧩</span>
+        <span class="blob b3">🛡️</span>
+        <span class="blob b4">⭐</span>
+        <span class="blob b5">💡</span>
+    </div>
+
     <header>
-        <h1>P&C Insurance Crossword</h1>
-        <p class="subtitle">Test your Property & Casualty insurance knowledge!</p>
+        <h1>P&amp;C Insurance <span class="accent">Crossword</span> 🧩</h1>
+        <p class="subtitle"><span class="pill">Test your Property &amp; Casualty insurance knowledge!</span></p>
     </header>
 
     <div class="game-container">
@@ -248,19 +374,19 @@
 
         <div class="clues-container">
             <div class="clue-section">
-                <h2>Across</h2>
+                <h2>➡️ Across</h2>
                 <ul class="clue-list" id="across-clues"></ul>
             </div>
             <div class="clue-section">
-                <h2>Down</h2>
+                <h2>⬇️ Down</h2>
                 <ul class="clue-list" id="down-clues"></ul>
             </div>
         </div>
 
         <div class="toolbar">
-            <button id="btn-check">Check Answers</button>
-            <button id="btn-reveal" class="secondary">Reveal Letters</button>
-            <button id="btn-reset" class="secondary">Reset</button>
+            <button id="btn-check">✓ Check Answers</button>
+            <button id="btn-reveal" class="secondary">💡 Reveal Letters</button>
+            <button id="btn-reset" class="secondary">↺ Reset</button>
         </div>
         
         <div id="win-message">🎉 Congratulations! You solved the crossword flawlessly!</div>
@@ -282,32 +408,58 @@
             ['.', 'T', '.', '.', '.', '.', '.', '.', '.', '.', '.']
         ];
 
-        // Words schema with metadata maps for sequencing navigation
+        // Words schema. Clue numbers are NOT hardcoded — they are computed from the
+        // grid (see computeNumbering) so the box labels and clue list always match.
         const clues = [
-            { num: 1, dir: 'across', word: 'POLICY', row: 0, col: 3, text: 'A legal contract between the insurer and the insured.' },
-            { num: 4, dir: 'across', word: 'FIRE', row: 2, col: 0, text: 'A core property hazard covered under standard commercial/homeowners policies.' },
-            { num: 5, dir: 'across', word: 'AUTO', row: 2, col: 7, text: 'A major personal insurance line covering private passenger vehicles.' },
-            { num: 6, dir: 'across', word: 'RISK', row: 4, col: 2, text: 'The probability or threat of quantifiable damage, injury, liability, or loss.' },
-            { num: 7, dir: 'across', word: 'DEDUCT', row: 6, col: 5, text: 'Short for deductible; amount paid out-of-pocket before insurance kicks in.' },
-            { num: 9, dir: 'across', word: 'PERIL', row: 8, col: 0, text: 'A specific cause of loss, such as theft, windstorm, or flood.' },
-            
-            { num: 1, dir: 'down', word: 'PREMIUM', row: 0, col: 3, text: 'The amount of money an individual or business pays for an insurance policy.' },
-            { num: 2, dir: 'down', word: 'CLAIM', row: 0, col: 7, text: 'A formal request by a policyholder for coverage or compensation.' },
-            { num: 3, dir: 'down', word: 'LIABLE', row: 2, col: 7, text: 'Legally responsible for damages or injury caused to another party.' },
-            { num: 5, dir: 'down', word: 'AUTO', row: 2, col: 8, text: 'A major line of coverage (spans across to form an intersection point).' },
-            { num: 8, dir: 'down', word: 'AGENT', row: 6, col: 1, text: 'A person authorized to act on behalf of an insurance company to sell policies.' }
+            { dir: 'across', word: 'POLICY', row: 0, col: 3, text: 'A legal contract between the insurer and the insured.' },
+            { dir: 'across', word: 'FIRE', row: 2, col: 0, text: 'A core property hazard covered under standard commercial/homeowners policies.' },
+            { dir: 'across', word: 'AUTO', row: 2, col: 7, text: 'A major personal insurance line covering private passenger vehicles.' },
+            { dir: 'across', word: 'RISK', row: 4, col: 2, text: 'The probability or threat of quantifiable damage, injury, liability, or loss.' },
+            { dir: 'across', word: 'DEDUCT', row: 6, col: 5, text: 'Short for deductible; amount paid out-of-pocket before insurance kicks in.' },
+            { dir: 'across', word: 'PERIL', row: 8, col: 0, text: 'A specific cause of loss, such as theft, windstorm, or flood.' },
+
+            { dir: 'down', word: 'PREMIUM', row: 0, col: 3, text: 'The amount of money an individual or business pays for an insurance policy.' },
+            { dir: 'down', word: 'CLAIM', row: 0, col: 7, text: 'A formal request by a policyholder for coverage or compensation.' },
+            { dir: 'down', word: 'AUTO', row: 5, col: 8, text: 'Coverage line for private passenger vehicles (reading downward).' },
+            { dir: 'down', word: 'AGENT', row: 6, col: 1, text: 'A person authorized to act on behalf of an insurance company to sell policies.' }
         ];
 
         const rows = 11;
         const cols = 11;
         const gridEl = document.getElementById('grid');
 
-        // Render Clue Lists
+        // Standard crossword numbering: scan top-to-bottom, left-to-right and number any
+        // cell that begins an across word and/or a down word. This guarantees the numbers
+        // in the boxes are always sequential and correctly placed.
+        function computeNumbering() {
+            const map = {};
+            let n = 0;
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (gridLayout[r][c] === '.') continue;
+                    const startsAcross = (c === 0 || gridLayout[r][c - 1] === '.') &&
+                                         (c + 1 < cols && gridLayout[r][c + 1] !== '.');
+                    const startsDown = (r === 0 || gridLayout[r - 1][c] === '.') &&
+                                       (r + 1 < rows && gridLayout[r + 1][c] !== '.');
+                    if (startsAcross || startsDown) {
+                        n++;
+                        map[`${r}-${c}`] = n;
+                    }
+                }
+            }
+            return map;
+        }
+
+        const numberMap = computeNumbering();
+        // Attach the computed number to each clue based on its starting cell.
+        clues.forEach(c => { c.num = numberMap[`${c.row}-${c.col}`]; });
+
+        // Render Clue Lists (sorted by their computed number)
         function renderClues() {
             const acrossList = document.getElementById('across-clues');
             const downList = document.getElementById('down-clues');
-            
-            clues.forEach(c => {
+
+            [...clues].sort((a, b) => a.num - b.num).forEach(c => {
                 const li = document.createElement('li');
                 li.className = 'clue-item';
                 li.innerHTML = `<strong>${c.num}.</strong> ${c.text} <em>(${c.word.length} letters)</em>`;
@@ -322,12 +474,6 @@
 
         // Initialize Crossword Grid Space
         function createGrid() {
-            // Setup Number labels lookup map
-            const labels = {};
-            clues.forEach(c => {
-                labels[`${c.row}-${c.col}`] = c.num;
-            });
-
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c < cols; c++) {
                     const cell = document.createElement('div');
@@ -339,10 +485,10 @@
                         cell.classList.add('wall');
                     } else {
                         // Insert number assignments if available
-                        if (labels[`${r}-${c}`]) {
+                        if (numberMap[`${r}-${c}`]) {
                             const numLabel = document.createElement('span');
                             numLabel.className = 'number';
-                            numLabel.innerText = labels[`${r}-${c}`];
+                            numLabel.innerText = numberMap[`${r}-${c}`];
                             cell.appendChild(numLabel);
                         }
 
