@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Peril Defender · P&C Command</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#070b18; --bg2:#0c1226; --panel:rgba(255,255,255,.045); --panel-2:rgba(255,255,255,.07);
+  --ink:#eaf0ff; --muted:#8e9bc4; --faint:#5a648c;
+  --cyan:#2ee6d6; --lime:#b6ff5a; --magenta:#ff4d9d; --amber:#ffc24d; --violet:#9b8cff;
+  --danger:#ff5a6e; --good:#36e07f; --line:rgba(255,255,255,.09);
+  --font-d:'Bricolage Grotesque',sans-serif; --font-b:'Outfit',sans-serif; --font-m:'JetBrains Mono',monospace;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0; font-family:var(--font-b); color:var(--ink); overflow-x:hidden; overflow-y:auto;
+  background:
+    radial-gradient(60% 50% at 15% -5%, rgba(46,230,214,.16), transparent 60%),
+    radial-gradient(55% 50% at 100% 0%, rgba(255,77,157,.14), transparent 60%),
+    radial-gradient(70% 60% at 50% 120%, rgba(155,140,255,.14), transparent 60%),
+    linear-gradient(180deg,var(--bg),var(--bg2));
+}
+/* faint control-room grid */
+body::before{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.5;
+  background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);
+  background-size:44px 44px; mask-image:radial-gradient(circle at 50% 40%,#000,transparent 85%);
+}
+h1,h2,h3{font-family:var(--font-d); margin:0; letter-spacing:-.5px;}
+
+#app{position:relative; z-index:1; min-height:100vh; display:flex; flex-direction:column; padding:14px; gap:12px; max-width:1280px; margin:0 auto;}
+
+/* ---------- HUD ---------- */
+.hud{display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+  background:linear-gradient(160deg,var(--panel-2),var(--panel)); border:1px solid var(--line);
+  border-radius:16px; padding:12px 18px; backdrop-filter:blur(10px);}
+.brand{display:flex; align-items:center; gap:12px; min-width:200px;}
+.brand .badge{width:42px; height:42px; border-radius:11px; display:grid; place-items:center; font-size:1.4rem;
+  background:conic-gradient(from 200deg,var(--cyan),var(--magenta),var(--violet),var(--cyan));
+  box-shadow:0 0 22px rgba(46,230,214,.4); }
+.brand h1{font-size:1.12rem; line-height:1; font-weight:800;}
+.brand small{color:var(--muted); font-family:var(--font-m); font-size:.62rem; letter-spacing:1.5px; text-transform:uppercase;}
+.stats{display:flex; gap:22px; margin-left:auto; flex-wrap:wrap;}
+.stat{text-align:center; min-width:64px;}
+.stat label{display:block; font-family:var(--font-m); font-size:.58rem; letter-spacing:1.5px; color:var(--faint); text-transform:uppercase;}
+.stat b{font-family:var(--font-m); font-size:1.35rem; font-weight:700;}
+#score b{color:var(--cyan);} #combo b{color:var(--lime);} #wave b{color:var(--amber);}
+.combo-x{color:var(--lime); font-size:.8rem;}
+.health-wrap{min-width:180px;}
+.health-wrap .bar{height:14px; border-radius:8px; background:rgba(0,0,0,.4); border:1px solid var(--line); overflow:hidden; margin-top:5px;}
+.health-wrap .fill{height:100%; width:100%; border-radius:8px; transition:width .25s ease, background .25s ease;
+  background:linear-gradient(90deg,var(--good),var(--lime));}
+.icon-btn{font-family:var(--font-b); font-weight:600; cursor:pointer; color:var(--ink); font-size:.82rem;
+  background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:9px 13px; transition:.18s;}
+.icon-btn:hover{background:var(--panel-2); border-color:var(--cyan); color:var(--cyan);}
+
+/* ---------- STAGE ---------- */
+.stage{display:flex; gap:12px; flex:1; min-height:0;}
+.field-wrap{flex:3; min-width:0;}
+.field{position:relative; height:100%; min-height:380px; border-radius:18px; overflow:hidden;
+  background:
+    radial-gradient(120% 60% at 50% -10%, rgba(255,77,157,.08), transparent 60%),
+    linear-gradient(180deg,rgba(10,16,38,.6),rgba(7,11,24,.85));
+  border:1px solid var(--line); box-shadow:inset 0 0 60px rgba(0,0,0,.5);}
+.field.flash-bad{animation:badflash .35s ease;}
+@keyframes badflash{0%,100%{box-shadow:inset 0 0 60px rgba(0,0,0,.5);}30%{box-shadow:inset 0 0 70px rgba(255,90,110,.55);}}
+
+.target-banner{position:absolute; top:12px; left:50%; transform:translateX(-50%);
+  font-family:var(--font-m); font-size:.78rem; letter-spacing:.5px; padding:7px 16px; border-radius:999px;
+  background:rgba(7,11,24,.7); border:1px solid var(--line); color:var(--muted); white-space:nowrap; max-width:92%;
+  overflow:hidden; text-overflow:ellipsis; z-index:6; backdrop-filter:blur(6px);}
+.target-banner b{color:var(--amber);}
+
+/* peril token */
+.peril{position:absolute; width:172px; padding:10px 12px; border-radius:13px; cursor:pointer; user-select:none;
+  background:linear-gradient(160deg,rgba(255,90,110,.16),rgba(255,194,77,.1)); border:1.5px solid rgba(255,120,140,.5);
+  box-shadow:0 8px 26px -10px rgba(255,90,110,.6); display:flex; gap:10px; align-items:center;
+  transition:box-shadow .15s, border-color .15s; will-change:transform;}
+.peril .pic{font-size:1.5rem; filter:drop-shadow(0 0 6px rgba(255,120,140,.5));}
+.peril .txt{font-size:.82rem; font-weight:600; line-height:1.15;}
+.peril.targeted{border-color:var(--amber); box-shadow:0 0 0 2px var(--amber),0 10px 30px -8px rgba(255,194,77,.7);
+  animation:tpulse 1.1s ease-in-out infinite;}
+@keyframes tpulse{0%,100%{box-shadow:0 0 0 2px var(--amber),0 10px 30px -8px rgba(255,194,77,.6);}50%{box-shadow:0 0 0 4px rgba(255,194,77,.35),0 10px 34px -6px rgba(255,194,77,.85);}}
+.peril.boom{animation:boom .32s ease forwards; pointer-events:none;}
+@keyframes boom{0%{transform:scale(1);opacity:1;}50%{transform:scale(1.25);}100%{transform:scale(.4);opacity:0;}}
+
+/* property zone */
+.property-zone{position:absolute; left:0; right:0; bottom:0; height:74px; z-index:5;
+  display:flex; align-items:center; justify-content:center; gap:14px; font-family:var(--font-m);
+  letter-spacing:2px; font-size:.72rem; color:var(--cyan); text-transform:uppercase;
+  background:linear-gradient(0deg,rgba(46,230,214,.16),transparent);
+  border-top:2px dashed rgba(46,230,214,.4);}
+.property-zone .b{font-size:1.7rem; filter:drop-shadow(0 0 10px rgba(46,230,214,.5));}
+.property-zone.hit{animation:zhit .4s ease;}
+@keyframes zhit{0%,100%{background:linear-gradient(0deg,rgba(46,230,214,.16),transparent);}40%{background:linear-gradient(0deg,rgba(255,90,110,.4),transparent);}}
+
+.float{position:absolute; font-family:var(--font-m); font-weight:700; font-size:1.1rem; pointer-events:none; z-index:8;
+  animation:floatup .8s ease forwards; text-shadow:0 2px 10px rgba(0,0,0,.6);}
+@keyframes floatup{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(-46px);opacity:0;}}
+.spark{position:absolute; width:7px; height:7px; border-radius:50%; pointer-events:none; z-index:7;}
+
+/* log panel */
+.log-panel{flex:1.05; min-width:0; display:flex; flex-direction:column;
+  background:linear-gradient(160deg,var(--panel-2),var(--panel)); border:1px solid var(--line);
+  border-radius:18px; padding:14px; backdrop-filter:blur(10px);}
+.log-panel h3{font-size:.95rem; display:flex; align-items:center; gap:8px; margin-bottom:8px;}
+.log-panel h3 .dot{width:8px;height:8px;border-radius:50%;background:var(--lime);box-shadow:0 0 8px var(--lime);}
+.log{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px; padding-right:4px;}
+.log::-webkit-scrollbar{width:6px;} .log::-webkit-scrollbar-thumb{background:var(--line); border-radius:6px;}
+.log .entry{font-size:.78rem; line-height:1.35; padding:9px 11px; border-radius:11px; border:1px solid var(--line);
+  background:rgba(0,0,0,.22); animation:slidein .3s ease;}
+.log .entry.ok{border-left:3px solid var(--good);}
+.log .entry.miss{border-left:3px solid var(--danger);}
+.log .entry .head{font-family:var(--font-m); font-size:.66rem; letter-spacing:.5px; text-transform:uppercase; margin-bottom:3px;}
+.log .entry.ok .head{color:var(--good);} .log .entry.miss .head{color:var(--danger);}
+.log .empty{color:var(--faint); font-size:.78rem; font-style:italic;}
+@keyframes slidein{from{opacity:0;transform:translateX(10px);}to{opacity:1;transform:translateX(0);}}
+
+/* ---------- TOOLBAR ---------- */
+.toolbar{display:grid; grid-template-columns:repeat(auto-fit,minmax(132px,1fr)); gap:10px;}
+.cov{position:relative; cursor:pointer; text-align:left; color:var(--ink); font-family:var(--font-b);
+  border-radius:14px; padding:11px 12px 12px; border:1.5px solid var(--line); overflow:hidden;
+  background:linear-gradient(160deg,var(--panel-2),var(--panel)); transition:transform .1s, border-color .15s, box-shadow .15s;}
+.cov:hover{transform:translateY(-3px); border-color:var(--c); box-shadow:0 10px 26px -12px var(--c);}
+.cov:active{transform:translateY(0);}
+.cov .key{position:absolute; top:8px; right:9px; font-family:var(--font-m); font-size:.6rem; color:var(--faint);
+  border:1px solid var(--line); border-radius:5px; padding:1px 5px;}
+.cov .ic{font-size:1.45rem; line-height:1;}
+.cov .nm{font-weight:700; font-size:.86rem; margin-top:6px; color:var(--c);}
+.cov .ds{font-size:.66rem; color:var(--muted); line-height:1.25; margin-top:3px;}
+.cov::after{content:""; position:absolute; left:0; top:0; bottom:0; width:4px; background:var(--c);}
+.cov.shake{animation:shake .34s ease;}
+@keyframes shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-5px);}75%{transform:translateX(5px);}}
+.cov.win{animation:winp .34s ease;}
+@keyframes winp{50%{box-shadow:0 0 0 3px var(--c),0 0 30px -4px var(--c);}}
+.cov.locked{opacity:.28; pointer-events:none; filter:grayscale(.6);}
+
+/* ---------- OVERLAYS ---------- */
+.overlay{position:absolute; inset:0; z-index:30; display:grid; place-items:center; padding:24px;
+  background:rgba(5,8,18,.82); backdrop-filter:blur(8px);}
+.overlay[hidden]{display:none !important;}
+.card{width:min(640px,94%); border-radius:22px; padding:34px 34px 30px; text-align:center;
+  background:linear-gradient(160deg,rgba(20,28,56,.95),rgba(9,13,28,.97)); border:1px solid var(--line);
+  box-shadow:0 40px 90px -30px #000, inset 0 1px 0 rgba(255,255,255,.06); position:relative; overflow:hidden;}
+.card::before{content:""; position:absolute; inset:-1px; border-radius:22px; padding:1px;
+  background:linear-gradient(140deg,var(--cyan),transparent 45%,transparent 60%,var(--magenta));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0); -webkit-mask-composite:xor; mask-composite:exclude; pointer-events:none;}
+.card .kicker{font-family:var(--font-m); font-size:.66rem; letter-spacing:3px; text-transform:uppercase; color:var(--cyan);}
+.card h2{font-size:2.5rem; font-weight:800; margin:8px 0 4px; line-height:.95;}
+.card h2 .g{background:linear-gradient(100deg,var(--cyan),var(--magenta)); -webkit-background-clip:text; background-clip:text; color:transparent;}
+.card p{color:var(--muted); font-size:.95rem; line-height:1.5; margin:10px auto 0; max-width:480px;}
+.how{display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:22px 0 6px; text-align:left;}
+.how .step{background:rgba(0,0,0,.28); border:1px solid var(--line); border-radius:13px; padding:13px;}
+.how .step .n{font-family:var(--font-m); color:var(--cyan); font-size:.72rem;}
+.how .step .t{font-weight:600; font-size:.84rem; margin-top:4px;}
+.how .step .d{font-size:.72rem; color:var(--muted); margin-top:3px; line-height:1.3;}
+.btn{font-family:var(--font-d); font-weight:700; font-size:1.05rem; cursor:pointer; color:#06121a; border:none;
+  border-radius:13px; padding:14px 30px; margin-top:22px; transition:transform .12s, box-shadow .12s;
+  background:linear-gradient(100deg,var(--cyan),var(--lime)); box-shadow:0 12px 30px -8px rgba(46,230,214,.6);}
+.btn:hover{transform:translateY(-2px); box-shadow:0 16px 36px -8px rgba(46,230,214,.7);}
+.btn.ghost{background:transparent; color:var(--ink); border:1.5px solid var(--line); box-shadow:none; font-size:.92rem; padding:12px 22px; margin-left:10px;}
+.btn.ghost:hover{border-color:var(--cyan); color:var(--cyan);}
+.final-stats{display:flex; justify-content:center; gap:34px; margin:18px 0 6px;}
+.final-stats .fs label{font-family:var(--font-m); font-size:.6rem; letter-spacing:1.5px; color:var(--faint); text-transform:uppercase; display:block;}
+.final-stats .fs b{font-family:var(--font-m); font-size:1.9rem;}
+
+/* guide */
+.guide-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px; text-align:left; max-height:48vh; overflow-y:auto; padding-right:6px;}
+.guide-grid .gi{background:rgba(0,0,0,.26); border:1px solid var(--line); border-left:4px solid var(--c); border-radius:11px; padding:10px 12px;}
+.guide-grid .gi .gn{font-weight:700; font-size:.84rem; color:var(--c); display:flex; gap:7px; align-items:center;}
+.guide-grid .gi .gd{font-size:.72rem; color:var(--muted); line-height:1.3; margin-top:4px;}
+.guide-grid::-webkit-scrollbar{width:6px;} .guide-grid::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px;}
+
+@media(max-width:860px){
+  body{overflow:auto;}
+  #app{height:auto; min-height:100vh;}
+  .stage{flex-direction:column;}
+  .field{height:52vh; min-height:340px;}
+  .log-panel{max-height:200px;}
+  .stats{gap:14px;}
+  .how,.guide-grid{grid-template-columns:1fr;}
+  .brand h1{font-size:1rem;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="hud">
+    <div class="brand">
+      <div class="badge">🛡️</div>
+      <div>
+        <h1>Peril Defender</h1>
+        <small>P&amp;C Command · LAVA Games</small>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat" id="score"><label>Score</label><b>0</b></div>
+      <div class="stat" id="combo"><label>Combo</label><b>0</b> <span class="combo-x" id="multi">×1</span></div>
+      <div class="stat" id="wave"><label>Wave</label><b>1</b></div>
+      <div class="stat health-wrap">
+        <label>Property Integrity</label>
+        <div class="bar"><div class="fill" id="healthFill"></div></div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="icon-btn" id="guideBtn">📘 Field Guide</button>
+      <button class="icon-btn" id="pauseBtn">⏸ Pause</button>
+      <button class="icon-btn" id="muteBtn">🔊</button>
+    </div>
+  </header>
+
+  <main class="stage">
+    <div class="field-wrap">
+      <div class="field" id="field">
+        <div class="target-banner" id="banner">Awaiting incoming losses…</div>
+        <div class="property-zone" id="propertyZone">
+          <span class="b">🏠</span><span>Insured Property</span><span class="b">🏢</span>
+        </div>
+      </div>
+    </div>
+    <aside class="log-panel">
+      <h3><span class="dot"></span> Adjuster's Log</h3>
+      <div class="log" id="log"><div class="empty">Resolved claims and the reason behind each coverage will appear here.</div></div>
+    </aside>
+  </main>
+
+  <section class="toolbar" id="toolbar"></section>
+
+  <!-- START -->
+  <div class="overlay" id="startOverlay">
+    <div class="card">
+      <div class="kicker">Virtual Assistant Training Sim</div>
+      <h2>PERIL <span class="g">DEFENDER</span></h2>
+      <p>Claims are falling toward the book of business. Read each incoming loss and fire the <b>correct P&amp;C coverage</b> before it reaches the insured property. Match well, build combos, and learn which coverage answers which peril.</p>
+      <div class="how">
+        <div class="step"><div class="n">01</div><div class="t">Read the loss</div><div class="d">The peril closest to the property is highlighted and shown up top.</div></div>
+        <div class="step"><div class="n">02</div><div class="t">Pick coverage</div><div class="d">Click a coverage card (or press its number key) that responds to that loss.</div></div>
+        <div class="step"><div class="n">03</div><div class="t">Defend the book</div><div class="d">Misses let the loss hit your property. Survive escalating waves of personal &amp; commercial perils.</div></div>
+      </div>
+      <button class="btn" id="startBtn">Start Shift ▸</button>
+      <button class="btn ghost" id="guideBtn2">📘 Field Guide</button>
+    </div>
+  </div>
+
+  <!-- GUIDE -->
+  <div class="overlay" id="guideOverlay" hidden>
+    <div class="card">
+      <div class="kicker">Coverage Field Guide</div>
+      <h2 style="font-size:1.9rem;">What answers <span class="g">what</span></h2>
+      <div class="guide-grid" id="guideGrid"></div>
+      <button class="btn" id="guideClose">Got it ▸</button>
+    </div>
+  </div>
+
+  <!-- GAME OVER -->
+  <div class="overlay" id="overOverlay" hidden>
+    <div class="card">
+      <div class="kicker" id="overKicker">Shift Report</div>
+      <h2><span class="g">Claims</span> Closed</h2>
+      <div class="final-stats">
+        <div class="fs"><label>Final Score</label><b id="finalScore" style="color:var(--cyan)">0</b></div>
+        <div class="fs"><label>Best Combo</label><b id="finalCombo" style="color:var(--lime)">0</b></div>
+        <div class="fs"><label>High Score</label><b id="finalHigh" style="color:var(--amber)">0</b></div>
+      </div>
+      <p id="overMsg"></p>
+      <button class="btn" id="restartBtn">Run It Back ▸</button>
+      <button class="btn ghost" id="guideBtn3">📘 Field Guide</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   PERIL DEFENDER — P&C coverage-matching arcade
+   Pure DOM/CSS/JS. No external assets. High score kept in-session.
+   ============================================================ */
+
+// ---- Coverage definitions (the player's tools) ----
+const COVERAGES = {
+  property:{ nm:'Property / Dwelling', ic:'🏠', c:'#2ee6d6', tier:1,
+    ds:'Physical loss to buildings & contents from covered perils.',
+    guide:'Direct physical loss to structures and contents — fire, wind, hail, lightning, smoke, vandalism, falling objects.'},
+  liability:{ nm:'Liability', ic:'⚖️', c:'#9b8cff', tier:1,
+    ds:'Injury or damage you cause to others.',
+    guide:'Bodily injury or property damage to others — slip-and-fall, dog bites, products, and personal/advertising injury (libel, slander).'},
+  auto:{ nm:'Auto', ic:'🚗', c:'#ffc24d', tier:1,
+    ds:'Collision + comprehensive on vehicles.',
+    guide:'Vehicles: collision damage, plus comprehensive (theft, glass, hail, animal strikes).'},
+  flood:{ nm:'Flood (NFIP)', ic:'🌊', c:'#4d9bff', tier:2,
+    ds:'Rising water — excluded by property forms.',
+    guide:'Flooding and storm surge. Specifically EXCLUDED from standard property policies — needs separate NFIP / flood coverage.'},
+  quake:{ nm:'Earthquake', ic:'🌋', c:'#ff8a4d', tier:2,
+    ds:'Earth movement — also excluded.',
+    guide:'Earthquake / earth movement. Another standard property EXCLUSION requiring its own coverage.'},
+  bi:{ nm:'Business Interruption', ic:'🏪', c:'#36e07f', tier:3,
+    ds:'Lost income after a covered shutdown.',
+    guide:'Lost net income and extra expense while a business is suspended after a covered physical loss.'},
+  wc:{ nm:"Workers' Comp", ic:'👷', c:'#ff4d9d', tier:3,
+    ds:'Employee injured on the job.',
+    guide:'Medical costs and lost wages for employees injured in the course of employment. No-fault, statutory.'},
+  cyber:{ nm:'Cyber Liability', ic:'🔐', c:'#b6ff5a', tier:3,
+    ds:'Breaches, ransomware, data loss.',
+    guide:'Data breaches, ransomware, network liability, notification and recovery costs.'},
+};
+const COV_ORDER = ['property','liability','auto','flood','quake','bi','wc','cyber'];
+
+// ---- Perils (the falling losses). Each maps to exactly one correct coverage ----
+const PERILS = [
+  {t:'Kitchen grease fire',           ic:'🔥', cov:'property', fact:'Fire is a core named peril under Property/Dwelling coverage.'},
+  {t:'Hailstorm dents the roof',      ic:'🌨️', cov:'property', fact:'Hail damage to the structure is paid under Property coverage.'},
+  {t:'Lightning fries the wiring',    ic:'⚡', cov:'property', fact:'Lightning is a covered peril on standard property forms.'},
+  {t:'Vandals smash the windows',     ic:'🧱', cov:'property', fact:'Vandalism & malicious mischief is covered under Property.'},
+  {t:'Windstorm strips the shingles', ic:'🌬️', cov:'property', fact:'Windstorm damage to the building falls under Property.'},
+  {t:'Smoke damages the inventory',   ic:'💨', cov:'property', fact:'Smoke is a named peril covered by Property coverage.'},
+  {t:'Customer slips on a wet floor', ic:'🧽', cov:'liability', fact:'Premises slip-and-fall injuries are a Liability claim.'},
+  {t:'Dog bites the mail carrier',    ic:'🐕', cov:'liability', fact:'Dog-bite injuries are paid under personal Liability.'},
+  {t:'Defamation lawsuit filed',      ic:'📣', cov:'liability', fact:'Libel/slander is "personal & advertising injury" under Liability.'},
+  {t:'Faulty product injures a buyer',ic:'📦', cov:'liability', fact:'Products liability is part of general Liability.'},
+  {t:'Car stolen from the lot',       ic:'🚙', cov:'auto', fact:'Theft of a vehicle is paid under Auto comprehensive.'},
+  {t:'Rear-ended at a stoplight',     ic:'💥', cov:'auto', fact:'Collision damage to the insured vehicle is Auto collision.'},
+  {t:'Deer darts across the highway', ic:'🦌', cov:'auto', fact:'Animal strikes fall under Auto comprehensive, not collision.'},
+  {t:'Cracked windshield on the van', ic:'🪟', cov:'auto', fact:'Glass breakage is an Auto comprehensive claim.'},
+  {t:'Flash flood swamps the floor',  ic:'🌊', cov:'flood', fact:'Flooding is EXCLUDED from property — it needs NFIP/Flood.'},
+  {t:'Storm surge enters the lobby',  ic:'🌀', cov:'flood', fact:'Storm surge is "flood" and requires separate Flood coverage.'},
+  {t:'River overtops its banks',      ic:'💧', cov:'flood', fact:'Rising water is flood, not a property peril.'},
+  {t:'Quake cracks the foundation',   ic:'🌋', cov:'quake', fact:'Earth movement is excluded — Earthquake coverage is separate.'},
+  {t:'Tremor topples the shelving',   ic:'📚', cov:'quake', fact:'Seismic damage needs dedicated Earthquake coverage.'},
+  {t:'Shop shut for repairs',         ic:'🏪', cov:'bi', fact:'Lost income during restoration is Business Interruption.'},
+  {t:'Power outage halts production', ic:'🔌', cov:'bi', fact:'Income lost during a covered suspension is Business Interruption.'},
+  {t:'Worker falls off a ladder',     ic:'🪜', cov:'wc', fact:'On-the-job injuries are handled by Workers\u2019 Compensation.'},
+  {t:'Warehouse back strain',         ic:'🤕', cov:'wc', fact:'Employee injuries at work fall under Workers\u2019 Comp.'},
+  {t:'Ransomware locks client data',  ic:'🔐', cov:'cyber', fact:'Ransomware response is covered by Cyber Liability.'},
+  {t:'Phishing breach leaks records', ic:'🎣', cov:'cyber', fact:'Data breaches are covered by Cyber Liability.'},
+];
+
+// ---- State ----
+const S = {
+  score:0, combo:0, bestCombo:0, multi:1, wave:1, health:100, tier:1,
+  running:false, paused:false, audio:true,
+  perils:[], manualTarget:null, spawnAcc:0, last:0, raf:null, idc:0,
+  fieldH:0, fieldW:0, propTop:0, highScore:0
+};
+const TOKEN_H = 60, TOKEN_W = 172, PER_WAVE = 7;
+
+// ---- DOM ----
+const field = document.getElementById('field');
+const banner = document.getElementById('banner');
+const propertyZone = document.getElementById('propertyZone');
+const toolbar = document.getElementById('toolbar');
+const logEl = document.getElementById('log');
+const healthFill = document.getElementById('healthFill');
+const $ = id => document.getElementById(id);
+
+// ---- Audio (tiny synth, no files) ----
+let actx=null;
+function ensureAudio(){ if(!actx){ try{ actx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } }
+function beep(freq, dur=.08, type='sine', vol=.05){
+  if(!S.audio || !actx) return;
+  const o=actx.createOscillator(), g=actx.createGain();
+  o.type=type; o.frequency.value=freq; g.gain.value=vol;
+  o.connect(g); g.connect(actx.destination); o.start();
+  g.gain.exponentialRampToValueAtTime(.0001, actx.currentTime+dur); o.stop(actx.currentTime+dur);
+}
+const sGood   =()=>{ beep(620,.07,'triangle',.06); setTimeout(()=>beep(880,.1,'triangle',.06),70); };
+const sWrong  =()=>{ beep(150,.16,'sawtooth',.05); };
+const sImpact =()=>{ beep(220,.18,'square',.06); setTimeout(()=>beep(120,.22,'square',.06),90); };
+const sUnlock =()=>{ [523,659,784].forEach((f,i)=>setTimeout(()=>beep(f,.12,'triangle',.05),i*90)); };
+
+// ---- Build toolbar + guide ----
+function tierForWave(w){ return w<=2?1 : w<=4?2 : 3; }
+function buildToolbar(){
+  toolbar.innerHTML='';
+  COV_ORDER.forEach((key,i)=>{
+    const c=COVERAGES[key];
+    const el=document.createElement('button');
+    el.className='cov'+(c.tier>S.tier?' locked':'');
+    el.style.setProperty('--c', c.c);
+    el.dataset.key=key;
+    el.innerHTML=`<span class="key">${i+1}</span><span class="ic">${c.ic}</span>
+      <div class="nm">${c.nm}</div><div class="ds">${c.ds}</div>`;
+    el.addEventListener('click', ()=>fireCoverage(key, el));
+    toolbar.appendChild(el);
+  });
+}
+function refreshLocks(){
+  [...toolbar.children].forEach(el=>{
+    const locked = COVERAGES[el.dataset.key].tier > S.tier;
+    el.classList.toggle('locked', locked);
+  });
+}
+(function buildGuide(){
+  const g=$('guideGrid'); g.innerHTML='';
+  COV_ORDER.forEach(key=>{
+    const c=COVERAGES[key];
+    const d=document.createElement('div');
+    d.className='gi'; d.style.setProperty('--c',c.c);
+    d.innerHTML=`<div class="gn">${c.ic} ${c.nm}</div><div class="gd">${c.guide}</div>`;
+    g.appendChild(d);
+  });
+})();
+
+// ---- Field metrics ----
+function measure(){
+  const h = field.clientHeight, w = field.clientWidth;
+  // Fall back to sane defaults if layout hasn't resolved (e.g. inside an iframe).
+  S.fieldH = h > 40 ? h : Math.max(340, Math.round(window.innerHeight * 0.5));
+  S.fieldW = w > 40 ? w : Math.max(320, Math.round(window.innerWidth * 0.6));
+  const pz = propertyZone.offsetHeight || 74;
+  // Never let the impact line sit above where perils spawn.
+  S.propTop = Math.max(200, S.fieldH - pz);
+}
+window.addEventListener('resize', measure);
+// Keep metrics correct the instant the field gets (or changes) a real size.
+if('ResizeObserver' in window){ try{ new ResizeObserver(measure).observe(field); }catch(e){} }
+
+// ---- Spawning ----
+function spawnPool(){ return PERILS.filter(p => COVERAGES[p.cov].tier <= S.tier); }
+function spawnPeril(){
+  if(S.perils.length>=6) return;
+  const pool=spawnPool();
+  const def=pool[Math.floor(Math.random()*pool.length)];
+  const el=document.createElement('div');
+  el.className='peril';
+  el.innerHTML=`<span class="pic">${def.ic}</span><span class="txt">${def.t}</span>`;
+  const x=Math.max(8, Math.min(S.fieldW-TOKEN_W-8, Math.random()*(S.fieldW-TOKEN_W-16)+8));
+  el.style.left=x+'px'; el.style.top='0px';
+  const id=++S.idc;
+  el.addEventListener('click', ()=>{ S.manualTarget=id; });
+  field.appendChild(el);
+  S.perils.push({ id, el, def, x, y:-70, speed: 34 + S.wave*7 + Math.random()*10 });
+}
+
+// ---- Targeting ----
+function activeTarget(){
+  if(!S.perils.length) return null;
+  if(S.manualTarget){
+    const m=S.perils.find(p=>p.id===S.manualTarget);
+    if(m) return m;
+    S.manualTarget=null;
+  }
+  return S.perils.reduce((a,b)=> b.y>a.y ? b : a);
+}
+function paintTarget(){
+  const t=activeTarget();
+  S.perils.forEach(p=> p.el.classList.toggle('targeted', t && p.id===t.id));
+  if(t){ banner.innerHTML=`⚠ Incoming loss: <b>${t.def.t}</b> — choose the coverage`; }
+  else { banner.textContent='Awaiting incoming losses…'; }
+}
+
+// ---- Fire a coverage at the active target ----
+function fireCoverage(key, el){
+  if(!S.running || S.paused) return;
+  const t=activeTarget();
+  if(!t){ return; }
+  if(t.def.cov===key){
+    // correct
+    S.combo++; S.bestCombo=Math.max(S.bestCombo,S.combo);
+    S.multi=Math.min(5, 1+Math.floor(S.combo/4));
+    const gain=100*S.multi; S.score+=gain;
+    sGood(); el && el.classList.add('win'); setTimeout(()=>el&&el.classList.remove('win'),340);
+    floatText(t, '+'+gain, COVERAGES[key].c);
+    burst(t, COVERAGES[key].c);
+    removePeril(t,true);
+    addLog('ok', COVERAGES[key].nm, t.def.fact);
+    S.manualTarget=null;
+    bumpWave();
+    updateHUD();
+  } else {
+    // wrong
+    S.combo=0; S.multi=1;
+    sWrong();
+    el && el.classList.add('shake'); setTimeout(()=>el&&el.classList.remove('shake'),340);
+    field.classList.add('flash-bad'); setTimeout(()=>field.classList.remove('flash-bad'),350);
+    updateHUD();
+  }
+}
+
+function removePeril(p, boom){
+  if(boom){
+    p.el.style.top=p.y+'px'; p.el.style.transform='none';
+    p.el.classList.add('boom'); setTimeout(()=>p.el.remove(),320);
+  }
+  else p.el.remove();
+  S.perils = S.perils.filter(x=>x.id!==p.id);
+}
+
+// ---- Impact (loss reaches property) ----
+function impact(p){
+  const dmg = 9 + S.wave*1.5;
+  S.health=Math.max(0, S.health-dmg);
+  S.combo=0; S.multi=1;
+  sImpact();
+  propertyZone.classList.add('hit'); setTimeout(()=>propertyZone.classList.remove('hit'),400);
+  addLog('miss', 'Missed → '+COVERAGES[p.def.cov].nm, p.def.fact);
+  removePeril(p,false);
+  updateHUD();
+  if(S.health<=0) gameOver();
+}
+
+// ---- Waves ----
+function bumpWave(){
+  // advance a wave every PER_WAVE neutralized losses (tracked via score milestones)
+  const neutralized = Math.round(S.score / 100); // rough; combos inflate but fine for pacing
+  const targetWave = 1 + Math.floor(neutralized / PER_WAVE);
+  if(targetWave>S.wave){
+    S.wave=targetWave;
+    const newTier=tierForWave(S.wave);
+    if(newTier>S.tier){ S.tier=newTier; refreshLocks(); sUnlock(); flashBanner('🎓 New coverages unlocked — Tier '+S.tier+'!'); }
+    else { flashBanner('🌊 Wave '+S.wave+' — losses incoming faster!'); }
+  }
+}
+let bannerTimer=null;
+function flashBanner(msg){
+  banner.innerHTML='<b>'+msg+'</b>';
+  clearTimeout(bannerTimer);
+  bannerTimer=setTimeout(paintTarget, 1600);
+}
+
+// ---- FX ----
+function floatText(p, txt, color){
+  const f=document.createElement('div'); f.className='float'; f.textContent=txt; f.style.color=color;
+  f.style.left=(p.x+10)+'px'; f.style.top=(p.y)+'px';
+  field.appendChild(f); setTimeout(()=>f.remove(),800);
+}
+function burst(p, color){
+  const cx=p.x+TOKEN_W/2, cy=p.y+TOKEN_H/2;
+  for(let i=0;i<10;i++){
+    const s=document.createElement('div'); s.className='spark'; s.style.background=color;
+    s.style.left=cx+'px'; s.style.top=cy+'px';
+    field.appendChild(s);
+    const ang=Math.random()*Math.PI*2, dist=30+Math.random()*46;
+    requestAnimationFrame(()=>{
+      s.style.transition='transform .55s ease, opacity .55s ease';
+      s.style.transform=`translate(${Math.cos(ang)*dist}px,${Math.sin(ang)*dist}px) scale(0)`;
+      s.style.opacity='0';
+    });
+    setTimeout(()=>s.remove(),600);
+  }
+}
+
+// ---- Log ----
+function addLog(kind, title, body){
+  const empty=logEl.querySelector('.empty'); if(empty) empty.remove();
+  const e=document.createElement('div'); e.className='entry '+kind;
+  e.innerHTML=`<div class="head">${kind==='ok'?'✓ Covered · '+title:'✕ '+title}</div>${body}`;
+  logEl.prepend(e);
+  while(logEl.children.length>14) logEl.lastChild.remove();
+}
+
+// ---- HUD ----
+function updateHUD(){
+  $('score').querySelector('b').textContent=S.score;
+  $('combo').querySelector('b').textContent=S.combo;
+  $('multi').textContent='×'+S.multi;
+  $('wave').querySelector('b').textContent=S.wave;
+  healthFill.style.width=S.health+'%';
+  healthFill.style.background = S.health>50
+    ? 'linear-gradient(90deg,var(--good),var(--lime))'
+    : S.health>22 ? 'linear-gradient(90deg,var(--amber),#ff8a4d)'
+    : 'linear-gradient(90deg,var(--danger),#ff2d55)';
+}
+
+// ---- Loop ----
+function loop(ts){
+  if(!S.running){ return; }
+  if(S.paused){ S.last=ts; S.raf=requestAnimationFrame(loop); return; }
+  const dt=Math.min(.05,(ts-S.last)/1000)||0; S.last=ts;
+
+  S.spawnAcc+=dt*1000;
+  const interval=Math.max(640, 1750 - S.wave*120);
+  if(S.spawnAcc>=interval){ S.spawnAcc=0; spawnPeril(); }
+
+  for(let i=S.perils.length-1;i>=0;i--){
+    const p=S.perils[i];
+    p.y += p.speed*dt;
+    p.el.style.transform='translateY('+p.y+'px)';
+    if(p.y>10 && p.y+TOKEN_H>=S.propTop){ impact(p); }
+  }
+  paintTarget();
+  S.raf=requestAnimationFrame(loop);
+}
+
+// ---- Game control ----
+function startGame(){
+  ensureAudio();
+  Object.assign(S,{score:0,combo:0,bestCombo:0,multi:1,wave:1,health:100,tier:1,
+    running:true,paused:false,perils:[],manualTarget:null,spawnAcc:0,last:performance.now(),idc:0});
+  [...field.querySelectorAll('.peril,.float,.spark')].forEach(n=>n.remove());
+  logEl.innerHTML='<div class="empty">Resolved claims and the reason behind each coverage will appear here.</div>';
+  refreshLocks(); updateHUD();
+  $('startOverlay').hidden=true; $('overOverlay').hidden=true; $('guideOverlay').hidden=true;
+  $('pauseBtn').textContent='⏸ Pause';
+  measure();                       // fresh metrics now that overlays are hidden
+  setTimeout(measure, 80);         // and again once layout has fully settled
+  S.last=performance.now();
+  cancelAnimationFrame(S.raf); S.raf=requestAnimationFrame(loop);
+}
+function gameOver(){
+  S.running=false; cancelAnimationFrame(S.raf);
+  S.highScore=Math.max(S.highScore,S.score);
+  saveHighScore(S.score); // hook for Supabase / LAVA dashboard integration
+  $('finalScore').textContent=S.score;
+  $('finalCombo').textContent='×'+S.bestCombo;
+  $('finalHigh').textContent=S.highScore;
+  const acc = S.score>=2400?'Senior Underwriter — you know your coverage cold.'
+            : S.score>=1200?'Sharp work. A few exclusions slipped past, but solid instincts.'
+            : 'Good start — review the Field Guide and run it back to sharpen your eye.';
+  $('overMsg').textContent=acc;
+  $('overOverlay').hidden=false;
+}
+function togglePause(){
+  if(!S.running) return;
+  S.paused=!S.paused;
+  $('pauseBtn').textContent=S.paused?'▶ Resume':'⏸ Pause';
+  if(S.paused) flashBanner('⏸ Paused');
+}
+
+/* Hook: wire this to your Supabase va_data.games_data like the other LAVA games.
+   Left as a no-op so the file is fully standalone. */
+function saveHighScore(score){ /* e.g. supabase upsert games_data.perilDefender.highScore */ }
+
+// ---- Events ----
+$('startBtn').addEventListener('click', startGame);
+$('restartBtn').addEventListener('click', startGame);
+$('pauseBtn').addEventListener('click', togglePause);
+$('muteBtn').addEventListener('click', ()=>{ S.audio=!S.audio; $('muteBtn').textContent=S.audio?'🔊':'🔇'; });
+function openGuide(){ $('guideOverlay').hidden=false; }
+function closeGuide(){ $('guideOverlay').hidden=true; }
+$('guideBtn').addEventListener('click', openGuide);
+$('guideBtn2').addEventListener('click', openGuide);
+$('guideBtn3').addEventListener('click', openGuide);
+$('guideClose').addEventListener('click', closeGuide);
+
+document.addEventListener('keydown', e=>{
+  if(e.key>='1' && e.key<='8'){
+    const idx=+e.key-1, el=toolbar.children[idx];
+    if(el && !el.classList.contains('locked')) fireCoverage(el.dataset.key, el);
+  } else if(e.key===' '){ e.preventDefault(); togglePause(); }
+  else if(e.key.toLowerCase()==='m'){ S.audio=!S.audio; $('muteBtn').textContent=S.audio?'🔊':'🔇'; }
+});
+
+// ---- Init ----
+buildToolbar();
+measure();
+window.addEventListener('load', measure);
+</script>
+</body>
+</html>
