@@ -597,7 +597,7 @@
         .lava-tab:hover { color: var(--text); }
         .lava-tab.active { background: rgba(255, 255, 255, 0.04); border-color: var(--line); }
         .lava-tab.team.active { color: var(--ember-2); }
-        .lava-tab.ai.active { color: var(--teal); }
+        .lava-tab.compose.active { color: var(--teal); }
 
         .lava-pane { display: none; flex: 1; min-height: 0; flex-direction: column; }
         .lava-pane.active { display: flex; }
@@ -631,33 +631,34 @@
         .lava-contact:hover .mail-ic { color: var(--ember-2); }
         .lava-empty { color: var(--faint); font-size: 0.85rem; text-align: center; padding: 24px; }
 
-        /* AI assistant */
-        .lava-ai-msgs { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
-        .lava-msg { max-width: 86%; padding: 11px 14px; border-radius: 14px; font-size: 0.88rem; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
-        .lava-msg.user { align-self: flex-end; background: linear-gradient(135deg, var(--ember), var(--ember-2)); color: #fff; border-bottom-right-radius: 4px; }
-        .lava-msg.bot { align-self: flex-start; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--line); color: var(--text); border-bottom-left-radius: 4px; }
-        .lava-msg.note { align-self: stretch; max-width: 100%; background: rgba(45, 212, 191, 0.08); border: 1px solid rgba(45, 212, 191, 0.25); color: var(--text); font-size: 0.82rem; }
-        .lava-typing { align-self: flex-start; display: flex; gap: 5px; padding: 12px 14px; }
-        .lava-typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: lava-bounce 1.2s infinite; }
-        .lava-typing span:nth-child(2) { animation-delay: 0.15s; }
-        .lava-typing span:nth-child(3) { animation-delay: 0.3s; }
-        @keyframes lava-bounce { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-5px); opacity: 1; } }
-
-        .lava-ai-input { display: flex; gap: 8px; padding: 12px; border-top: 1px solid var(--line); }
-        .lava-ai-input textarea {
-            flex: 1; resize: none; max-height: 90px; padding: 11px 14px; border-radius: 12px;
-            background: rgba(0, 0, 0, 0.35); border: 1px solid var(--line-2); color: var(--text);
-            font-family: var(--font-body); font-size: 0.88rem; outline: none; line-height: 1.4;
+        /* Compose message / email */
+        .lava-compose { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+        .lava-field { display: flex; flex-direction: column; gap: 6px; }
+        .lava-field label {
+            font-family: var(--font-mono); font-size: 0.66rem; font-weight: 700;
+            letter-spacing: 1px; text-transform: uppercase; color: var(--muted);
         }
-        .lava-ai-input textarea::placeholder { color: var(--faint); }
-        .lava-ai-input textarea:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.12); }
-        .lava-send {
-            width: 44px; flex-shrink: 0; border: none; border-radius: 12px; cursor: pointer; color: #fff;
-            background: linear-gradient(135deg, var(--teal), var(--indigo)); font-size: 1.05rem;
-            transition: 0.18s;
+        .lava-input, .lava-select, .lava-textarea {
+            width: 100%; padding: 11px 14px; border-radius: 11px;
+            background: rgba(0, 0, 0, 0.35); border: 1px solid var(--line-2);
+            color: var(--text); font-family: var(--font-body); font-size: 0.88rem; outline: none;
+            box-sizing: border-box;
         }
-        .lava-send:hover { filter: brightness(1.1); }
-        .lava-send:disabled { opacity: 0.5; cursor: not-allowed; }
+        .lava-input::placeholder, .lava-textarea::placeholder { color: var(--faint); }
+        .lava-textarea { resize: vertical; min-height: 120px; line-height: 1.5; }
+        .lava-input:focus, .lava-select:focus, .lava-textarea:focus {
+            border-color: var(--ember); box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.12);
+        }
+        .lava-select option { background: var(--obsidian); color: var(--text); }
+        .lava-send-mail {
+            margin-top: 2px; width: 100%; padding: 13px; border: none; border-radius: 12px; cursor: pointer;
+            font-family: var(--font-body); font-weight: 600; font-size: 0.9rem; color: #fff;
+            background: linear-gradient(135deg, var(--ember), var(--ember-2));
+            box-shadow: 0 10px 24px -8px rgba(255, 90, 31, 0.55); transition: 0.18s;
+        }
+        .lava-send-mail:hover { transform: translateY(-2px); filter: brightness(1.06); }
+        .lava-hint { font-size: 0.74rem; color: var(--faint); text-align: center; }
+        .lava-warn { font-size: 0.78rem; color: var(--danger); font-weight: 600; }
 
         @media (max-width: 480px) {
             #lava-chat-panel { right: 14px; left: 14px; width: auto; bottom: 94px; }
@@ -815,14 +816,14 @@
         <span class="lava-dot"></span>
         <div>
             <h4>LAVA Connect</h4>
-            <div class="lava-sub">Team &amp; AI Assistant</div>
+            <div class="lava-sub">Team &amp; Messages</div>
         </div>
         <button class="lava-chat-close" onclick="lavaToggleChat()" aria-label="Close chat">✕</button>
     </div>
 
     <div class="lava-tabs">
         <div class="lava-tab team active" onclick="lavaSwitchTab('team')">👥 Team</div>
-        <div class="lava-tab ai" onclick="lavaSwitchTab('ai')">🤖 Assistant</div>
+        <div class="lava-tab compose" onclick="lavaSwitchTab('compose')">✉️ Compose</div>
     </div>
 
     <!-- Contacts pane -->
@@ -831,12 +832,28 @@
         <div class="lava-contact-list" id="lava-contact-list"></div>
     </div>
 
-    <!-- AI assistant pane -->
-    <div class="lava-pane" id="lava-pane-ai">
-        <div class="lava-ai-msgs" id="lava-ai-msgs"></div>
-        <div class="lava-ai-input">
-            <textarea id="lava-ai-text" rows="1" placeholder="Ask the assistant..." onkeydown="lavaAiKey(event)" oninput="lavaAutoGrow(this)"></textarea>
-            <button class="lava-send" id="lava-send-btn" onclick="lavaSendAi()" aria-label="Send">➤</button>
+    <!-- Compose message / email pane -->
+    <div class="lava-pane" id="lava-pane-compose">
+        <div class="lava-compose">
+            <div class="lava-field">
+                <label>To</label>
+                <select class="lava-select" id="lava-to-select" onchange="lavaToChange()">
+                    <option value="">Select a colleague…</option>
+                    <option value="__other__">✏️ Type another email…</option>
+                </select>
+                <input class="lava-input" id="lava-to-other" type="email" placeholder="name@example.com" style="display:none; margin-top:6px;">
+            </div>
+            <div class="lava-field">
+                <label>Subject</label>
+                <input class="lava-input" id="lava-subject" type="text" placeholder="What's this about?">
+            </div>
+            <div class="lava-field">
+                <label>Message</label>
+                <textarea class="lava-textarea" id="lava-body" placeholder="Type your message…"></textarea>
+            </div>
+            <div class="lava-warn" id="lava-compose-warn" style="display:none;"></div>
+            <button class="lava-send-mail" onclick="lavaSendMail()">✉ Send Email</button>
+            <div class="lava-hint">Opens your email app with everything filled in, ready to send.</div>
         </div>
     </div>
 </div>
@@ -1062,17 +1079,11 @@ const LAVA_CONTACTS = [
     { name: "IT Support",     role: "Tech Helpdesk",       email: "support@lava-automation.com" }
 ];
 
-/* ---- 2. AI BACKEND -----------------------------------------------------
-   The Assistant needs a small server-side proxy so your AI key stays secret.
-   Deploy the Supabase Edge Function (code provided separately), then paste
-   its URL below. Leave it blank ("") and the Assistant tab still works as a
-   UI — it just shows a "not connected yet" note instead of live answers.
-   Example: "https://esjxzcmfxtestkettdyp.supabase.co/functions/v1/ai-chat" */
-const AI_PROXY_URL = "";
+/* ---- 2. COMPOSE TAB ----------------------------------------------------
+   The Compose tab opens the VA's own email app (via mailto) with the
+   recipient, subject and message pre-filled. No backend or API key needed. */
 
 let lavaChatOpen = false;
-let lavaAiHistory = [];
-let lavaAiBusy = false;
 
 function lavaToggleChat() {
     lavaChatOpen = !lavaChatOpen;
@@ -1080,7 +1091,7 @@ function lavaToggleChat() {
     document.getElementById('lava-chat-fab').classList.toggle('open', lavaChatOpen);
     if (lavaChatOpen) {
         lavaRenderContacts();
-        if (lavaAiHistory.length === 0) lavaSeedAi();
+        lavaPopulateRecipients();
     }
 }
 
@@ -1088,7 +1099,7 @@ function lavaSwitchTab(tab) {
     document.querySelectorAll('.lava-tab').forEach(t => t.classList.remove('active'));
     document.querySelector('.lava-tab.' + tab).classList.add('active');
     document.getElementById('lava-pane-team').classList.toggle('active', tab === 'team');
-    document.getElementById('lava-pane-ai').classList.toggle('active', tab === 'ai');
+    document.getElementById('lava-pane-compose').classList.toggle('active', tab === 'compose');
 }
 
 function lavaEscape(str) {
@@ -1115,67 +1126,53 @@ function lavaRenderContacts() {
         </a>`).join('');
 }
 
-function lavaSeedAi() {
-    if (AI_PROXY_URL) {
-        lavaAddMsg('bot', "Hi! I'm your LAVA assistant. Ask me anything about insurance, underwriting, or your workflow.");
-    } else {
-        lavaAddMsg('note', "⚙️ The AI Assistant isn't connected yet. Deploy the Supabase Edge Function and paste its URL into AI_PROXY_URL in the code to enable live answers.");
-    }
+/* ---- Compose tab: build recipient list + send via email ---- */
+function lavaPopulateRecipients() {
+    const sel = document.getElementById('lava-to-select');
+    if (!sel || sel.dataset.filled === '1') return;
+    const otherOpt = sel.querySelector('option[value="__other__"]');
+    LAVA_CONTACTS.forEach(c => {
+        const o = document.createElement('option');
+        o.value = c.email;
+        o.textContent = c.name + ' — ' + c.role;
+        sel.insertBefore(o, otherOpt);
+    });
+    sel.dataset.filled = '1';
 }
 
-function lavaAddMsg(type, text) {
-    const msgs = document.getElementById('lava-ai-msgs');
-    const div = document.createElement('div');
-    div.className = 'lava-msg ' + type;
-    div.textContent = text;
-    msgs.appendChild(div);
-    msgs.scrollTop = msgs.scrollHeight;
-    return div;
+function lavaToChange() {
+    const sel = document.getElementById('lava-to-select');
+    const other = document.getElementById('lava-to-other');
+    const isOther = sel.value === '__other__';
+    other.style.display = isOther ? 'block' : 'none';
+    if (isOther) other.focus();
 }
 
-function lavaAutoGrow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 90) + 'px'; }
-function lavaAiKey(e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); lavaSendAi(); } }
+function lavaSendMail() {
+    const sel = document.getElementById('lava-to-select');
+    const warn = document.getElementById('lava-compose-warn');
+    let to = sel.value === '__other__'
+        ? document.getElementById('lava-to-other').value.trim()
+        : sel.value;
+    const subject = document.getElementById('lava-subject').value.trim();
+    const body = document.getElementById('lava-body').value.trim();
 
-async function lavaSendAi() {
-    const input = document.getElementById('lava-ai-text');
-    const text = input.value.trim();
-    if (!text || lavaAiBusy) return;
-
-    lavaAddMsg('user', text);
-    lavaAiHistory.push({ role: 'user', content: text });
-    input.value = ''; lavaAutoGrow(input);
-
-    if (!AI_PROXY_URL) {
-        lavaAddMsg('note', "⚙️ No AI backend configured yet, so I can't answer live. Set AI_PROXY_URL in the code to enable this.");
+    if (!to) {
+        warn.style.display = 'block';
+        warn.textContent = 'Please choose a colleague or type an email address.';
         return;
     }
-
-    lavaAiBusy = true;
-    document.getElementById('lava-send-btn').disabled = true;
-    const msgs = document.getElementById('lava-ai-msgs');
-    const typing = document.createElement('div');
-    typing.className = 'lava-typing';
-    typing.innerHTML = '<span></span><span></span><span></span>';
-    msgs.appendChild(typing); msgs.scrollTop = msgs.scrollHeight;
-
-    try {
-        const res = await fetch(AI_PROXY_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ messages: lavaAiHistory })
-        });
-        const result = await res.json();
-        typing.remove();
-        const reply = result.reply || result.error || "Sorry, I couldn't get a response.";
-        lavaAddMsg('bot', reply);
-        lavaAiHistory.push({ role: 'assistant', content: reply });
-    } catch (err) {
-        typing.remove();
-        lavaAddMsg('bot', "⚠️ Connection error. Please try again later.");
-    } finally {
-        lavaAiBusy = false;
-        document.getElementById('lava-send-btn').disabled = false;
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) {
+        warn.style.display = 'block';
+        warn.textContent = "That email address doesn't look right.";
+        return;
     }
+    warn.style.display = 'none';
+
+    const url = 'mailto:' + to +
+        '?subject=' + encodeURIComponent(subject) +
+        '&body=' + encodeURIComponent(body);
+    window.location.href = url;
 }
 
 /* ---- Show the floating chat ONLY when a VA is logged in ----------------
@@ -1190,9 +1187,13 @@ async function lavaSendAi() {
             if (panel) panel.classList.remove('open');
         }
     }
-    if (window._supabase && _supabase.auth) {
-        _supabase.auth.getSession().then(({ data: { session } }) => setVisible(!!session));
-        _supabase.auth.onAuthStateChange((event, session) => setVisible(!!session));
+    try {
+        if (typeof _supabase !== 'undefined' && _supabase.auth) {
+            _supabase.auth.getSession().then(({ data: { session } }) => setVisible(!!session));
+            _supabase.auth.onAuthStateChange((event, session) => setVisible(!!session));
+        }
+    } catch (e) {
+        console.error('LAVA chat widget init error:', e);
     }
 })();
 </script>
