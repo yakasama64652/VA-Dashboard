@@ -710,7 +710,7 @@
         .lava-input:focus, .lava-select:focus, .lava-textarea:focus {
             border-color: var(--ember); box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.12);
         }
-        .lava-select option { background: var(--obsidian); color: var(--text); }
+        .lava-select option { background: var(--obsidian); color: var(--text); color: var(--text); }
         .lava-send-mail {
             margin-top: 2px; width: 100%; padding: 13px; border: none; border-radius: 12px; cursor: pointer;
             font-family: var(--font-body); font-weight: 600; font-size: 0.9rem; color: #fff;
@@ -1291,7 +1291,7 @@
 
 <script>
 /* ============================================================
-    FLOATING CHAT WIDGET LOGIC  (FIXED DEEP LINK PROTOCOL)
+    FLOATING CHAT WIDGET LOGIC  (UPDATED HANDOFF REDIRECTION WITH AUTO-CLOSE)
    ============================================================ */
 const LAVA_CONTACTS = [
     { name: "Martin Salcedo", role: "Virtual Assistant", email: "martin.salcedo@lava-automation.com", slackLink: "https://lavaautomation.slack.com/team/U091CLBJFDX" },
@@ -1324,6 +1324,16 @@ function lavaEscape(str) {
     return String(str).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s]));
 }
 
+// Intercepts the click action, fires up a tab context, hands the payload route to Slack, and closes the tab clean
+function lavaOpenSlackAndCloseTab(url) {
+    const temporaryTab = window.open(url, '_blank');
+    if (temporaryTab) {
+        setTimeout(() => {
+            temporaryTab.close();
+        }, 800); // 800ms gives the operating system ample time to intercept the custom protocol handoff
+    }
+}
+
 function lavaRenderContacts() {
     const q = (document.getElementById('lava-contact-search').value || '').toLowerCase();
     const list = document.getElementById('lava-contact-list');
@@ -1334,14 +1344,22 @@ function lavaRenderContacts() {
     if (filtered.length === 0) { list.innerHTML = '<div class="lava-empty">No colleagues found.</div>'; return; }
     
     list.innerHTML = filtered.map(c => {
-        // Universal web-to-app deep redirection schema forces application payload registration even from hard closed states
-        const targetHref = c.slackLink ? c.slackLink : `mailto:${c.email}`;
-        const targetIcon = c.slackLink ? "💬" : "✉";
-        const targetTitle = c.slackLink ? "Open Slack Channel Conversation" : "Send Email";
-        const targetTarget = c.slackLink ? `target="_blank"` : "";
+        let targetHref, onClickAction, targetTitle, targetIcon;
+
+        if (c.slackLink) {
+            targetHref = "javascript:void(0);";
+            onClickAction = `onclick="lavaOpenSlackAndCloseTab('${c.slackLink}')"`;
+            targetIcon = "💬";
+            targetTitle = "Launch Conversation inside Slack Desktop App";
+        } else {
+            targetHref = `mailto:${c.email}`;
+            onClickAction = "";
+            targetIcon = "✉";
+            targetTitle = "Send Email";
+        }
 
         return `
-            <a class="lava-contact" href="${targetHref}" ${targetTarget} title="${targetTitle}">
+            <a class="lava-contact" href="${targetHref}" ${onClickAction} title="${targetTitle}">
                 <div class="lava-avatar">${lavaEscape((c.name[0] || '?').toUpperCase())}</div>
                 <div class="lava-contact-info">
                     <div class="nm">${lavaEscape(c.name)}</div>
