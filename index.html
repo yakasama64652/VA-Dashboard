@@ -1255,7 +1255,6 @@
         renderAll();
     }
 
-    // Function updated safely: references exist without causing layout logic anomalies
     function renderAll() {
         const p = data.profile;
         document.getElementById('display-name').innerText = p.name || "Set Name";
@@ -1281,7 +1280,6 @@
         const highscore = data.games?.brickBreaker?.highScore || 0;
         document.getElementById('pto-brickbreaker-score').innerText = highscore + " pts";
         
-        // This element now maps explicitly to the newsletter panel instead of throwing errors
         document.getElementById('newsletter-stats-card').style.display = 'grid';
     }
 
@@ -1293,10 +1291,12 @@
 
 <script>
 /* ============================================================
-   FLOATING CHAT WIDGET LOGIC  (ADDED FEATURE — self-contained)
+    FLOATING CHAT WIDGET LOGIC  (UPDATED FOR SLACK LINKING)
    ============================================================ */
+// Note: team code 'T091B7V4K' has been parsed dynamically out of the workspace URL to facilitate protocol operations
 const LAVA_CONTACTS = [
-    { name: "Maria Santos",   role: "Team Lead",           email: "maria.santos@lava-automation.com" },
+    { name: "Martin Salcedo", role: "Virtual Assistant", email: "martin.salcedo@lava-automation.com", slackId: "U091CLBJFDX", slackTeam: "T091B7V4K" },
+    { name: "Maria Santos",   role: "Team Lead",          email: "maria.santos@lava-automation.com" },
     { name: "John Dela Cruz", role: "Senior Underwriter",  email: "john.delacruz@lava-automation.com" },
     { name: "HR Department",  role: "People & Culture",    email: "hr@lava-automation.com" },
     { name: "IT Support",      role: "Tech Helpdesk",       email: "support@lava-automation.com" }
@@ -1333,16 +1333,26 @@ function lavaRenderContacts() {
         c.role.toLowerCase().includes(q) ||
         c.email.toLowerCase().includes(q));
     if (filtered.length === 0) { list.innerHTML = '<div class="lava-empty">No colleagues found.</div>'; return; }
-    list.innerHTML = filtered.map(c => `
-        <a class="lava-contact" href="mailto:${lavaEscape(c.email)}">
-            <div class="lava-avatar">${lavaEscape((c.name[0] || '?').toUpperCase())}</div>
-            <div class="lava-contact-info">
-                <div class="nm">${lavaEscape(c.name)}</div>
-                <div class="rl">${lavaEscape(c.role)}</div>
-                <div class="em">${lavaEscape(c.email)}</div>
-            </div>
-            <span class="mail-ic">✉</span>
-        </a>`).join('');
+    
+    list.innerHTML = filtered.map(c => {
+        // Automatically determine if target contact link shifts into application routing schemas or email app anchors
+        const targetHref = c.slackId 
+            ? `slack://user?team=${c.slackTeam}&id=${c.slackId}`
+            : `mailto:${c.email}`;
+        const targetIcon = c.slackId ? "💬" : "✉";
+        const targetTitle = c.slackId ? "Open Slack Direct Message" : "Send Email";
+
+        return `
+            <a class="lava-contact" href="${targetHref}" title="${targetTitle}">
+                <div class="lava-avatar">${lavaEscape((c.name[0] || '?').toUpperCase())}</div>
+                <div class="lava-contact-info">
+                    <div class="nm">${lavaEscape(c.name)}</div>
+                    <div class="rl">${lavaEscape(c.role)}</div>
+                    <div class="em">${lavaEscape(c.slackId ? 'Slack Channel Link Connected' : c.email)}</div>
+                </div>
+                <span class="mail-ic">${targetIcon}</span>
+            </a>`;
+    }).join('');
 }
 
 function lavaPopulateRecipients() {
@@ -1416,7 +1426,7 @@ function lavaSendMail() {
 
 <script>
 /* ============================================================
-   SOP VAULT LOGIC  (ADDED FEATURE — self-contained)
+    SOP VAULT LOGIC  (ADDED FEATURE — self-contained)
    ============================================================ */
 const SOP_BUCKET = 'sop-vault';
 const SOP_MAX_BYTES = 50 * 1024 * 1024; // 50 MB
@@ -1480,7 +1490,7 @@ async function uploadSopDocument() {
 
         const { error: dbErr } = await _supabase.from('sop_documents').insert({
             user_id:   currentUser.id,
-            title:     document.getElementById('sop-title').value.trim() || file.name,
+            title:      document.getElementById('sop-title').value.trim() || file.name,
             category:  document.getElementById('sop-category').value || null,
             file_name: file.name,
             file_path: filePath,
