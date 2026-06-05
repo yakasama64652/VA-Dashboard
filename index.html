@@ -297,7 +297,7 @@
             border: 1px solid var(--line);
             height: 100%;
             box-sizing: border-box;
-            box-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.7);
+            box-shadow: 0 18px 40px -24 rgba(0, 0, 0, 0.7);
             animation: rise 0.55s cubic-bezier(0.16, 1, 0.3, 1) backwards;
         }
         .card h3 {
@@ -442,125 +442,6 @@
         .tag-live { background: var(--danger); box-shadow: 0 0 0 0 rgba(255, 81, 104, 0.6); animation: pulse 1.6s infinite; }
         .tag-scheduled { background: rgba(45, 212, 191, 0.18); color: var(--teal); border: 1px solid rgba(45, 212, 191, 0.4); }
 
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 81, 104, 0.55); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 81, 104, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 81, 104, 0); }
-        }
-        @keyframes rise {
-            from { opacity: 0; transform: translateY(18px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Leave credits */
-        .leave-stat {
-            background: rgba(0, 0, 0, 0.25);
-            padding: 16px;
-            border-radius: 14px;
-            text-align: center;
-            border: 1px solid var(--line);
-        }
-        .leave-stat label {
-            font-family: var(--font-mono);
-            font-size: 0.66rem;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            color: var(--muted);
-            display: block;
-            margin-bottom: 6px;
-        }
-        .leave-stat span { font-family: var(--font-mono); font-size: 1.7rem; font-weight: 700; color: var(--text); }
-        .leave-btns { margin-top: 10px; display: flex; justify-content: center; gap: 8px; }
-        .leave-btns button {
-            width: 30px; height: 30px;
-            font-size: 1rem;
-            cursor: pointer;
-            border-radius: 8px;
-            border: 1px solid var(--line-2);
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--text);
-            transition: 0.18s;
-        }
-        .leave-btns button:hover { background: var(--ember); border-color: var(--ember); color: #fff; }
-
-        /* ====== NEWSLETTER COMPONENT STYLING ====== */
-        .newsletter-layout {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            width: 100%;
-        }
-        .newsletter-block {
-            display: flex;
-            gap: 16px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--line);
-            padding: 14px;
-            border-radius: 12px;
-            align-items: center;
-            transition: border-color 0.2s, background 0.2s;
-        }
-        .newsletter-block:hover {
-            border-color: rgba(255, 90, 31, 0.3);
-            background: rgba(255, 90, 31, 0.02);
-        }
-        .newsletter-thumb {
-            width: 110px;
-            height: 80px;
-            object-fit: cover;
-            border-radius: 8px;
-            border: 1px solid var(--line-2);
-            flex-shrink: 0;
-        }
-        .newsletter-info {
-            flex: 1;
-            min-width: 0;
-        }
-        .newsletter-tagline {
-            font-family: var(--font-mono);
-            font-size: 0.68rem;
-            color: var(--teal);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 4px;
-        }
-        .newsletter-heading {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--text);
-            margin: 0 0 4px 0;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .newsletter-desc {
-            font-size: 0.8rem;
-            color: var(--muted);
-            line-height: 1.4;
-            margin: 0 0 8px 0;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .newsletter-links {
-            display: flex;
-            gap: 14px;
-            font-size: 0.78rem;
-        }
-        .newsletter-links a {
-            color: var(--ember-2);
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .newsletter-links a:hover {
-            text-decoration: underline;
-        }
-
-        /* Hidden fallback mapping tracker to prevent breaking JS references */
-        #pto-brickbreaker-score { display: none !important; }
-
-        /* Responsive */
         @media (max-width: 900px) {
             .sidebar {
                 position: relative;
@@ -575,9 +456,7 @@
             #newsletter-stats-card { grid-column: span 1 !important; }
         }
 
-        /* ============================================================
-           FLOATING CHAT WIDGET  (ADDED FEATURE — fully self-contained)
-           ============================================================ */
+        /* FLOATING CHAT WIDGET */
         #lava-chat-fab {
             position: fixed;
             bottom: 26px;
@@ -601,11 +480,6 @@
         #lava-chat-fab img { width: 100%; height: 100%; object-fit: cover; display: block; }
         #lava-chat-fab:hover { transform: translateY(-3px) scale(1.04); box-shadow: 0 18px 38px -8px rgba(255, 90, 31, 0.75); }
         #lava-chat-fab.open { animation: none; }
-        @keyframes lava-fab-pulse {
-            0%   { box-shadow: 0 12px 30px -8px rgba(255, 90, 31, 0.6), 0 0 0 0 rgba(255, 90, 31, 0.45); }
-            70%  { box-shadow: 0 12px 30px -8px rgba(255, 90, 31, 0.6), 0 0 0 14px rgba(255, 90, 31, 0); }
-            100% { box-shadow: 0 12px 30px -8px rgba(255, 90, 31, 0.6), 0 0 0 0 rgba(255, 90, 31, 0); }
-        }
 
         #lava-chat-panel {
             position: fixed;
@@ -627,10 +501,6 @@
             transform-origin: bottom right;
         }
         #lava-chat-panel.open { display: flex; animation: lava-pop 0.32s cubic-bezier(0.16, 1, 0.3, 1); }
-        @keyframes lava-pop {
-            from { opacity: 0; transform: translateY(16px) scale(0.96); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
 
         .lava-chat-head {
             display: flex; align-items: center; gap: 12px;
@@ -663,7 +533,6 @@
         .lava-pane { display: none; flex: 1; min-height: 0; flex-direction: column; }
         .lava-pane.active { display: flex; }
 
-        /* Contacts */
         .lava-search {
             margin: 12px; padding: 11px 14px; border-radius: 11px;
             background: rgba(0, 0, 0, 0.35); border: 1px solid var(--line-2);
@@ -687,12 +556,10 @@
         .lava-contact-info { min-width: 0; flex: 1; }
         .lava-contact-info .nm { font-size: 0.9rem; font-weight: 600; color: var(--text); }
         .lava-contact-info .rl { font-size: 0.74rem; color: var(--muted); }
-        .lava-contact-info .em { font-size: 0.74rem; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .lava-contact .mail-ic { color: var(--faint); font-size: 1rem; transition: 0.18s; flex-shrink: 0; }
         .lava-contact:hover .mail-ic { color: var(--ember-2); }
         .lava-empty { color: var(--faint); font-size: 0.85rem; text-align: center; padding: 24px; }
 
-        /* Compose message / email */
         .lava-compose { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
         .lava-field { display: flex; flex-direction: column; gap: 6px; }
         .lava-field label {
@@ -710,7 +577,6 @@
         .lava-input:focus, .lava-select:focus, .lava-textarea:focus {
             border-color: var(--ember); box-shadow: 0 0 0 3px rgba(255, 90, 31, 0.12);
         }
-        .lava-select option { background: var(--obsidian); color: var(--text); }
         .lava-send-mail {
             margin-top: 2px; width: 100%; padding: 13px; border: none; border-radius: 12px; cursor: pointer;
             font-family: var(--font-body); font-weight: 600; font-size: 0.9rem; color: #fff;
@@ -720,9 +586,7 @@
         .lava-send-mail:hover { transform: translateY(-2px); filter: brightness(1.06); }
         .lava-hint { font-size: 0.74rem; color: var(--faint); text-align: center; }
 
-        /* ============================================================
-           SOP VAULT UPLOAD MODAL  (ADDED FEATURE — namespaced `sop-`)
-           ============================================================ */
+        /* SOP VAULT UPLOAD MODAL */
         #sop-modal {
             position: fixed; inset: 0; z-index: 9500;
             display: none; align-items: center; justify-content: center;
@@ -731,7 +595,6 @@
             backdrop-filter: blur(6px);
         }
         #sop-modal.open { display: flex; animation: sop-fade 0.25s ease; }
-        @keyframes sop-fade { from { opacity: 0; } to { opacity: 1; } }
 
         .sop-panel {
             position: relative;
@@ -779,7 +642,6 @@
             color: var(--text); font-family: var(--font-body); font-size: 0.88rem; outline: none; box-sizing: border-box;
         }
         .sop-input:focus { border-color: var(--ember); box-shadow: 0 0 0 3px rgba(255,90,31,0.12); }
-        .sop-input option { background: var(--obsidian); }
 
         .sop-upload-btn {
             margin-top: 20px; width: 100%; padding: 13px; border: none; border-radius: 12px; cursor: pointer;
@@ -815,7 +677,6 @@
         .sop-doc-act { background: none; border: none; cursor: pointer; font-size: 1rem; color: var(--faint); transition: 0.18s; padding: 4px 6px; }
         .sop-doc-act:hover { color: var(--ember-2); }
         .sop-doc-act.del:hover { color: var(--danger); }
-        .sop-white-space { display: none !important; }
         .sop-empty { color: var(--faint); font-size: 0.85rem; text-align: center; padding: 16px; }
 
         .sop-email-box {
@@ -827,12 +688,110 @@
         .sop-btn-group { display: flex; gap: 10px; margin-top: 14px; }
         .sop-btn-send { flex: 2; padding: 11px; border: none; border-radius: 8px; background: linear-gradient(135deg, var(--teal), var(--indigo)); color: #fff; font-weight: 600; cursor: pointer; font-size: 0.85rem; }
         .sop-btn-send:hover { filter: brightness(1.1); }
-        .sop-btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
         .sop-btn-cancel { flex: 1; padding: 11px; border: 1px solid var(--line-2); border-radius: 8px; background: rgba(255,255,255,0.04); color: var(--muted); cursor: pointer; font-size: 0.85rem; }
         .sop-btn-cancel:hover { background: rgba(255,81,104,0.1); color: var(--danger); }
 
-        @media (max-width: 480px) {
-            .sop-panel { padding: 22px; }
+        /* Leave credits */
+        .leave-stat {
+            background: rgba(0, 0, 0, 0.25);
+            padding: 16px;
+            border-radius: 14px;
+            text-align: center;
+            border: 1px solid var(--line);
+        }
+        .leave-stat label {
+            font-family: var(--font-mono);
+            font-size: 0.66rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            color: var(--muted);
+            display: block;
+            margin-bottom: 6px;
+        }
+        .leave-stat span { font-family: var(--font-mono); font-size: 1.7rem; font-weight: 700; color: var(--text); }
+        .leave-btns { margin-top: 10px; display: flex; justify-content: center; gap: 8px; }
+        .leave-btns button {
+            width: 30px; height: 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 8px;
+            border: 1px solid var(--line-2);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--text);
+            transition: 0.18s;
+        }
+        .leave-btns button:hover { background: var(--ember); border-color: var(--ember); color: #fff; }
+
+        /* NEWSLETTER COMPONENT STYLING */
+        .newsletter-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+        }
+        .newsletter-block {
+            display: flex;
+            gap: 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--line);
+            padding: 14px;
+            border-radius: 12px;
+            align-items: center;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .newsletter-block:hover {
+            border-color: rgba(255, 90, 31, 0.3);
+            background: rgba(255, 90, 31, 0.02);
+        }
+        .newsletter-thumb {
+            width: 110px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid var(--line-2);
+            flex-shrink: 0;
+        }
+        .newsletter-info { flex: 1; min-width: 0; }
+        .newsletter-tagline {
+            font-family: var(--font-mono);
+            font-size: 0.68rem;
+            color: var(--teal);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        .newsletter-heading {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+            margin: 0 0 4px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .newsletter-desc {
+            font-size: 0.8rem;
+            color: var(--muted);
+            line-height: 1.4;
+            margin: 0 0 8px 0;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .newsletter-links { display: flex; gap: 14px; font-size: 0.78rem; }
+        .newsletter-links a { color: var(--ember-2); text-decoration: none; font-weight: 500; }
+        .newsletter-links a:hover { text-decoration: underline; }
+
+        #pto-brickbreaker-score { display: none !important; }
+        @keyframes lava-fab-pulse {
+            0%   { box-shadow: 0 12px 30px -8px rgba(255, 90, 31, 0.6), 0 0 0 0 rgba(255, 90, 31, 0.45); }
+            70%  { box-shadow: 0 12px 30px -8px rgba(255, 90, 31, 0.6), 0 0 0 14px rgba(255, 90, 31, 0); }
+            100% { box-shadow: 0 12px 30px -8px rgba(255, 90, 31, 0.6), 0 0 0 0 rgba(255, 90, 31, 0); }
+        }
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
         }
     </style>
 </head>
@@ -964,7 +923,6 @@
                     <div class="card">
                         <h3>LAVA Newsletters &amp; Updates</h3>
                         <div class="newsletter-layout">
-                            
                             <div class="newsletter-block">
                                 <img src="https://images.unsplash.com/photo-1557200134-90327ee9fafa?auto=format&fit=crop&w=220&q=80" alt="Newsletter Thumbnail" class="newsletter-thumb">
                                 <div class="newsletter-info">
@@ -977,7 +935,6 @@
                                     </div>
                                 </div>
                             </div>
-
                             <div class="newsletter-block">
                                 <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=220&q=80" alt="Security Newsletter Thumbnail" class="newsletter-thumb">
                                 <div class="newsletter-info">
@@ -990,7 +947,6 @@
                                     </div>
                                 </div>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -1011,7 +967,7 @@
         <div class="sop-drop" id="sop-drop" onclick="document.getElementById('sop-file').click()">
             <div class="sop-ic">📄</div>
             <div class="sop-main-txt" id="sop-drop-text">Click to choose a file or drag it here</div>
-            <div class="sop-sub-txt">PDF, Word, images, etc. — up to 50&nbsp;MB</div>
+            <div class="sop-sub-txt">PDF, Word, images, etc. — up to 50 MB</div>
         </div>
         <input type="file" id="sop-file" style="display:none" onchange="sopFileChosen(this.files[0])">
 
@@ -1051,9 +1007,7 @@
             </div>
         </div>
 
-        <div class="sop-white-space"></div>
         <button class="sop-upload-btn" id="sop-upload-btn" onclick="uploadSopDocument()">⬆ Upload Document</button>
-
         <div class="sop-divider"></div>
         <div class="sop-list-title">Recent Documents</div>
         <div id="sop-doc-list"><div class="sop-empty">Loading…</div></div>
@@ -1449,7 +1403,13 @@ async function uploadSopDocument() {
 
 async function loadSopDocuments() {
     const list = document.getElementById('sop-doc-list');
-    const { data, error } = await _supabase.from('sop_documents').select('*').order('uploaded_at', { ascending: false }).limit(50);
+    // FIXED: Added filter .eq('user_id', currentUser.id) to prevent seeing other users' documents
+    const { data, error } = await _supabase.from('sop_documents')
+        .select('*')
+        .eq('user_id', currentUser.id)
+        .order('uploaded_at', { ascending: false })
+        .limit(50);
+        
     if (error) { list.innerHTML = '<div class="sop-empty">Could not load documents.</div>'; return; }
     if (!data || data.length === 0) { list.innerHTML = '<div class="sop-empty">No documents yet.</div>'; return; }
     list.innerHTML = data.map(d => {
@@ -1471,7 +1431,7 @@ async function loadSopDocuments() {
 
 async function sopOpenDoc(encodedPath) {
     const path = decodeURIComponent(encodedPath);
-    const { data, error } = await _supabase.storage.from(SOP_BUCKET).createSignedUrl(path, 60); 
+    const { data, error } = await _supabase.storage.from(SOP_BUCKET).createSignedUrl(path, 86400); 
     if (error) { alert('Could not open file: ' + error.message); return; }
     window.open(data.signedUrl, '_blank');
 }
@@ -1499,9 +1459,6 @@ function sopCloseEmailContainer() {
     currentActiveTargetDoc = null;
 }
 
-/* ===================================================================================
-   NATIVE SUBMISSION METHOD - TRIGGERS NATIVE EDGE PIPELINES DIRECTLY ON THE PLATFORM
-   =================================================================================== */
 async function sopTriggerDirectEmailSend() {
     const toField = document.getElementById('sop-email-to').value.trim();
     const notesField = document.getElementById('sop-email-notes').value.trim();
@@ -1528,7 +1485,6 @@ async function sopTriggerDirectEmailSend() {
 
         statusText.innerText = "⏳ Calling your native Supabase Edge Function controller...";
 
-        // DIRECT EDGE FUNCTION CALL WITHOUT AN INTERNAL THIRD-PARTY INTERMEDIARY BRIDGE
         const { data: functionData, error: functionErr } = await _supabase.functions.invoke('send-vault-email', {
             body: {
                 sender_name: document.getElementById('side-name').innerText,
@@ -1562,7 +1518,6 @@ async function sopDeleteDoc(id, encodedPath) {
     loadSopDocuments();
 }
 
-// Global execution hooks configurations mapping scripts
 window.addEventListener('DOMContentLoaded', () => {
     const modal = document.getElementById('sop-modal');
     if (modal) modal.addEventListener('click', e => { if (e.target === modal) closeSopVault(); });
