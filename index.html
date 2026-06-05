@@ -8,7 +8,7 @@
     <link rel="preconnect" href="https://api.fontshare.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400;500;600;700&f[]=general-sans@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&f[]=general-sans@400,500,600,700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -442,18 +442,14 @@
         .tag-live { background: var(--danger); box-shadow: 0 0 0 0 rgba(255, 81, 104, 0.6); animation: pulse 1.6s infinite; }
         .tag-scheduled { background: rgba(45, 212, 191, 0.18); color: var(--teal); border: 1px solid rgba(45, 212, 191, 0.4); }
 
-        @media (max-width: 900px) {
-            .sidebar {
-                position: relative;
-                width: 100%;
-                height: auto;
-                flex-direction: column;
-            }
-            .main-layout { flex-direction: column; }
-            .main-content { margin-left: 0; width: 100%; padding: 28px 20px; }
-            .dashboard-grid { grid-template-columns: 1fr; }
-            .profile-header { flex-direction: column; align-items: flex-start; gap: 18px; }
-            #newsletter-stats-card { grid-column: span 1 !important; }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 81, 104, 0.55); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 81, 104, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 81, 104, 0); }
+        }
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(18px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         /* Leave credits */
@@ -561,7 +557,23 @@
             text-decoration: underline;
         }
 
+        /* Hidden fallback mapping tracker to prevent breaking JS references */
         #pto-brickbreaker-score { display: none !important; }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                height: auto;
+                flex-direction: column;
+            }
+            .main-layout { flex-direction: column; }
+            .main-content { margin-left: 0; width: 100%; padding: 28px 20px; }
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .profile-header { flex-direction: column; align-items: flex-start; gap: 18px; }
+            #newsletter-stats-card { grid-column: span 1 !important; }
+        }
 
         /* ============================================================
            FLOATING CHAT WIDGET  (ADDED FEATURE — fully self-contained)
@@ -666,26 +678,18 @@
             border: 1px solid transparent;
         }
         .lava-contact:hover { background: rgba(255, 90, 31, 0.08); border-color: var(--line); }
-        
-        /* Updated dynamic styling variants for contact channels */
         .lava-avatar {
             width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
             display: flex; align-items: center; justify-content: center;
             font-family: var(--font-display); font-weight: 600; color: #fff; font-size: 1rem;
             background: linear-gradient(135deg, var(--ember), var(--teal));
         }
-        .lava-contact.slack-variant .lava-avatar {
-            background: linear-gradient(135deg, #4a154b, #e01e5a);
-        }
-        
         .lava-contact-info { min-width: 0; flex: 1; }
         .lava-contact-info .nm { font-size: 0.9rem; font-weight: 600; color: var(--text); }
         .lava-contact-info .rl { font-size: 0.74rem; color: var(--muted); }
         .lava-contact-info .em { font-size: 0.74rem; color: var(--faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .lava-contact .channel-ic { color: var(--faint); font-size: 0.85rem; transition: 0.18s; flex-shrink: 0; font-family: var(--font-mono); font-weight: bold;}
-        .lava-contact:hover .channel-ic { color: var(--ember-2); }
-        .lava-contact.slack-variant:hover .channel-ic { color: #36c5f0; }
-        
+        .lava-contact .mail-ic { color: var(--faint); font-size: 1rem; transition: 0.18s; flex-shrink: 0; }
+        .lava-contact:hover .mail-ic { color: var(--ember-2); }
         .lava-empty { color: var(--faint); font-size: 0.85rem; text-align: center; padding: 24px; }
 
         /* Compose message / email */
@@ -1084,6 +1088,7 @@
     let currentUser = null;
     let data = { profile: { name: "", role: "", agency: "", pto: 10, sick: 5, photo: "", gender: "", birthday: "", joinDate: "", emergency: "", tasks: [] }, games: { brickBreaker: { highScore: 0 } } };
 
+    // Constant Data
     const insuranceTrivia = [
         "Benjamin Franklin founded the first successful U.S. property insurance company in 1752.",
         "The first auto insurance policy was issued in 1897, when there were fewer than 100 cars on the road.",
@@ -1093,12 +1098,14 @@
         "Usage-Based Insurance (UBI) uses telematics to track braking and acceleration to determine rates."
     ];
 
+    // Placeholder until Supabase responds
     let classroomSchedule = [{ day: "Syncing", class_name: "Loading...", class_time: "Please wait", is_live: false }];
 
     let triviaIndex = 0;
     let scheduleIndex = 0;
     let isTriviaPaused = false;
 
+    // FETCH LIVE SCHEDULE (From Supabase Table updated by Google Sheets)
     async function fetchLiveSchedule() {
         const { data: schedule, error } = await _supabase
             .from('classroom_schedule')
@@ -1111,6 +1118,7 @@
         }
     }
 
+    // Rotators
     function rotateTrivia() {
         if(isTriviaPaused) return;
         const display = document.getElementById('trivia-display');
@@ -1152,14 +1160,15 @@
     }
 
     async function startRotators() {
-        await fetchLiveSchedule();
+        await fetchLiveSchedule(); // Initial fetch
         rotateTrivia();
         rotateClassroom();
         setInterval(rotateTrivia, 6000);
         setInterval(rotateClassroom, 5000);
-        setInterval(fetchLiveSchedule, 60000);
+        setInterval(fetchLiveSchedule, 60000); // Re-sync with Supabase every minute
     }
 
+    // Logic Functions
     function toggleTrivia() {
         isTriviaPaused = !isTriviaPaused;
         const icon = document.getElementById('play-pause-icon');
@@ -1246,6 +1255,7 @@
         renderAll();
     }
 
+    // Function updated safely: references exist without causing layout logic anomalies
     function renderAll() {
         const p = data.profile;
         document.getElementById('display-name').innerText = p.name || "Set Name";
@@ -1271,6 +1281,7 @@
         const highscore = data.games?.brickBreaker?.highScore || 0;
         document.getElementById('pto-brickbreaker-score').innerText = highscore + " pts";
         
+        // This element now maps explicitly to the newsletter panel instead of throwing errors
         document.getElementById('newsletter-stats-card').style.display = 'grid';
     }
 
@@ -1282,11 +1293,9 @@
 
 <script>
 /* ============================================================
-    FLOATING CHAT WIDGET LOGIC  (UPDATED FOR AUTOMATIC SLACK ROUTING)
+   FLOATING CHAT WIDGET LOGIC  (ADDED FEATURE — self-contained)
    ============================================================ */
 const LAVA_CONTACTS = [
-    // Martin Configured to bypass email completely using your exact Slack details:
-    { name: "Martin Salcedo", role: "Team Lead", slackTeam: "Martin", slackMember: "U091CLBJFDX" },
     { name: "Maria Santos",   role: "Team Lead",           email: "maria.santos@lava-automation.com" },
     { name: "John Dela Cruz", role: "Senior Underwriter",  email: "john.delacruz@lava-automation.com" },
     { name: "HR Department",  role: "People & Culture",    email: "hr@lava-automation.com" },
@@ -1319,42 +1328,21 @@ function lavaEscape(str) {
 function lavaRenderContacts() {
     const q = (document.getElementById('lava-contact-search').value || '').toLowerCase();
     const list = document.getElementById('lava-contact-list');
-    
     const filtered = LAVA_CONTACTS.filter(c =>
         c.name.toLowerCase().includes(q) ||
         c.role.toLowerCase().includes(q) ||
-        (c.email && c.email.toLowerCase().includes(q)));
-        
+        c.email.toLowerCase().includes(q));
     if (filtered.length === 0) { list.innerHTML = '<div class="lava-empty">No colleagues found.</div>'; return; }
-    
-    list.innerHTML = filtered.map(c => {
-        // If a contact contains slack details, route via slack:// deep-linking protocol
-        if (c.slackMember) {
-            const slackUrl = `slack://user?team=${encodeURIComponent(c.slackTeam)}&id=${encodeURIComponent(c.slackMember)}`;
-            return `
-                <a class="lava-contact slack-variant" href="${slackUrl}">
-                    <div class="lava-avatar">${lavaEscape((c.name[0] || '?').toUpperCase())}</div>
-                    <div class="lava-contact-info">
-                        <div class="nm">${lavaEscape(c.name)}</div>
-                        <div class="rl">${lavaEscape(c.role)}</div>
-                        <div class="em">Open Slack Profile</div>
-                    </div>
-                    <span class="channel-ic">SLACK</span>
-                </a>`;
-        } else {
-            // Fallback for standard legacy email targets
-            return `
-                <a class="lava-contact" href="mailto:${lavaEscape(c.email)}">
-                    <div class="lava-avatar">${lavaEscape((c.name[0] || '?').toUpperCase())}</div>
-                    <div class="lava-contact-info">
-                        <div class="nm">${lavaEscape(c.name)}</div>
-                        <div class="rl">${lavaEscape(c.role)}</div>
-                        <div class="em">${lavaEscape(c.email)}</div>
-                    </div>
-                    <span class="channel-ic">✉</span>
-                </a>`;
-        }
-    }).join('');
+    list.innerHTML = filtered.map(c => `
+        <a class="lava-contact" href="mailto:${lavaEscape(c.email)}">
+            <div class="lava-avatar">${lavaEscape((c.name[0] || '?').toUpperCase())}</div>
+            <div class="lava-contact-info">
+                <div class="nm">${lavaEscape(c.name)}</div>
+                <div class="rl">${lavaEscape(c.role)}</div>
+                <div class="em">${lavaEscape(c.email)}</div>
+            </div>
+            <span class="mail-ic">✉</span>
+        </a>`).join('');
 }
 
 function lavaPopulateRecipients() {
@@ -1362,13 +1350,10 @@ function lavaPopulateRecipients() {
     if (!sel || sel.dataset.filled === '1') return;
     const otherOpt = sel.querySelector('option[value="__other__"]');
     LAVA_CONTACTS.forEach(c => {
-        // Only add contacts to the traditional email compose field if they have an email address
-        if (c.email) {
-            const o = document.createElement('option');
-            o.value = c.email;
-            o.textContent = c.name + ' — ' + c.role;
-            sel.insertBefore(o, otherOpt);
-        }
+        const o = document.createElement('option');
+        o.value = c.email;
+        o.textContent = c.name + ' — ' + c.role;
+        sel.insertBefore(o, otherOpt);
     });
     sel.dataset.filled = '1';
 }
@@ -1431,10 +1416,10 @@ function lavaSendMail() {
 
 <script>
 /* ============================================================
-    SOP VAULT LOGIC  (ADDED FEATURE — self-contained)
+   SOP VAULT LOGIC  (ADDED FEATURE — self-contained)
    ============================================================ */
 const SOP_BUCKET = 'sop-vault';
-const SOP_MAX_BYTES = 50 * 1024 * 1024;
+const SOP_MAX_BYTES = 50 * 1024 * 1024; // 50 MB
 let sopSelectedFile = null;
 
 function openSopVault() {
@@ -1444,7 +1429,7 @@ function openSopVault() {
     loadSopDocuments();
 }
 function closeSopVault() {
-    document.getElementById('sop-modal').classList.remove('remove');
+    document.getElementById('sop-modal').classList.remove('open');
     sopResetForm();
 }
 function sopResetForm() {
@@ -1495,7 +1480,7 @@ async function uploadSopDocument() {
 
         const { error: dbErr } = await _supabase.from('sop_documents').insert({
             user_id:   currentUser.id,
-            title:      document.getElementById('sop-title').value.trim() || file.name,
+            title:     document.getElementById('sop-title').value.trim() || file.name,
             category:  document.getElementById('sop-category').value || null,
             file_name: file.name,
             file_path: filePath,
