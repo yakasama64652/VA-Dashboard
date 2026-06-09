@@ -601,6 +601,7 @@
             display: flex; align-items: center; justify-content: center;
             font-family: var(--font-display); font-weight: 600; color: #fff; font-size: 1rem;
             background: linear-gradient(135deg, var(--ember), var(--teal));
+            position: relative;
         }
         .lava-contact-info { min-width: 0; flex: 1; }
         .lava-contact-info .nm { font-size: 0.9rem; font-weight: 600; color: var(--text); }
@@ -608,6 +609,11 @@
         .lava-contact .mail-ic { color: var(--faint); font-size: 1rem; transition: 0.18s; flex-shrink: 0; }
         .lava-contact:hover .mail-ic { color: var(--ember-2); }
         .lava-empty { color: var(--faint); font-size: 0.85rem; text-align: center; padding: 24px; }
+        
+        /* Presence Indicator Badges */
+        .slack-badge { font-size: 0.68rem; padding: 2px 6px; border-radius: 4px; font-weight: 600; margin-left: auto; text-transform: uppercase; letter-spacing: 0.5px; }
+        .slack-online { background: rgba(45, 212, 191, 0.15); color: var(--teal); border: 1px solid rgba(45, 212, 191, 0.3); }
+        .slack-away { background: rgba(255, 255, 255, 0.04); color: var(--faint); border: 1px solid var(--line); }
 
         .lava-compose { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
         .lava-field { display: flex; flex-direction: column; gap: 6px; }
@@ -1145,7 +1151,6 @@
                 <label>To</label>
                 <select class="lava-select" id="lava-to-select" onchange="lavaToChange()">
                     <option value="">Select a colleague…</option>
-                    <option value="__other__">✏️ Type another email…</option>
                 </select>
                 <input class="lava-input" id="lava-to-other" type="email" placeholder="name@example.com" style="display:none; margin-top:6px;">
             </div>
@@ -1158,8 +1163,8 @@
                 <textarea class="lava-textarea" id="lava-body" placeholder="Type your message…"></textarea>
             </div>
             <div class="lava-warn" id="lava-compose-warn" style="display:none;"></div>
-            <button class="lava-send-mail" onclick="lavaSendMail()">✉ Send Email</button>
-            <div class="lava-hint">Opens your email app with everything filled in, ready to send.</div>
+            <button class="lava-send-mail" onclick="lavaSendMail()">✉ Send to Slack</button>
+            <div class="lava-hint">Sends your message directly through to their Slack portal window instantly.</div>
         </div>
     </div>
 </div>
@@ -1364,12 +1369,16 @@ const LAVA_CONTACTS = [
 ];
 
 let lavaChatOpen = false;
+let presenceCache = {};
 
 function lavaToggleChat() {
     lavaChatOpen = !lavaChatOpen;
     document.getElementById('lava-chat-panel').classList.toggle('open', lavaChatOpen);
     document.getElementById('lava-chat-fab').classList.toggle('open', lavaChatOpen);
-    if (lavaChatOpen) { lavaRenderContacts(); lavaPopulateRecipients(); }
+    if (lavaChatOpen) { 
+        lavaFetchPresenceAndRender();
+        lavaPopulateRecipients(); 
+    }
 }
 
 function lavaEscape(str) { return String(str).replace(/[&<>"']/g, s => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[s])); }
@@ -1386,19 +1395,58 @@ function lavaOpenSlackAndCloseTab(url) {
     if (temporaryTab) { setTimeout(() => { temporaryTab.close(); }, 800); }
 }
 
+async function lavaFetchPresenceAndRender() {
+    // Render immediately using cache while we pull live data
+    lavaRenderContacts();
+
+    try {
+        // Grab presence updates from a lightweight table configuration or script router
+        const { data: presenceData, error } = await _supabase
+            .from('slack_presence_cache')
+            .select('slack_user_id, presence_status');
+
+        if (!error && presenceData) {
+            presenceData.forEach(row => {
+                presenceCache[row.slack_user_id] = row.presence_status; // 'active' or 'away'
+            });
+            // Re-render matching current statuses
+            lavaRenderContacts();
+        }
+    } catch (err) {
+        console.error("Presence check lookup bypass:", err);
+    }
+}
+
 function lavaRenderContacts() {
     const q = (document.getElementById('lava-contact-search').value || '').toLowerCase();
     const list = document.getElementById('lava-contact-list');
     const filtered = LAVA_CONTACTS.filter(c => c.name.toLowerCase().includes(q) || c.role.toLowerCase().includes(q));
     if (filtered.length === 0) { list.innerHTML = '<div class="lava-empty">No colleagues found.</div>'; return; }
+    
     list.innerHTML = filtered.map(c => {
+        // Extract the user tracking token string out of your team profile link values
+        const userIdMatch = c.slackLink.match(/\/team\/([A-Z0-9]+)/);
+        const userId = userIdMatch ? userIdMatch[1] : null;
+        
+        // Determine live dot color mapping classes
+        let presenceLabel = "Status Unknown";
+        let presenceClass = "slack-away";
+        
+        if (userId && presenceCache[userId]) {
+            const status = presenceCache[userId];
+            presenceLabel = status === 'active' ? '● Online' : '○ Away';
+            presenceClass = status === 'active' ? 'slack-online' : 'slack-away';
+        }
+
         return `<a class="lava-contact" href="javascript:void(0);" onclick="lavaOpenSlackAndCloseTab('${c.slackLink}')">
-                <div class="lava-avatar">${lavaEscape((c.name[0] || '?').toUpperCase())}</div>
+                <div class="lava-avatar">
+                    ${lavaEscape((c.name[0] || '?').toUpperCase())}
+                </div>
                 <div class="lava-contact-info">
                     <div class="nm">${lavaEscape(c.name)}</div>
                     <div class="rl">${lavaEscape(c.role)}</div>
                 </div>
-                <span class="mail-ic">💬</span>
+                <span class="slack-badge ${presenceClass}">${presenceLabel}</span>
             </a>`;
     }).join('');
 }
@@ -1406,12 +1454,15 @@ function lavaRenderContacts() {
 function lavaPopulateRecipients() {
     const sel = document.getElementById('lava-to-select');
     if (!sel || sel.dataset.filled === '1') return;
+    
     const otherOpt = sel.querySelector('option[value="__other__"]');
+    if (otherOpt) otherOpt.remove();
+
     LAVA_CONTACTS.forEach(c => {
         const o = document.createElement('option');
-        o.value = c.name.toLowerCase().replace(/\s+/g, '.') + '@lava-automation.com';
+        o.value = c.slackLink;
         o.textContent = c.name + ' — ' + c.role;
-        sel.insertBefore(o, otherOpt);
+        sel.appendChild(o);
     });
     sel.dataset.filled = '1';
 }
@@ -1424,17 +1475,58 @@ function lavaToChange() {
     if (isOther) other.focus();
 }
 
-function lavaSendMail() {
+async function lavaSendMail() {
     const sel = document.getElementById('lava-to-select');
     const warn = document.getElementById('lava-compose-warn');
-    let to = sel.value === '__other__' ? document.getElementById('lava-to-other').value.trim() : sel.value;
     const subject = document.getElementById('lava-subject').value.trim();
     const body = document.getElementById('lava-body').value.trim();
-    if (!to) { warn.style.display = 'block'; warn.textContent = 'Please choose a colleague or type an email address.'; return; }
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) { warn.style.display = 'block'; warn.textContent = "That email address doesn't look right."; return; }
+    const sendBtn = document.querySelector('.lava-send-mail');
+    
+    if (!sel.value) { 
+        warn.style.display = 'block'; 
+        warn.textContent = 'Please choose a colleague.'; 
+        return; 
+    }
+    if (!body) {
+        warn.style.display = 'block';
+        warn.textContent = 'Please type a message before sending.';
+        return;
+    }
+    
     warn.style.display = 'none';
-    const url = 'mailto:' + to + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
-    window.location.href = url;
+    sendBtn.disabled = true;
+    sendBtn.innerText = 'Sending to Slack...';
+    
+    const selectedName = sel.options[sel.selectedIndex].text.split(' — ')[0];
+    const slackLink = sel.value; 
+
+    try {
+        const { data: funcData, error: funcErr } = await _supabase.functions.invoke('send-slack-message', {
+            body: {
+                sender_name: document.getElementById('side-name').innerText,
+                recipient_name: selectedName,
+                slack_destination: slackLink,
+                subject: subject || "No Subject",
+                message: body
+            }
+        });
+
+        if (funcErr) throw funcErr;
+
+        alert(`Message routed to Slack for ${selectedName}!`);
+        
+        document.getElementById('lava-subject').value = '';
+        document.getElementById('lava-body').value = '';
+        lavaSwitchTab('team');
+        
+    } catch (err) {
+        console.error(err);
+        warn.style.display = 'block';
+        warn.textContent = 'Transmission failed. Verify your Supabase Edge routing setup.';
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerText = '✉ Send to Slack';
+    }
 }
 
 (function lavaInitVisibility() {
